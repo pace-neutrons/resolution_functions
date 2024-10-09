@@ -13,7 +13,6 @@ maintainers = [
 description = "Python library for working with resolution functions of neutron instruments "
 readme = "README.md"
 license = {file = "LICENSE"}
-Repository = "https://github.com/RastislavTuranyi/resolution_functions"
 
 dependencies = [
     "PyYAML >= 6.0.2",
@@ -29,6 +28,9 @@ dev = [
 test = [
     "pytest >= 8.3.2"
 ]
+
+[project.urls]
+Repository = "https://github.com/RastislavTuranyi/resolution_functions"
 
 [tool.setuptools]
 package-dir = {"resolution_functions" = "src"}
