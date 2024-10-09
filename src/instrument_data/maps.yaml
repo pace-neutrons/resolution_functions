@@ -1,0 +1,76 @@
+default_version: 'MAPS'
+default_settings: ["A"]
+default_model: "PyCHOP"
+
+version:
+    MAPS:
+        constants:
+            d_chopper_sample: 1.899               # Distance (x1) from final chopper to sample (m)
+            d_sample_detector: 6.0                  # Distance (x2) from sample to detector (m)
+            aperture_width: 0.094         # Width of aperture at moderator face (m)
+            theta: 32.0                   # Angle beamline makes with moderator face (degrees)
+            q_size: 100
+            e_init: 500  # meV
+            max_wavenumber: 2000  # meV
+            chopper_frequency_default: 400
+            chopper_allowed_frequencies: list(range(50, 601, 50))
+            default_frequencies: [ 400, 50 ]
+            frequency_matrix:
+                [[0, 1],                    # f1 is the Fermi frequency
+                 [1, 0]]                    # f2 is the Disk frequency
+            choppers:
+                Disk:
+                    fermi: false
+                    distance: 8.831
+                    nslot: 4                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_width: 68            # Slot width in mm
+                    slot_ang_pos: [-180., -39.1, 0., 39.1]
+                    guide_width: 50           # Width of guide after chopper in mm
+                    radius: 375               # Disk radius
+                    num_disk: 1
+                    is_phase_independent: True  # Is this disk to be phased independently?
+                    default_phase: "1"         # What is the default phase for this disk (either a time in microseconds
+                Fermi:
+                    fermi: true
+                    distance: 10.143  # m
+                    aperture_distance: 8.27  # m
+                    # Default compatibility arguments:
+                    nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_ang_pos: None
+                    slot_width: 10.            # Slot width in mm
+                    guide_width: 10.           # Width of guide after chopper in mm
+                    radius: 290.               # Disk radius
+                    num_disk: 1
+        settings:
+            A:
+                pslit: 1.087e-3  # m
+                radius: 49.0e-3  # m
+                rho: 1.300  # m
+                tjit: 0.0             # Jitter time (us)
+            B:
+                pslit: 1.812e-3  # m
+                radius: 49.0e-3  # m
+                rho: 0.92  # m
+                tjit: 0.0             # Jitter time (us)
+            S:
+                pslit: 2.899e-3  # m
+                radius: 49.0e-3  # m
+                rho: 1.300  # m
+                tjit: 0.0             # Jitter time (us)
+        models:
+            PyChop_fit:
+                function: "2d_fit"
+                parameters:
+                    imod: 2
+                    measured_width: # Table of measured moderator time widths in microseconds. If present will override imod and mod_pars
+                        isSigma: False              # Indicates measurements are FWHM
+                        wavelength: [ 3.81593, 5.39537, 2.2052, 2.70006, 3.25499, 1.70813, 3.11649, 1.44378, 2.41516, 1.91018, 2.47745, 1.27303, 2.07872, 1.05928, 1.55951 ]
+                        width: [ 54, 62, 40, 44, 48, 35, 47, 30, 41, 37, 40, 25, 38, 20, 31 ]
+            PyChop_tau:
+                function: "2d_tau"
+                parameters:
+                    imod: 2
+                    measured_width: # Table of measured moderator time widths in microseconds. If present will override imod and mod_pars
+                        isSigma: False              # Indicates measurements are FWHM
+                        wavelength: [ 3.81593, 5.39537, 2.2052, 2.70006, 3.25499, 1.70813, 3.11649, 1.44378, 2.41516, 1.91018, 2.47745, 1.27303, 2.07872, 1.05928, 1.55951 ]
+                        width: [ 54, 62, 40, 44, 48, 35, 47, 30, 41, 37, 40, 25, 38, 20, 31 ]

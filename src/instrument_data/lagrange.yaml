@@ -1,0 +1,30 @@
+default_version: 'Lagrange'
+default_settings: ["Cu(220)"]
+default_model: "AbINS"
+
+version:
+    Lagrange:
+        constants:
+            final_neutron_energy: 4.5 * 8.06554465  # Final energy on the crystal analyser in cm-1 (converted from eV)
+            scattering_angle_range: [10, 90]
+            angles_per_detector: 5
+            energy_bin_width: 1.0  # Default bin width in wavenumber
+        settings:
+            Cu(220):
+                Ei_range: [26, 500]  # meV
+                abs_resolution: [7.6987e-5, 2.156e-2, -3.5961e-2]  # meV
+                low_energy_cutoff: 25  # meV
+                low_energy_resolution: 0.8  # meV
+            Cu(331):
+                Ei_range: [67, 500]  # meV
+                abs_resolution: [-8.60511597e-08, 1.11911095e-04, 5.15925386e-04, 6.58362118e-01]  # meV
+            Si(311):
+                Ei_range: [16.5, 60]  # meV
+                abs_resolution: [0.8]  # meV
+            Si(111):
+                Ei_range: [4.5, 20]  # meV
+                abs_resolution: [0.8]  # meV
+        models:
+           AbINS:
+                function: "discontinuous_polynomial"
+                parameters: []

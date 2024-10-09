@@ -1,0 +1,25 @@
+default_version: 'PANTHER'
+default_settings: ["PANTHER"]
+default_model: "AbINS"
+
+version:
+    PANTHER:
+        constants:
+            q_size: 100
+            e_init: 150 # meV
+        settings:
+            PANTHER:
+                chopper: ""
+        models:
+            AbINS:
+                # Resolution function fitted to incident energy and energy transfer:
+                # sigma = polyval(abs_meV, ɛ) + polyval(ei_dependence, E_i) + polyval(ei_energy_product, E_i × ɛ)
+                # (Here a quartic polynomial in ɛ, plus quadratic on Ei and cubic on ɛ×Ei)
+                function: "multiple_polynomial_ei"
+                parameters:
+                    abs:
+                        [9.776165626074981, 0.023616411911882462, 0.0006472263718719711, 1.4819832651359686e-06]  # abs_meV
+                    ei_dependence:
+                        [0, -0.15243694390151533, 0.0010075660656377956]  # ei_dependence
+                    ei_energy_product:
+                        [0, -0.000790753342146401, -8.56972067941707e-09, -2.3477397983667877e-13]  # ei_energy_product
