@@ -10,7 +10,7 @@ from scipy.interpolate import interp1d
 from .instrument import Instrument, InvalidSettingError
 
 if TYPE_CHECKING:
-    from jaxtyping import Array, Float
+    from jaxtyping import Float
 
 E2L = 81.8042103582802156
 E2V = 437.393362604208619
@@ -28,7 +28,7 @@ class Instrument2D(Instrument):
 
             polynomial = self.precompute_resolution(model, setting, e_init, chopper_frequency)
 
-            def resolution_2d(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+            def resolution_2d(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
                 return polynomial(frequencies)
             return resolution_2d
 
@@ -39,7 +39,7 @@ class Instrument2D(Instrument):
                               setting: list[str],
                               e_init: float,
                               chopper_frequency: float
-                               ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
+                               ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
         params = self.models[model]['parameters']
 
         tsq_moderator = self.get_moderator_width(params['measured_width']['width'], e_init, params['imod']) ** 2
@@ -49,7 +49,7 @@ class Instrument2D(Instrument):
         l1 = self.constants['d_chopper_sample']
         l2 = self.constants['d_sample_detector']
 
-        def resolution(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+        def resolution(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
             e_final = frequencies - e_init
             energy_term = (e_final / e_init) ** 1.5
 

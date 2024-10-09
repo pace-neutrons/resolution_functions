@@ -9,7 +9,7 @@ from .model_functions import create_polynomial, create_discontinuous_polynomial
 
 
 if TYPE_CHECKING:
-    from jaxtyping import Array, Float
+    from jaxtyping import Float
 
 
 class TOSCA(Instrument):
@@ -46,12 +46,12 @@ class TOSCA(Instrument):
 
     @staticmethod
     def _create_tosca_book(parameters: list[float] | list[list[float]], *_, **__
-                           ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
+                           ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
         ds, dd, dg, ddi, ws, wd, eta_g, theta_b, a, dtch, di, df, ef, theta_b, d_theta_b = parameters
         da = df * np.sin(np.deg2rad(theta_b))
         REDUCED_PLANCK_SQUARED = 4.18019
 
-        def tosca_book(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+        def tosca_book(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
             ei = frequencies + ef
 
             time_dependent_term = (2 / NEUTRON_MASS) ** 0.5 * ei ** 1.5 / di
@@ -74,7 +74,7 @@ class TOSCA(Instrument):
     @staticmethod
     def _create_vision_paper(l1: float, dl1: float, z2: float, theta_deg: float, l_c: float, w_s: float,
                              w_d: float, d_t: float, d_r: float, *_, **__
-                             ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
+                             ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
         """https://doi.org/10.1016/j.nima.2009.03.204"""
         PLANCK = 6.626068e-34  # J s
         REDUCED_PLANCK = 1.054571817e-34  # J s
@@ -94,7 +94,7 @@ class TOSCA(Instrument):
         d_c = w_d ** 2 / 12
         db_dc_factor = (2 * d_b + d_c)
 
-        def resolution(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+        def resolution(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
             e1 = frequencies * REDUCED_PLANCK + e0 * (1 / np.sin(theta))
             z0 = l1 * (e0 / e1) ** 0.5
             one_over_z0 = 1 / z0

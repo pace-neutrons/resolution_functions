@@ -8,7 +8,7 @@ import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 
 if TYPE_CHECKING:
-    from jaxtyping import Array, Float
+    from jaxtyping import Float
 
 
 class PANTHER(Instrument):
@@ -30,8 +30,8 @@ class PANTHER(Instrument):
                                       ei_dependence: list[float],
                                       ei_energy_product: list[float],
                                       e_init: float, *_, **__
-                                      ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
-        def multiple_polynomial_ei(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+                                      ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
+        def multiple_polynomial_ei(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
             resolution_fwhm = (Polynomial(abs)(frequencies) +
                                Polynomial(ei_dependence)(e_init) +
                                Polynomial(ei_energy_product)(e_init * frequencies))

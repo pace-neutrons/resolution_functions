@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import Callable, TYPE_CHECKING
 
-from jaxtyping import Array, Float
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
+
+
+if TYPE_CHECKING:
+    from jaxtyping import Float
 
 
 class InvalidSettingError(Exception):
@@ -21,8 +24,8 @@ def create_discontinuous_polynomial(parameters: list[float],
                                     low_energy_resolution: float = 0.,
                                     high_energy_cutoff: float = np.inf,
                                     high_energy_resolution: float = 0., *_, **__
-                                    ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
-    def discontinuous_polynomial(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+                                    ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
+    def discontinuous_polynomial(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
         polynomial = Polynomial(parameters)
         result = polynomial(frequencies)
 
@@ -38,8 +41,8 @@ def create_discontinuous_polynomial(parameters: list[float],
 
 def create_multiple_polynomial_ei(parameters: list[list[float]],
                                   e_init: float, *_, **__
-                                  ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
-    def multiple_polynomial_ei(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+                                  ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
+    def multiple_polynomial_ei(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
         resolution_fwhm = (Polynomial(parameters[0])(frequencies) +
                            Polynomial(parameters[1])(e_init) +
                            Polynomial(parameters[2])(e_init * frequencies))
@@ -50,8 +53,8 @@ def create_multiple_polynomial_ei(parameters: list[list[float]],
 
 def create_2d_polynomial(parameters: list[float],
                          e_init: float, *_, **__
-                         ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
-    def polynomial_2d(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+                         ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
+    def polynomial_2d(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
         fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
         fake_frequencies[fake_frequencies >= e_init] = np.nan
 
@@ -61,8 +64,8 @@ def create_2d_polynomial(parameters: list[float],
 
 def create_dummy(parameters: list[float],
                  e_init: float, *_, **__
-                 ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
-    def dummy(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+                 ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
+    def dummy(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
         return np.full_like(frequencies, e_init * parameters[0])
 
     return dummy
@@ -70,7 +73,7 @@ def create_dummy(parameters: list[float],
 
 def create_tosca_book(parameters: list[float] | list[list[float]],
                       parameter_indices: list[int], *_, **__
-                      ) -> Callable[[Float[Array, 'frequencies']], Float[Array, 'sigma']]:
+                      ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
     if isinstance(parameters[0], list):
         if len(parameter_indices) == 1:
             parameters = parameters[parameter_indices[0]]
@@ -82,7 +85,7 @@ def create_tosca_book(parameters: list[float] | list[list[float]],
     da = df * np.sin(np.deg2rad(theta_b))
     REDUCED_PLANCK_SQUARED = 4.18019
 
-    def tosca_book(frequencies: Float[Array, 'frequencies']) -> Float[Array, 'sigma']:
+    def tosca_book(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
         ei = frequencies + ef
 
         time_dependent_term = (2 / NEUTRON_MASS) ** 0.5 * ei ** 1.5 / di
