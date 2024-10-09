@@ -31,6 +31,3 @@ test = [
 
 [project.urls]
 Repository = "https://github.com/RastislavTuranyi/resolution_functions"
-
-[tool.setuptools]
-package-dir = {"resolution_functions" = "src"}

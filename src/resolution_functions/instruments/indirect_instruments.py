@@ -2,8 +2,8 @@ from typing import ClassVar, Callable, TYPE_CHECKING
 
 import numpy as np
 
-from instrument import Instrument, InvalidSettingError
-from model_functions import create_polynomial, create_discontinuous_polynomial
+from .instrument import Instrument, InvalidSettingError
+from .model_functions import create_polynomial, create_discontinuous_polynomial
 
 
 if TYPE_CHECKING:
