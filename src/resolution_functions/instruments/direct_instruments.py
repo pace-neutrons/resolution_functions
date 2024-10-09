@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from typing import ClassVar, Callable, TYPE_CHECKING
 
-from instrument import Instrument
+from .instrument import Instrument
 
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial

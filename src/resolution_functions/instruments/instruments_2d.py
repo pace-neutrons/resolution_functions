@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from copy import deepcopy
 from typing import ClassVar, Callable, TYPE_CHECKING
 
@@ -5,8 +7,7 @@ import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 from scipy.interpolate import interp1d
 
-from instrument import Instrument, InvalidSettingError
-from model_functions import create_polynomial, create_discontinuous_polynomial
+from .instrument import Instrument, InvalidSettingError
 
 if TYPE_CHECKING:
     from jaxtyping import Array, Float
