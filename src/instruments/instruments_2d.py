@@ -1,7 +1,6 @@
 from copy import deepcopy
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
-from jaxtyping import Array, Float
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 from scipy.interpolate import interp1d
@@ -9,6 +8,8 @@ from scipy.interpolate import interp1d
 from instrument import Instrument, InvalidSettingError
 from model_functions import create_polynomial, create_discontinuous_polynomial
 
+if TYPE_CHECKING:
+    from jaxtyping import Array, Float
 
 E2L = 81.8042103582802156
 E2V = 437.393362604208619

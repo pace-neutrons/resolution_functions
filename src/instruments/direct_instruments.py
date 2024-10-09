@@ -1,10 +1,12 @@
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 from instrument import Instrument
 
-from jaxtyping import Array, Float
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
+
+if TYPE_CHECKING:
+    from jaxtyping import Array, Float
 
 
 class PANTHER(Instrument):

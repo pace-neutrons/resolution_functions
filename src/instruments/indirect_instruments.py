@@ -1,10 +1,13 @@
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
-from jaxtyping import Array, Float
 import numpy as np
 
 from instrument import Instrument, InvalidSettingError
 from model_functions import create_polynomial, create_discontinuous_polynomial
+
+
+if TYPE_CHECKING:
+    from jaxtyping import Array, Float
 
 
 class TOSCA(Instrument):
