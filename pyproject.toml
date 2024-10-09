@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools"]
+
+[project]
+name = 'resolutions_functions'
+version = "0.1.0"
+authors = [
+    {name = "Rastislav Turanyi", email = "rastislav.turanyi@stfc.ac.uk"},
+]
+maintainers = [
+    {name = "Rastislav Turanyi", email = "rastislav.turanyi@stfc.ac.uk"},
+]
+description = "Python library for working with resolution functions of neutron instruments "
+readme = "README.md"
+license = {file = "LICENSE"}
+Repository = "https://github.com/RastislavTuranyi/resolution_functions"
+
+dependencies = [
+    "PyYAML >= 6.0.2",
+    "numpy >= 2.1.0",
+    "scipy >= 1.14.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    "Pint >= 0.24.3",
+    "jaxtyping >= 0.2.34"
+]
+test = [
+    "pytest >= 8.3.2"
+]
+
+[tool.setuptools]
+package-dir = {"resolution_functions" = "src"}
