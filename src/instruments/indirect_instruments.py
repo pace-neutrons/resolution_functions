@@ -1,4 +1,4 @@
-from typing import Callable, TYPE_CHECKING
+from typing import ClassVar, Callable, TYPE_CHECKING
 
 import numpy as np
 
@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 class TOSCA(Instrument):
+    name: ClassVar[str] = 'tosca'
+
     def get_resolution_function(self, model: str, setting: list[str], **_):
         model, setting = self.models[model], setting[0]
 
@@ -106,6 +108,8 @@ class TOSCA(Instrument):
 
 
 class Lagrange(Instrument):
+    name: ClassVar[str] = 'lagrange'
+
     def get_resolution_function(self, model: str, setting: list[str], **_):
         if self.models[model]['function'] == 'discontinuous_polynomial':
             setting = self.settings[setting[0]]

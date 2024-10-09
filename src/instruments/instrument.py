@@ -1,10 +1,10 @@
 import dataclasses
 import os
 import yaml
-from typing import TYPE_CHECKING, Optional, Union
+from typing import ClassVar, Optional, Union
 
-if TYPE_CHECKING:
-    from pathlib import Path
+
+INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'instrument_data')
 
 
 class InvalidSettingError(Exception):
@@ -20,8 +20,10 @@ class Instrument:
     default_settings: str
     default_model: str
 
+    name: ClassVar[str]
+
     @classmethod
-    def from_file(cls, path: Path, version: Optional[str] = None):
+    def from_file(cls, path: str, version: Optional[str] = None):
         data = yaml.safe_load(path)
 
         if version is None:
@@ -37,8 +39,8 @@ class Instrument:
         )
 
     @classmethod
-    def from_default(cls, instrument: str):
-        return cls.from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), instrument))
+    def from_default(cls, version: Optional[str] = None):
+        return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, cls.name + '.yaml'), version)
 
     def get_constant(self, name: str, setting: str):
         return self.settings[setting].get(name, self.constants[name])

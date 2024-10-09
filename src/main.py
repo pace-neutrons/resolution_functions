@@ -1,20 +1,15 @@
-from collections.abc import Callable
+from typing import Callable, Optional, TYPE_CHECKING
 
-from instruments import instrument
-from model_functions import MODEL_FUNCTIONS
+from instruments import INSTRUMENTS
+
+if TYPE_CHECKING:
+    from instruments.instrument import Instrument
 
 
-def get_resolution_function(instrument: instrument.Instrument,
-                            model: str = None,
-                            setting: str = None,
-                            **user_parameters) -> Callable:
-    if model is None:
-        model = instrument.default_model
+def get_instrument(name: str, version: Optional[str] = None) -> Instrument:
+    instrument, alt_version = INSTRUMENTS[name.lower()]
 
-    if setting is None:
-        setting = instrument.default_settings
+    if version is None:
+        version = alt_version
 
-    func = MODEL_FUNCTIONS[instrument.models[model]['function']]
-    return func(parameters=instrument.models[model]['parameters'],
-                **instrument.get_relevant_settings(model, setting),
-                **user_parameters)
+    return instrument.from_default(version)

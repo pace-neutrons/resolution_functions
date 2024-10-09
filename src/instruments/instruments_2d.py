@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Callable, TYPE_CHECKING
+from typing import ClassVar, Callable, TYPE_CHECKING
 
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
@@ -296,3 +296,7 @@ class Instrument2D(Instrument):
         consts = self.settings['constants']
 
         return mod_chop, ap_chop, consts['d_chopper_sample'], consts['d_sample_detector'], choppers[0]['distance']
+
+
+class MAPS(Instrument2D):
+    name: ClassVar[str] = 'maps'

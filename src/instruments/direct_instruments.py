@@ -1,4 +1,4 @@
-from typing import Callable, TYPE_CHECKING
+from typing import ClassVar, Callable, TYPE_CHECKING
 
 from instrument import Instrument
 
@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 class PANTHER(Instrument):
+    name: ClassVar[str] = 'panther'
+
     def get_resolution_function(self, model: str, setting: list[str], e_init: float, **_):
         model = self.models[model]
 
