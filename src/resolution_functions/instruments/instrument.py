@@ -26,16 +26,19 @@ class Instrument:
 
     @classmethod
     def from_file(cls, path: str, version: Optional[str] = None):
-        data = yaml.safe_load(path)
+        with open(path, 'r') as f:
+            data = yaml.safe_load(f)
 
         if version is None:
             version = data['default_version']
 
+        version_data = data['version'][version]
+
         return cls(
             version,
-            data[version]['constants'],
-            data[version]['settings'],
-            data[version]['models'],
+            version_data['constants'],
+            version_data['settings'],
+            version_data['models'],
             data['default_settings'],
             data['default_model'],
         )
