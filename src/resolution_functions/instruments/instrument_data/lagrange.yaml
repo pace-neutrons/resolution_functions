@@ -12,12 +12,12 @@ version:
         settings:
             Cu(220):
                 Ei_range: [26, 500]  # meV
-                abs_resolution: [7.6987e-5, 2.156e-2, -3.5961e-2]  # meV
+                abs_resolution: [-3.5961e-2, 2.156e-2, 7.6987e-5, ]  # meV
                 low_energy_cutoff: 25  # meV
                 low_energy_resolution: 0.8  # meV
             Cu(331):
                 Ei_range: [67, 500]  # meV
-                abs_resolution: [-8.60511597e-08, 1.11911095e-04, 5.15925386e-04, 6.58362118e-01]  # meV
+                abs_resolution: [6.58362118e-01, 5.15925386e-04, 1.11911095e-04, -8.60511597e-08]  # meV
             Si(311):
                 Ei_range: [16.5, 60]  # meV
                 abs_resolution: [0.8]  # meV
