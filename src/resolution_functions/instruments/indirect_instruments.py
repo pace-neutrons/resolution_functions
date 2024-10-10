@@ -116,7 +116,7 @@ class Lagrange(Instrument):
         if self.models[model]['function'] == 'discontinuous_polynomial':
             setting = self.settings[setting[0]]
             return create_discontinuous_polynomial(parameters=setting['abs_resolution'],
-                                                   low_energy_cutoff=setting['low_energy_cutoff'],
-                                                   low_energy_resolution=setting['low_energy_resolution'])
+                                                   low_energy_cutoff=setting.get('low_energy_cutoff', -np.inf),
+                                                   low_energy_resolution=setting.get('low_energy_resolution', 0.))
         else:
             raise NotImplementedError()
