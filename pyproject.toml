@@ -32,3 +32,12 @@ test = [
 
 [project.urls]
 Repository = "https://github.com/RastislavTuranyi/resolution_functions"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where =  ["src"]
+
+[tool.setuptools.package-data]
+resolution_functions = ["instruments/instrument_data/*.yaml"]

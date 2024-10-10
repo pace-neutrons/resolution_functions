@@ -6,7 +6,7 @@ import yaml
 from typing import ClassVar, Optional, Union
 
 
-INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'instrument_data')
+INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
 
 
 class InvalidSettingError(Exception):
