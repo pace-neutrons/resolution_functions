@@ -23,12 +23,12 @@ def tosca_abins():
 
 @pytest.fixture
 def tosca_abins_resolution_function_backward(tosca_rf):
-    return tosca_rf.get_resolution_function('AbINS', 'Backward')
+    return tosca_rf.get_resolution_function('AbINS', ['Backward'])
 
 
 @pytest.fixture
 def tosca_abins_resolution_function_forward(tosca_rf):
-    return tosca_rf.get_resolution_function('AbINS', 'Forward')
+    return tosca_rf.get_resolution_function('AbINS', ['Forward'])
 
 
 @pytest.mark.parametrize('frequencies',
