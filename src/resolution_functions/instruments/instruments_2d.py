@@ -42,7 +42,7 @@ class Instrument2D(Instrument):
                                ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
         params = self.models[model]['parameters']
 
-        tsq_moderator = self.get_moderator_width(params['measured_width']['width'], e_init, params['imod']) ** 2
+        tsq_moderator = self.get_moderator_width(params['measured_width'], e_init, params['imod']) ** 2
         tsq_chopper = self.get_chopper_width_squared(setting, True, e_init, chopper_frequency)
 
         l0 = self.constants['Fermi']['distance']
@@ -72,7 +72,7 @@ class Instrument2D(Instrument):
         tsq_jit = self.settings[setting[0]]['tjit'] ** 2
         x0, xa, x1, x2, xm = self.get_distances()
 
-        tsq_moderator = self.get_moderator_width(params['measured_width']['width'], e_init, params['imod']) ** 2
+        tsq_moderator = self.get_moderator_width(params['measured_width'], e_init, params['imod']) ** 2
         tsq_chopper = self.get_chopper_width_squared(setting, True, e_init, chopper_frequency)
 
         # For Disk chopper spectrometers, the opening times of the first chopper can be the effective moderator time
@@ -160,7 +160,7 @@ class Instrument2D(Instrument):
 
     def get_chopper_width_squared(self, setting: list[str], is_fermi: bool, e_init: float, chopper_frequency: float) -> tuple[float, float | None]:
         if is_fermi:
-            settings = self.settings[setting[1]]
+            settings = self.settings[setting[0]]
             pslit, radius, rho = settings['pslit'], settings['radius'], settings['rho']
 
             return self.get_fermi_width_squared(e_init, chopper_frequency, pslit, radius, rho), None
@@ -287,14 +287,14 @@ class Instrument2D(Instrument):
         return wd0 ** 2, wd1 ** 2
 
     def get_distances(self) -> tuple[float, float, float, float, float]:
-        choppers = list(self.settings.values())
+        choppers = list(self.constants['choppers'].values())
         mod_chop = choppers[-1]['distance']
         try:
             ap_chop = choppers[-1]['aperture_distance']
         except KeyError:
             ap_chop = mod_chop
 
-        consts = self.settings['constants']
+        consts = self.constants
 
         return mod_chop, ap_chop, consts['d_chopper_sample'], consts['d_sample_detector'], choppers[0]['distance']
 
