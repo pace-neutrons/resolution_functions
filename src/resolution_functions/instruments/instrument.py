@@ -16,9 +16,9 @@ class InvalidSettingError(Exception):
 @dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
 class Instrument:
     version: str
-    constants: dict[str, Union[float, list[float], list[list[float]], dict[str, dict[str, Union[float, list[float]]]]]]
-    settings: dict
-    models: dict
+    constants: InstrumentConstants
+    settings: InstrumentSettings
+    models: dict[str, InstrumentModelData]
     default_settings: str
     default_model: str
 
@@ -32,13 +32,13 @@ class Instrument:
         if version is None:
             version = data['default_version']
 
-        version_data = data['version'][version]
+        constants, settings, models = cls._convert_data(data['version'][version])
 
         return cls(
             version,
-            version_data['constants'],
-            version_data['settings'],
-            version_data['models'],
+            constants,
+            settings,
+            models,
             data['default_settings'],
             data['default_model'],
         )
@@ -46,6 +46,10 @@ class Instrument:
     @classmethod
     def from_default(cls, version: Optional[str] = None):
         return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, cls.name + '.yaml'), version)
+
+    @staticmethod
+    def _convert_data(version_data: dict) -> tuple[InstrumentConstants, InstrumentSettings, dict[str, InstrumentModelData]]:
+        raise NotImplementedError()
 
     def get_constant(self, name: str, setting: str):
         return self.settings[setting].get(name, self.constants[name])
@@ -56,3 +60,38 @@ class Instrument:
     @property
     def available_models(self) -> list[str]:
         return list(self.models.keys())
+
+
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+class InstrumentConstants:
+    pass
+
+
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+class InstrumentSettings:
+    pass
+
+
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+class InstrumentModelData:
+    function: str
+    citation: str
+    constants: ModelConstants
+    settings: ModelSettings
+    parameters: ModelParameters
+
+
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+class ModelConstants:
+    pass
+
+
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+class ModelSettings:
+    pass
+
+
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+class ModelParameters:
+    pass
+
