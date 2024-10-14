@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import dataclasses
 import os
 import yaml
@@ -14,7 +15,7 @@ class InvalidSettingError(Exception):
 
 
 @dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
-class Instrument:
+class Instrument(ABC):
     version: str
     models: dict[str, InstrumentModelData]
     default_settings: str
@@ -44,6 +45,7 @@ class Instrument:
         return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, cls.name + '.yaml'), version)
 
     @staticmethod
+    @abstractmethod
     def _convert_data(version_data: dict
                       ) -> dict[str, InstrumentModelData]:
         raise NotImplementedError()
@@ -51,6 +53,7 @@ class Instrument:
     def get_constant(self, name: str, setting: str):
         return self.settings[setting].get(name, self.constants[name])
 
+    @abstractmethod
     def get_resolution_function(self, model: str, setting: list[str], **_):
         raise NotImplementedError()
 
