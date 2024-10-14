@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Callable, TYPE_CHECKING
 
-from .instrument import *
+from .instrument import Instrument, InstrumentModelData, ModelParameters, ModelSettings
 from .instrument_model import InstrumentModel1D
 
 import numpy as np
@@ -13,29 +13,25 @@ if TYPE_CHECKING:
     from jaxtyping import Float
 
 
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+@dataclass(init=True, repr=True, frozen=True, slots=True)
 class PANTHER(Instrument):
-    constants: PantherConstants
     models: dict[str, PantherAbINSModelData]
 
     name: ClassVar[str] = 'panther'
 
     @staticmethod
     def _convert_data(version_data: dict
-                      ) -> tuple[InstrumentConstants, InstrumentSettings, dict[str, InstrumentModelData]]:
-        constants = PantherConstants(**version_data['constants'])
-        settings = InstrumentSettings()
+                      ) -> dict[str, InstrumentModelData]:
 
         abins_model = version_data['models']['AbINS']
         models = {
             'AbINS': PantherAbINSModelData(function=abins_model['function'],
                                          citation=abins_model['citation'],
-                                         constants=ModelConstants(),
                                          settings=ModelSettings(),
                                          parameters=PantherAbINSModelParameters(**abins_model['parameters']))
         }
 
-        return constants, settings, models
+        return models
 
     def get_resolution_function(self, model: str, setting: list[str], e_init: float, **_):
         model = self.models[model]
@@ -46,18 +42,12 @@ class PANTHER(Instrument):
             raise NotImplementedError()
 
 
-@dataclass(init=True, repr=True, frozen=True, slots=True)
-class PantherConstants(InstrumentConstants):
-    q_size: int
-    e_init: int
-
-
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class PantherAbINSModelData(InstrumentModelData):
     parameters: PantherAbINSModelParameters
 
 
-@dataclass(init=True, repr=True, frozen=True, slots=True)
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class PantherAbINSModelParameters(ModelParameters):
     abs: list[float]
     ei_dependence: list[float]

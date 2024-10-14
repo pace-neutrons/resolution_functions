@@ -4,7 +4,7 @@ default_model: "AbINS"
 
 version:
     PANTHER:
-        constants:
+        constants: &PANTHER_CONSTANTS
             q_size: 100
             e_init: 150 # meV
         settings: {}
@@ -15,7 +15,6 @@ version:
                 # (Here a quartic polynomial in ɛ, plus quadratic on Ei and cubic on ɛ×Ei)
                 function: "multiple_polynomial_ei"
                 citation: ""
-                constants: {}
                 settings: {}
                 parameters:
                     abs:

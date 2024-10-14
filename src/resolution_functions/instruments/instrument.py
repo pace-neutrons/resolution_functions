@@ -16,8 +16,6 @@ class InvalidSettingError(Exception):
 @dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
 class Instrument:
     version: str
-    constants: InstrumentConstants
-    settings: InstrumentSettings
     models: dict[str, InstrumentModelData]
     default_settings: str
     default_model: str
@@ -32,12 +30,10 @@ class Instrument:
         if version is None:
             version = data['default_version']
 
-        constants, settings, models = cls._convert_data(data['version'][version])
+        models = cls._convert_data(data['version'][version])
 
         return cls(
             version,
-            constants,
-            settings,
             models,
             data['default_settings'],
             data['default_model'],
@@ -48,7 +44,8 @@ class Instrument:
         return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, cls.name + '.yaml'), version)
 
     @staticmethod
-    def _convert_data(version_data: dict) -> tuple[InstrumentConstants, InstrumentSettings, dict[str, InstrumentModelData]]:
+    def _convert_data(version_data: dict
+                      ) -> dict[str, InstrumentModelData]:
         raise NotImplementedError()
 
     def get_constant(self, name: str, setting: str):
@@ -62,36 +59,22 @@ class Instrument:
         return list(self.models.keys())
 
 
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
-class InstrumentConstants:
-    pass
-
-
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
-class InstrumentSettings:
-    pass
-
-
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
-class InstrumentModelData:
-    function: str
-    citation: str
-    constants: ModelConstants
-    settings: ModelSettings
-    parameters: ModelParameters
-
-
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
-class ModelConstants:
-    pass
-
-
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class ModelSettings:
     pass
 
 
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class ModelParameters:
     pass
 
+
+@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class InstrumentModelData:
+    function: str
+    citation: str
+    settings: ModelSettings = ModelSettings()
+    parameters: ModelParameters = ModelParameters()
+
+    def get_coefficients(self) -> list[float]:
+        raise NotImplementedError()
