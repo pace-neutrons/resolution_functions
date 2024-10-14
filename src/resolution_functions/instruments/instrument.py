@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import dataclasses
 import os
 import yaml
-from typing import Any, ClassVar, Optional, TYPE_CHECKING
+from typing import Any, ClassVar, Optional, TYPE_CHECKING, Union
 
 
 if TYPE_CHECKING:
@@ -64,8 +64,8 @@ class Instrument(ABC):
                                                   )
         return models
 
-    def get_constant(self, name: str, setting: str):
-        return self.settings[setting].get(name, self.constants[name])
+    def get_model_parameter(self, model_name: str, parameter_name: str, setting: str) -> Union[Any, None]:
+        return self.models[model_name].get_value(parameter_name, setting)
 
     def get_resolution_function(self, model: str, setting: list[str], **kwargs):
         return self.model_functions[model](self.models[model], setting, **kwargs)
