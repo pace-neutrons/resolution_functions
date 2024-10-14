@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING
+from abc import ABC, abstractmethod
+from typing import Callable, ClassVar, TYPE_CHECKING
 
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
@@ -8,15 +9,31 @@ from numpy.polynomial.polynomial import Polynomial
 
 if TYPE_CHECKING:
     from jaxtyping import Float
+    from .instrument import InstrumentModelData
 
 
-class InvalidSettingError(Exception):
-    pass
+class InstrumentModel(ABC):
+    input: ClassVar[int]
+    output: ClassVar[int]
+
+    def __init__(self, _: InstrumentModelData, setting: list[str], **__):
+        self.setting = setting
+
+    @abstractmethod
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError()
 
 
-def create_polynomial(parameters: list[float], *_, **__
-                      ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
-    return Polynomial(parameters)
+class PolynomialModel1D(InstrumentModel):
+    input = 1
+    output = 1
+
+    def __init__(self, model_data: InstrumentModelData, setting: list[str], **kwargs):
+        super().__init__(model_data, setting, **kwargs)
+        self.polynomial = Polynomial(model_data.get_coefficients())
+
+    def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
+        return self.polynomial(frequencies)
 
 
 def create_discontinuous_polynomial(parameters: list[float],
@@ -38,23 +55,3 @@ def create_discontinuous_polynomial(parameters: list[float],
         return result * 0.5
 
     return discontinuous_polynomial
-
-
-def create_multiple_polynomial_ei(parameters: list[list[float]],
-                                  e_init: float, *_, **__
-                                  ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
-    def multiple_polynomial_ei(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
-        resolution_fwhm = (Polynomial(parameters[0])(frequencies) +
-                           Polynomial(parameters[1])(e_init) +
-                           Polynomial(parameters[2])(e_init * frequencies))
-        return resolution_fwhm / (2 * np.sqrt(2 * np.log(2)))
-
-    return multiple_polynomial_ei
-
-def create_dummy(parameters: list[float],
-                 e_init: float, *_, **__
-                 ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
-    def dummy(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
-        return np.full_like(frequencies, e_init * parameters[0])
-
-    return dummy

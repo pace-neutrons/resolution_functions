@@ -8,7 +8,7 @@ from typing import ClassVar, Optional, TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from .instrument_model import InstrumentModel
+    from .model_functions import InstrumentModel
 
 
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import ClassVar, Callable, TYPE_CHECKING
 
 from .instrument import Instrument, InstrumentModelData, ModelParameters, ModelSettings
-from .instrument_model import InstrumentModel
+from .model_functions import InstrumentModel
 
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
