@@ -1,112 +1,221 @@
 from __future__ import annotations
 
-from typing import ClassVar, Callable, TYPE_CHECKING
+from dataclasses import dataclass
+from typing import ClassVar, Callable, TYPE_CHECKING, Union
 
 import numpy as np
 
-from .instrument import Instrument, InvalidSettingError
-from .model_functions import create_polynomial, create_discontinuous_polynomial
+from .instrument import Instrument, InstrumentModelData, ModelParameters, ModelSettings
+from .model_functions import InstrumentModel, PolynomialModel1D, create_discontinuous_polynomial
 
 
 if TYPE_CHECKING:
     from jaxtyping import Float
 
 
-class TOSCA(Instrument):
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class ToscaAbINSModelData(InstrumentModelData):
+    parameters: ToscaAbINSModelParameters
+
+    def get_coefficients(self) -> list[float]:
+        return self.parameters.fit
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class ToscaAbINSModelParameters(ModelParameters):
+    fit: list[float]
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class ToscaBookModelData(InstrumentModelData):
+    parameters: ToscaBookModelParameters
+    settings: dict[str, ToscaBookSettings]
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class ToscaBookModelParameters(ModelParameters):
+    primary_flight_path: float
+    primary_flight_path_uncertainty: float
+    water_moderator_constant: int
+    time_channel_uncertainty: int
+    sample_thickness: float
+    graphite_thickness: float
+    detector_thickness: float
+    sample_width: float
+    detector_width: float
+    graphite_analyser_mosaic: float
+    crystal_plane_spacing: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class ToscaBookSettings(ModelSettings):
+    angles: list[float]
+    average_secondary_flight_path: float
+    average_final_energy: float
+    average_bragg_angle_graphite: float
+    change_average_bragg_angle_graphite: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class ToscaVisionModelData(InstrumentModelData):
+    parameters: ToscaVisionModelParameters
+    settings: dict[str, ToscaVisionSettings]
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class ToscaVisionModelParameters(ModelParameters):
+    primary_flight_path: float
+    primary_flight_path_uncertainty: float
+    sample_thickness: float
+    detector_thickness: float
+    crystal_plane_spacing: float
+    d_r: float
+    d_t: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class ToscaVisionSettings(ModelSettings):
+    angles: list[float]
+    average_secondary_flight_path: float
+    average_bragg_angle_graphite: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class ToscaLikeInstrument(Instrument):
+    model_functions = {
+        'AbINS': PolynomialModel1D,
+        'book': ToscaBookModel,
+        'vision': VisionPaperModel,
+    }
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class TFXA(ToscaLikeInstrument):
+    models: dict[str, ToscaBookModelData]
+
+    name: ClassVar[str] = 'tfxa'
+    model_classes = {'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings)}
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class TOSCA1(ToscaLikeInstrument):
+    models: dict[str, ToscaBookModelData]
+
+    name: ClassVar[str] = 'tosca1'
+    model_classes = {'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings)}
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class TOSCA(ToscaLikeInstrument):
+    models: dict[str, Union[ToscaAbINSModelData, ToscaBookModelData, ToscaVisionModelData]]
+
     name: ClassVar[str] = 'tosca'
+    model_classes = {
+        'AbINS': (ToscaAbINSModelData, ToscaAbINSModelParameters, ModelSettings),
+        'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings),
+        'vision': (ToscaVisionModelData, ToscaVisionModelParameters, ToscaBookSettings)
+    }
 
-    def get_resolution_function(self, model: str, setting: list[str], **_):
-        model, setting = self.models[model], setting[0]
 
-        if model['function'] == 'polynomial':
-            return create_polynomial(model['parameters'])
-        elif model['function'] == 'tosca_book':
-            if setting == 'All detectors':
-                raise InvalidSettingError(
-                    'The chosen setting must point to exactly 1 set of parameters; averaging over '
-                    'parameters is not available.')
-            else:
-                return self._create_tosca_book(model['parameters'][setting])
-        elif model['function'] == 'vision_paper':
-            setting = self.settings[setting]
-            theta = setting['average_bragg_angle_graphite']
-            z2 = setting.get('distance_sample_analyzer', 0.5 * setting['average_secondary_flight_path'] * np.sin(theta))
+class ToscaBookModel(InstrumentModel):
+    input = 1
+    output = 1
 
-            return self._create_vision_paper(self.constants['primary_flight_path'],
-                                             self.constants['primary_flight_path_uncertainty'],
-                                             z2,
-                                             theta,
-                                             self.constants['crystal_plane_spacing'],
-                                             self.constants['sample_thickness'],
-                                             self.constants['detector_thickness'],
-                                             0,
-                                             model['parameters']['d_r'])
-        else:
-            raise NotImplementedError()
+    REDUCED_PLANCK_SQUARED = 4.18019
 
-    @staticmethod
-    def _create_tosca_book(parameters: list[float] | list[list[float]], *_, **__
-                           ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
-        ds, dd, dg, ddi, ws, wd, eta_g, theta_b, a, dtch, di, df, ef, theta_b, d_theta_b = parameters
-        da = df * np.sin(np.deg2rad(theta_b))
-        REDUCED_PLANCK_SQUARED = 4.18019
+    def __init__(self, model_data: ToscaBookModelData, setting: list[str], **kwargs):
+        super().__init__(model_data, setting, **kwargs)
+        settings = model_data.settings[setting[0]]
+        params = model_data.parameters
 
-        def tosca_book(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
-            ei = frequencies + ef
+        da = settings.average_secondary_flight_path * np.sin(np.deg2rad(settings.average_bragg_angle_graphite))
 
-            time_dependent_term = (2 / NEUTRON_MASS) ** 0.5 * ei ** 1.5 / di
-            time_dependent_term *= (a ** 2 * REDUCED_PLANCK_SQUARED / (2 * NEUTRON_MASS * ei)) + dtch ** 2
+        self.time_dependent_term_factor = params.water_moderator_constant ** 2 * self.REDUCED_PLANCK_SQUARED
+        self.final_energy_term_factor = (2 * settings.average_final_energy *
+                                         settings.change_average_bragg_angle_graphite /
+                                         np.tan(np.deg2rad(settings.average_bragg_angle_graphite)))
+        self.time_dependent_term_factor += (2 * settings.average_final_energy *
+                                            (params.sample_thickness ** 2 +
+                                             4 * params.graphite_thickness ** 2 +
+                                             params.detector_thickness ** 2) ** 0.5 / da) ** 2
+        self.time_dependent_term_factor = np.sqrt(self.time_dependent_term_factor)
 
-            incident_flight_term = 2 * ei / di * ddi
+        self.average_final_energy = settings.average_final_energy
+        self.primary_flight_path = params.primary_flight_path
+        self.primary_flight_path_uncertainty = params.primary_flight_path_uncertainty
+        self.average_secondary_flight_path = settings.average_secondary_flight_path
+        self.average_bragg_angle = settings.average_bragg_angle_graphite
+        self.time_channel_uncertainty2 = params.time_channel_uncertainty ** 2
 
-            final_energy_term = 2 * ef * d_theta_b / np.tan(np.deg2rad(theta_b))
-            final_energy_term += (2 * ef * (ds ** 2 + 4 * dg ** 2 + dd ** 2) ** 0.5 / da) ** 2
-            final_energy_term = np.sqrt(final_energy_term)
-            final_energy_term *= 1 + df / di * (ei / ef) ** 1.5
+    def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
+        ei = frequencies + self.average_final_energy
 
-            final_flight_term = 2 / df * np.sqrt(ei ** 3 / ef) * 2 * di / np.sin(theta_b)
+        time_dependent_term = (2 / NEUTRON_MASS) ** 0.5 * ei ** 1.5 / self.primary_flight_path
+        time_dependent_term *= self.time_dependent_term_factor / (2 * NEUTRON_MASS * ei) + self.time_channel_uncertainty2
 
-            return np.sqrt(time_dependent_term ** 2 + incident_flight_term ** 2 +
-                           final_energy_term ** 2 + final_flight_term ** 2)
+        incident_flight_term = 2 * ei / self.primary_flight_path * self.primary_flight_path_uncertainty
 
-        return tosca_book
+        final_energy_term = (self.time_dependent_term_factor *
+                             (1 + self.average_secondary_flight_path / self.primary_flight_path *
+                              (ei / self.average_final_energy) ** 1.5))
 
-    @staticmethod
-    def _create_vision_paper(l1: float, dl1: float, z2: float, theta_deg: float, l_c: float, w_s: float,
-                             w_d: float, d_t: float, d_r: float, *_, **__
-                             ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
-        """https://doi.org/10.1016/j.nima.2009.03.204"""
-        PLANCK = 6.626068e-34  # J s
-        REDUCED_PLANCK = 1.054571817e-34  # J s
-        NEUTRON_MASS = 1.67492749804e-27  # kg
+        final_flight_term = (2 / self.average_secondary_flight_path *
+                             np.sqrt(ei ** 3 / self.average_final_energy) *
+                             2 * self.primary_flight_path / np.sin(self.average_bragg_angle))
 
-        e0 = PLANCK ** 2 * 0.5 / NEUTRON_MASS * (0.5 / l_c) ** 2
-        nu0 = 0.5 * PLANCK / (NEUTRON_MASS * l_c)
-        one_over_l1 = 1 / l1
+        return np.sqrt(time_dependent_term ** 2 + incident_flight_term ** 2 +
+                       final_energy_term ** 2 + final_flight_term ** 2)
 
-        theta = np.deg2rad(theta_deg)
-        capital_t = 0.5 * 1 / np.tan(theta)
 
-        capital_t_over_z2 = capital_t / z2
+class VisionPaperModel(InstrumentModel):
+    """https://doi.org/10.1016/j.nima.2009.03.204"""
+    input = 1
+    output = 1
 
-        d_a = w_s ** 2 / 12
+    PLANCK = 6.626068e-34  # J s
+    REDUCED_PLANCK = 1.054571817e-34  # J s
+    NEUTRON_MASS = 1.67492749804e-27  # kg
+
+    def __init__(self, model_data: ToscaVisionModelData, setting: list[str], **kwargs):
+        super().__init__(model_data, setting, **kwargs)
+        settings = model_data.settings[setting[0]]
+
+        self.l1 = model_data.parameters.primary_flight_path
+        self.d_t = model_data.parameters.d_t
+
+        self.e0 = self.PLANCK ** 2 * 0.5 / self.NEUTRON_MASS * (0.5 / model_data.parameters.crystal_plane_spacing) ** 2
+        self.nu0 = 0.5 * self.PLANCK / (self.NEUTRON_MASS * model_data.parameters.crystal_plane_spacing)
+        self.one_over_l1 = 1 / self.l1
+        self.distance_ratio = model_data.parameters.primary_flight_path_uncertainty * self.one_over_l1
+
+        self.theta = np.deg2rad(settings.average_bragg_angle_graphite)
+        self.capital_t = 0.5 * 1 / np.tan(self.theta)
+
+        try:
+            self.z2 = settings.distance_sample_analyzer
+        except AttributeError:
+            self.z2 = 0.5 * settings.average_secondary_flight_path * np.sin(self.theta)
+        self.capital_t_over_z2 = self.capital_t / self.z2
+
+        self.d_a = model_data.parameters.sample_thickness ** 2 / 12
         d_b = 0.7e-6
-        d_c = w_d ** 2 / 12
-        db_dc_factor = (2 * d_b + d_c)
+        d_c = model_data.parameters.detector_thickness ** 2 / 12
+        self.db_dc_factor = (2 * d_b + d_c)
 
-        def resolution(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
-            e1 = frequencies * REDUCED_PLANCK + e0 * (1 / np.sin(theta))
-            z0 = l1 * (e0 / e1) ** 0.5
-            one_over_z0 = 1 / z0
+        self.final_term = self.e0 / np.tan(self.theta) / self.z2 * model_data.parameters.d_r
 
-            sigma = dl1 * one_over_l1 - nu0 * d_t / z0 + (one_over_l1 + one_over_z0 + capital_t_over_z2) * d_a
-            sigma += (one_over_z0 + capital_t_over_z2) * db_dc_factor
-            sigma *= 2 * e1
-            sigma -= e0 / np.tan(theta) / z2 * d_r
+    def __call__(self, frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
+        e1 = frequencies * self.REDUCED_PLANCK + self.e0 * (1 / np.sin(self.theta))
+        z0 = self.l1 * (self.e0 / e1) ** 0.5
+        one_over_z0 = 1 / z0
 
-            return sigma
+        sigma = self.distance_ratio - self.nu0 * self.d_t / z0
+        sigma += (self.one_over_l1 + one_over_z0 + self.capital_t_over_z2) * self.d_a
+        sigma += (one_over_z0 + self.capital_t_over_z2) * self.db_dc_factor
+        sigma *= 2 * e1
+        sigma -= self.final_term
 
-        return resolution
+        return sigma
 
 
 class Lagrange(Instrument):

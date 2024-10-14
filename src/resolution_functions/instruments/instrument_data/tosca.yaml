@@ -4,7 +4,7 @@ default_model: 'AbINS'
 
 version:
     TFXA:
-        constants:
+        constants: &tfxa_constants
             final_neutron_energy: 32.0  # Final energy on the crystal analyser in cm-1
             scattering_angle: 2.356  # Angle of the crystal analyser radians (NO LONGER USED)
             energy_bin_width: 1.0  # Default bin width in wavenumber
@@ -19,7 +19,7 @@ version:
             detector_width: 0.012  # m
             graphite_analyser_mosaic: 2.5  # deg
             crystal_plane_spacing: 3.348e-10  # m
-        settings:
+        settings: &tfxa_settings
             Backward:
                 angles: [ 134.98885653282196 ]
                 average_secondary_flight_path: 0.671  # m
@@ -28,9 +28,11 @@ version:
         models:
             book:
                 function: "tosca_book"
-                parameters: []
+                citation: ""
+                parameters: *tfxa_constants
+                settings: *tfxa_settings
     TOSCA1:
-        constants:
+        constants: &tosca1_constants
             final_neutron_energy: 32.0  # Final energy on the crystal analyser in cm-1
             scattering_angle: 2.356  # Angle of the crystal analyser radians (NO LONGER USED)
             energy_bin_width: 1.0  # Default bin width in wavenumber
@@ -45,69 +47,77 @@ version:
             detector_width: 0.012  # m
             graphite_analyser_mosaic: 2.5  # deg
             crystal_plane_spacing: 3.348e-10  # m
-        settings:
+        settings: &tosca1_setttings
             Backward:
                 angles: [ 134.98885653282196 ]
                 average_secondary_flight_path: 0.7456  # m
                 average_final_energy: 3.51  # meV
                 average_bragg_angle_graphite: 46.03  # deg
+                change_average_bragg_angle_graphite: 5.0814852427945665
         models:
             book:
                 function: "tosca_book"
-                # parameters: sample thickness, graphite thickness, detector thickness, uncertainty in primary flight path,
-                #             sample width, detector width, mosaic of graphite analyser, ISIS water moderator constant,
-                #             time channel uncertainty, PRIMARY FLIGHT PATH, AVERAGE SECONDARY FLIGHT PATH,
-                #             AVERAGE FINAL ENERGY, AVERAGE BRAGG ANGLE FOR GRAPHITE, CHANGE IN AVG BRAGG
-                parameters: [ 0.002, 0.002, 0.0025, 0.0021, 0.02, 0.012, 2.5, 44, 2, 12.264, 0.7456, 3.51, 46.03, 5.0814852427945665 ]
+                citation: ""
+                parameters: *tosca1_constants
+                settings: *tosca1_setttings
     TOSCA:
-        constants:
-            final_neutron_energy: 32.0  # Final energy on the crystal analyser in cm-1
-            scattering_angle: 2.356  # Angle of the crystal analyser radians (NO LONGER USED)
-            energy_bin_width: 1.0  # Default bin width in wavenumber
+        constants: &tosca_constants
             primary_flight_path: 17.  # m
             primary_flight_path_uncertainty: 0.0021  # m
-            water_moderator_constant: 44  # us
-            time_channel_uncertainty: 2  # us
             sample_thickness: 0.002  # m
-            graphite_thickness: 0.002  # m
             detector_thickness: 0.0025  # m
-            sample_width: 0.04  # m
-            detector_width: 0.12  # m
-            graphite_analyser_mosaic: 2.5  # deg
             crystal_plane_spacing: 3.348e-10  # m
-        settings:
-            Backward:
+        settings: &tosca_settings
+            Backward: &tosca_settings_backward
                 angles: [ 134.98885653282196 ]
                 average_secondary_flight_path: 0.6279  # m
-                average_final_energy: 3.32  # meV
                 average_bragg_angle_graphite: 47.73  # deg
-            Forward:
+            Forward: &tosca_settings_forward
                 angles: [ 45.0 ]
                 average_secondary_flight_path: 0.6279  # m
-                average_final_energy: 3.35  # meV
                 average_bragg_angle_graphite: 47.45  # deg
-            All detectors:
-                angles: [ 45.0, 134.98885653282196 ]
+#            All detectors:
+#                angles: [ 45.0, 134.98885653282196 ]
         models:
             AbINS:
                 # TOSCA parameters for resolution function
                 # sigma = tosca_a * omega * omega + tosca_b * omega + tosca_c
                 # where sigma is width of Gaussian function
                 function: "polynomial"
+                citation: ""
                 #original_parameters: [2.5, 0.005, 0.0000001] wavenumber
-                parameters: [ 0.3099604960830007, 0.005, 8.065543937349209e-07 ]  # meV
+                parameters:
+                    fit: [ 0.3099604960830007, 0.005, 8.065543937349209e-07 ]  # meV
+                settings: {}
             book:
                 function: "tosca_book"
+                citation: ""
                 parameters:
+                    <<: *tosca_constants
+                    water_moderator_constant: 44  # us
+                    time_channel_uncertainty: 2  # us
+                    graphite_thickness: 0.002  # m
+                    sample_width: 0.04  # m ???????????? where is it used?
+                    detector_width: 0.12  # m
+                    graphite_analyser_mosaic: 2.5  # deg
+                settings:
+                    <<: *tosca_settings
                     Backward:
-                      [ 0.002, 0.002, 0.0025, 0.0021, 0.04, 0.12, 2.5, 44, 2, 17, 0.6279, 3.32, 47.73, 17.439366410966983 ]
+                        <<: *tosca_settings_backward
+                        average_final_energy: 3.32  # meV
+                        change_average_bragg_angle_graphite: 17.439366410966983
                     Forward:
-                      [ 0.002, 0.002, 0.0025, 0.0021, 0.04, 0.12, 2.5, 44, 2, 17, NONE, 3.35, 47.45, 17.59374274222979 ]
+                        <<: *tosca_settings_forward
+                        average_final_energy: 3.35  # meV
+                        change_average_bragg_angle_graphite: 17.59374274222979
             vision:
                 function: "vision_paper"
                 citation: "https://doi.org/10.1016/j.nima.2009.03.204"
                 parameters:
+                    <<: *tosca_constants
                     d_r: 12.9e-6
+                    d_t: null
+                settings: *tosca_settings
     VISION:
         constants:
             primary_flight_path: 15.  # m
@@ -127,3 +137,4 @@ version:
                 citation: "https://doi.org/10.1016/j.nima.2009.03.204"
                 parameters:
                     d_r: 11.6e-6
+                    d_t: null
