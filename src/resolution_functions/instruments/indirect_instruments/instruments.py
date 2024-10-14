@@ -3,16 +3,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Union
 
-from ..instrument import Instrument, InstrumentModelData, ModelParameters, ModelSettings
-from ..model_functions import PolynomialModel1D, create_discontinuous_polynomial
+import numpy as np
+
+from ..instrument import Instrument, InstrumentModelData, ModelParameters, ModelSettings, InstrumentPolynomialModelData
+from ..model_functions import PolynomialModel1D, DiscontinuousPolynomialModel1D
 from .models import ToscaBookModel, VisionPaperModel
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
-class ToscaAbINSModelData(InstrumentModelData):
+class ToscaAbINSModelData(InstrumentPolynomialModelData):
     parameters: ToscaAbINSModelParameters
 
-    def get_coefficients(self) -> list[float]:
+    def get_coefficients(self, setting: list[str]) -> list[float]:
         return self.parameters.fit
 
 
@@ -112,14 +114,35 @@ class TOSCA(ToscaLikeInstrument):
     }
 
 
-class Lagrange(Instrument):
-    name: ClassVar[str] = 'lagrange'
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class LagrangeAbINSModelData(InstrumentPolynomialModelData):
+    parameters: LagrangeAbINSModelParameters
+    settings: dict[str, LagrangeAbINSModelSettings]
 
-    def get_resolution_function(self, model: str, setting: list[str], **_):
-        if self.models[model]['function'] == 'discontinuous_polynomial':
-            setting = self.settings[setting[0]]
-            return create_discontinuous_polynomial(parameters=setting['abs_resolution'],
-                                                   low_energy_cutoff=setting.get('low_energy_cutoff', -np.inf),
-                                                   low_energy_resolution=setting.get('low_energy_resolution', 0.))
-        else:
-            raise NotImplementedError()
+    def get_coefficients(self, setting: list[str]) -> list[float]:
+        return self.settings[setting[0]].abs_resolution
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class LagrangeAbINSModelParameters(ModelParameters):
+    final_neutron_energy: float
+    scattering_angle_range: list[float]
+    angles_per_detector: int
+    energy_bin_width: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class LagrangeAbINSModelSettings(ModelSettings):
+    ei_range: list[float]
+    abs_resolution: list[float]
+    low_energy_cutoff: float = - np.inf
+    low_energy_resolution: float = 0.
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class Lagrange(Instrument):
+    models: dict[str, LagrangeAbINSModelData]
+
+    name: ClassVar[str] = 'lagrange'
+    model_classes = {'AbINS': (LagrangeAbINSModelData, LagrangeAbINSModelParameters, LagrangeAbINSModelSettings)}
+    model_functions = {'AbINS': DiscontinuousPolynomialModel1D}

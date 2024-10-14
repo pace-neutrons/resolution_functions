@@ -9,7 +9,7 @@ from numpy.polynomial.polynomial import Polynomial
 
 if TYPE_CHECKING:
     from jaxtyping import Float
-    from .instrument import InstrumentModelData
+    from .instrument import InstrumentModelData, InstrumentPolynomialModelData
 
 
 class InstrumentModel(ABC):
@@ -28,30 +28,35 @@ class PolynomialModel1D(InstrumentModel):
     input = 1
     output = 1
 
-    def __init__(self, model_data: InstrumentModelData, setting: list[str], **kwargs):
+    def __init__(self, model_data: InstrumentPolynomialModelData, setting: list[str], **kwargs):
         super().__init__(model_data, setting, **kwargs)
-        self.polynomial = Polynomial(model_data.get_coefficients())
+        self.polynomial = Polynomial(model_data.get_coefficients(setting))
 
     def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
         return self.polynomial(frequencies)
 
 
-def create_discontinuous_polynomial(parameters: list[float],
-                                    low_energy_cutoff: float = - np.inf,
-                                    low_energy_resolution: float = 0.,
-                                    high_energy_cutoff: float = np.inf,
-                                    high_energy_resolution: float = 0., *_, **__
-                                    ) -> Callable[[Float[np.ndarray, 'frequencies']], Float[np.ndarray, 'sigma']]:
-    def discontinuous_polynomial(frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
-        polynomial = Polynomial(parameters)
-        result = polynomial(frequencies)
+class DiscontinuousPolynomialModel1D(InstrumentModel):
+    input = 1
+    output = 1
 
-        print(result)
+    def __init__(self, model_data: InstrumentPolynomialModelData, setting: list[str], **kwargs):
+        super().__init__(model_data, setting, **kwargs)
+
+        self.polynomial = Polynomial(model_data.get_coefficients(setting))
+
+        self.low_energy_cutoff = model_data.get_value('low_energy_cutoff', setting[0], - np.inf)
+        self.low_energy_resolution = model_data.get_value('low_energy_resolution', setting[0], 0.)
+
+        self.high_energy_cutoff = model_data.get_value('high_energy_cutoff', setting[0], np.inf)
+        self.high_energy_resolution = model_data.get_value('high_energy_resolution', setting[0], 0.)
+
+    def __call__(self, frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
+        result = self.polynomial(frequencies)
+
         assert np.all(result > 0)
 
-        result[frequencies < low_energy_cutoff] = low_energy_resolution
-        result[frequencies > high_energy_cutoff] = high_energy_resolution
+        result[frequencies < self.low_energy_cutoff] = self.low_energy_resolution
+        result[frequencies > self.high_energy_cutoff] = self.high_energy_resolution
 
         return result * 0.5
-
-    return discontinuous_polynomial

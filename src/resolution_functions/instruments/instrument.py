@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import dataclasses
 import os
 import yaml
-from typing import ClassVar, Optional, TYPE_CHECKING
+from typing import Any, ClassVar, Optional, TYPE_CHECKING
 
 
 if TYPE_CHECKING:
@@ -86,11 +86,23 @@ class ModelParameters:
 
 
 @dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
-class InstrumentModelData:
+class InstrumentModelData(ABC):
     function: str
     citation: str
     parameters: ModelParameters = ModelParameters()
     settings: dict[str, ModelSettings] = dataclasses.field(default_factory=lambda: {'': ModelSettings()})
 
-    def get_coefficients(self) -> list[float]:
+    def get_value(self, attribute: str, setting: str, default: Optional[Any] = None) -> Any:
+        try:
+            return getattr(self.settings[setting], attribute)
+        except AttributeError:
+            try:
+                return getattr(self.parameters, attribute)
+            except AttributeError:
+                return default
+
+
+class InstrumentPolynomialModelData(InstrumentModelData, ABC):
+    @abstractmethod
+    def get_coefficients(self, setting: list[str]) -> list[float]:
         raise NotImplementedError()
