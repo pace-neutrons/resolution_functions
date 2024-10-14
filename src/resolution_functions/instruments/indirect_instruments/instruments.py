@@ -78,7 +78,8 @@ class ToscaVisionSettings(ModelSettings):
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True)
-class ToscaLikeInstrument(Instrument):
+class _ToscaBase(Instrument):
+    name: ClassVar[str] = 'tosca'
     model_functions = {
         'AbINS': PolynomialModel1D,
         'book': ToscaBookModel,
@@ -87,26 +88,23 @@ class ToscaLikeInstrument(Instrument):
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True)
-class TFXA(ToscaLikeInstrument):
+class TFXA(_ToscaBase):
     models: dict[str, ToscaBookModelData]
 
-    name: ClassVar[str] = 'tfxa'
     model_classes = {'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings)}
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True)
-class TOSCA1(ToscaLikeInstrument):
+class TOSCA1(_ToscaBase):
     models: dict[str, ToscaBookModelData]
 
-    name: ClassVar[str] = 'tosca1'
     model_classes = {'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings)}
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True)
-class TOSCA(ToscaLikeInstrument):
+class TOSCA(_ToscaBase):
     models: dict[str, Union[ToscaAbINSModelData, ToscaBookModelData, ToscaVisionModelData]]
 
-    name: ClassVar[str] = 'tosca'
     model_classes = {
         'AbINS': (ToscaAbINSModelData, ToscaAbINSModelParameters, ModelSettings),
         'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings),
