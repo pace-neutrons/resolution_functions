@@ -8,7 +8,7 @@ from ..model_functions import InstrumentModel
 
 if TYPE_CHECKING:
     from jaxtyping import Float
-    from .instruments import ToscaBookModelData, ToscaVisionModelData
+    from .instruments import ToscaBookModelData, ToscaVisionModelData, VisionPaperModelData
 
 
 class ToscaBookModel(InstrumentModel):
@@ -70,7 +70,9 @@ class VisionPaperModel(InstrumentModel):
     REDUCED_PLANCK = 1.054571817e-34  # J s
     NEUTRON_MASS = 1.67492749804e-27  # kg
 
-    def __init__(self, model_data: ToscaVisionModelData, setting: list[str], **kwargs):
+    def __init__(self,
+                 model_data: Union[ToscaVisionModelData, VisionPaperModelData],
+                 setting: list[str], **kwargs):
         super().__init__(model_data, setting, **kwargs)
         settings = model_data.settings[setting[0]]
 
