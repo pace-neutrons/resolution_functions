@@ -118,23 +118,3 @@ version:
                     d_r: 12.9e-6
                     d_t: null
                 settings: *tosca_settings
-    VISION:
-        constants:
-            primary_flight_path: 15.  # m
-            sample_thickness: 0.002  # m
-            detector_thickness: 0.003  # m
-            sample_width: 0.04  # m
-            detector_width: 0.005  # m
-            crystal_plane_spacing: 3.348e-10  # m
-        settings:
-            Backward:
-                angles: []
-                distance_sample_analyzer: 0.26  # m
-                average_bragg_angle_graphite: 45.  # deg
-        models:
-            vision:
-                function: "vision_paper"
-                citation: "https://doi.org/10.1016/j.nima.2009.03.204"
-                parameters:
-                    d_r: 11.6e-6
-                    d_t: null

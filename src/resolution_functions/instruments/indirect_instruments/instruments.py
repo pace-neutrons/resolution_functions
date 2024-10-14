@@ -113,6 +113,40 @@ class TOSCA(_ToscaBase):
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True)
+class VisionPaperModelData(InstrumentModelData):
+    parameters: VisionPaperModelParameters
+    settings: dict[str, VisionPaperModelSettings]
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class VisionPaperModelParameters(ModelParameters):
+    primary_flight_path: float
+    sample_thickness: float
+    detector_thickness: float
+    sample_width: float
+    detector_width: float
+    crystal_plane_spacing: float
+    d_r: float
+    d_t: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class VisionPaperModelSettings(ModelSettings):
+    angles: list[float]
+    distance_sample_analyzer: float
+    average_bragg_angle_graphite: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class VISION(Instrument):
+    models: dict[str, VisionPaperModelData]
+
+    name = 'vision'
+    model_classes = {'vision': (VisionPaperModelData, VisionPaperModelParameters, VisionPaperModelSettings)}
+    model_functions = {'vision': VisionPaperModel}
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
 class LagrangeAbINSModelData(InstrumentPolynomialModelData):
     parameters: LagrangeAbINSModelParameters
     settings: dict[str, LagrangeAbINSModelSettings]

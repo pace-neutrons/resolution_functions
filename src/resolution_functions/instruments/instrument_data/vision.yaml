@@ -1,0 +1,27 @@
+default_version: 'VISION'
+default_settings: ["Backward"]
+default_model: 'vision'
+
+version:
+    VISION:
+        constants: &vision_constants
+            primary_flight_path: 15.  # m
+            sample_thickness: 0.002  # m
+            detector_thickness: 0.003  # m
+            sample_width: 0.04  # m
+            detector_width: 0.005  # m
+            crystal_plane_spacing: 3.348e-10  # m
+        settings: &vision_settings
+            Backward:
+                angles: [ ]
+                distance_sample_analyzer: 0.26  # m
+                average_bragg_angle_graphite: 45.  # deg
+        models:
+            vision:
+                function: "vision_paper"
+                citation: "https://doi.org/10.1016/j.nima.2009.03.204"
+                parameters:
+                    <<: *vision_constants
+                    d_r: 11.6e-6
+                    d_t: null
+                settings: *vision_settings
