@@ -22,6 +22,7 @@ class Instrument(ABC):
     default_model: str
 
     name: ClassVar[str]
+    model_classes: ClassVar[dict[str, tuple[type[InstrumentModelData], type[ModelSettings], type[ModelParameters]]]]
 
     @classmethod
     def from_file(cls, path: str, version: Optional[str] = None):
@@ -44,11 +45,17 @@ class Instrument(ABC):
     def from_default(cls, version: Optional[str] = None):
         return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, cls.name + '.yaml'), version)
 
-    @staticmethod
-    @abstractmethod
-    def _convert_data(version_data: dict
-                      ) -> dict[str, InstrumentModelData]:
-        raise NotImplementedError()
+    @classmethod
+    def _convert_data(cls, version_data: dict) -> dict[str, InstrumentModelData]:
+        models = {}
+        for model_name, model_data in version_data['models'].items():
+            model_data_class, model_settings_class, model_parameters_class = cls.model_classes[model_name]
+            models[model_name] = model_data_class(function=model_data['function'],
+                                                  citation=model_data['citation'],
+                                                  settings=model_settings_class(**model_data['settings']),
+                                                  parameters=model_parameters_class(**model_data['parameters'])
+                                                  )
+        return models
 
     def get_constant(self, name: str, setting: str):
         return self.settings[setting].get(name, self.constants[name])
