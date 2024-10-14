@@ -4,7 +4,11 @@ from abc import ABC, abstractmethod
 import dataclasses
 import os
 import yaml
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Optional, TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from .instrument_model import InstrumentModel
 
 
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
@@ -23,6 +27,7 @@ class Instrument(ABC):
 
     name: ClassVar[str]
     model_classes: ClassVar[dict[str, tuple[type[InstrumentModelData], type[ModelParameters], type[ModelSettings]]]]
+    model_functions: ClassVar[dict[str, type[InstrumentModel]]]
 
     @classmethod
     def from_file(cls, path: str, version: Optional[str] = None):
@@ -50,9 +55,11 @@ class Instrument(ABC):
         models = {}
         for model_name, model_data in version_data['models'].items():
             model_data_class, model_parameters_class, model_settings_class = cls.model_classes[model_name]
+            model_settings = {name: model_settings_class(**value) for name, value in model_data['settings'].items()}
+
             models[model_name] = model_data_class(function=model_data['function'],
                                                   citation=model_data['citation'],
-                                                  settings=model_settings_class(**model_data['settings']),
+                                                  settings=model_settings,
                                                   parameters=model_parameters_class(**model_data['parameters'])
                                                   )
         return models
@@ -60,9 +67,8 @@ class Instrument(ABC):
     def get_constant(self, name: str, setting: str):
         return self.settings[setting].get(name, self.constants[name])
 
-    @abstractmethod
-    def get_resolution_function(self, model: str, setting: list[str], **_):
-        raise NotImplementedError()
+    def get_resolution_function(self, model: str, setting: list[str], **kwargs):
+        return self.model_functions[model](self.models[model], setting, **kwargs)
 
     @property
     def available_models(self) -> list[str]:
@@ -84,7 +90,7 @@ class InstrumentModelData:
     function: str
     citation: str
     parameters: ModelParameters = ModelParameters()
-    settings: ModelSettings = ModelSettings()
+    settings: dict[str, ModelSettings] = dataclasses.field(default_factory=lambda: {'': ModelSettings()})
 
     def get_coefficients(self) -> list[float]:
         raise NotImplementedError()
