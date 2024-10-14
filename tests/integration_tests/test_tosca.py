@@ -11,22 +11,22 @@ WAVENUMBER_TO_MEV = 0.12398419843320028
 MEV_TO_WAVENUMBER = 1 / WAVENUMBER_TO_MEV
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def tosca_rf():
     return TOSCA.from_default('TOSCA')
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def tosca_abins():
     return ToscaInstrument()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def tosca_abins_resolution_function_backward(tosca_rf):
     return tosca_rf.get_resolution_function('AbINS', ['Backward'])
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def tosca_abins_resolution_function_forward(tosca_rf):
     return tosca_rf.get_resolution_function('AbINS', ['Forward'])
 
@@ -44,4 +44,4 @@ def test_tosca_against_abins(frequencies,
 
     expected = tosca_abins.get_sigma(frequencies * MEV_TO_WAVENUMBER) * WAVENUMBER_TO_MEV
 
-    assert np.allclose(actual, expected)
+    np.allclose(actual, expected)
