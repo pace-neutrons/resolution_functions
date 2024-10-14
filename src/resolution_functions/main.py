@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, Optional, TYPE_CHECKING
 
-from instruments import INSTRUMENTS
+from instruments.get_instrument import INSTRUMENTS
 
 if TYPE_CHECKING:
     from instruments.instrument import Instrument
