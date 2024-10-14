@@ -26,7 +26,7 @@ class Instrument(ABC):
     default_model: str
 
     name: ClassVar[str]
-    model_classes: ClassVar[dict[str, tuple[type[InstrumentModelData], type[ModelParameters], type[ModelSettings]]]]
+    model_dataclasses: ClassVar[dict[str, tuple[type[InstrumentModelData], type[ModelParameters], type[ModelSettings]]]]
     model_functions: ClassVar[dict[str, type[InstrumentModel]]]
 
     @classmethod
@@ -54,7 +54,7 @@ class Instrument(ABC):
     def _convert_data(cls, version_data: dict) -> dict[str, InstrumentModelData]:
         models = {}
         for model_name, model_data in version_data['models'].items():
-            model_data_class, model_parameters_class, model_settings_class = cls.model_classes[model_name]
+            model_data_class, model_parameters_class, model_settings_class = cls.model_dataclasses[model_name]
             model_settings = {name: model_settings_class(**value) for name, value in model_data['settings'].items()}
 
             models[model_name] = model_data_class(function=model_data['function'],

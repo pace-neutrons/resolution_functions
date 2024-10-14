@@ -48,6 +48,6 @@ class PANTHER(Instrument):
     models: dict[str, PantherAbINSModelData]
 
     name: ClassVar[str] = 'panther'
-    model_classes = {'AbINS': (PantherAbINSModelData, PantherAbINSModelParameters, ModelSettings)}
+    model_dataclasses = {'AbINS': (PantherAbINSModelData, PantherAbINSModelParameters, ModelSettings)}
     model_functions = {'AbINS': PantherAbINSModel}
 

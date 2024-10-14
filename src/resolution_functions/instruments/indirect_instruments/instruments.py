@@ -91,21 +91,21 @@ class _ToscaBase(Instrument):
 class TFXA(_ToscaBase):
     models: dict[str, ToscaBookModelData]
 
-    model_classes = {'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings)}
+    model_dataclasses = {'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings)}
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True)
 class TOSCA1(_ToscaBase):
     models: dict[str, ToscaBookModelData]
 
-    model_classes = {'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings)}
+    model_dataclasses = {'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings)}
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True)
 class TOSCA(_ToscaBase):
     models: dict[str, Union[ToscaAbINSModelData, ToscaBookModelData, ToscaVisionModelData]]
 
-    model_classes = {
+    model_dataclasses = {
         'AbINS': (ToscaAbINSModelData, ToscaAbINSModelParameters, ModelSettings),
         'book': (ToscaBookModelData, ToscaBookModelParameters, ToscaBookSettings),
         'vision': (ToscaVisionModelData, ToscaVisionModelParameters, ToscaVisionSettings)
@@ -142,7 +142,7 @@ class VISION(Instrument):
     models: dict[str, VisionPaperModelData]
 
     name = 'vision'
-    model_classes = {'vision': (VisionPaperModelData, VisionPaperModelParameters, VisionPaperModelSettings)}
+    model_dataclasses = {'vision': (VisionPaperModelData, VisionPaperModelParameters, VisionPaperModelSettings)}
     model_functions = {'vision': VisionPaperModel}
 
 
@@ -176,5 +176,5 @@ class Lagrange(Instrument):
     models: dict[str, LagrangeAbINSModelData]
 
     name: ClassVar[str] = 'lagrange'
-    model_classes = {'AbINS': (LagrangeAbINSModelData, LagrangeAbINSModelParameters, LagrangeAbINSModelSettings)}
+    model_dataclasses = {'AbINS': (LagrangeAbINSModelData, LagrangeAbINSModelParameters, LagrangeAbINSModelSettings)}
     model_functions = {'AbINS': DiscontinuousPolynomialModel1D}
