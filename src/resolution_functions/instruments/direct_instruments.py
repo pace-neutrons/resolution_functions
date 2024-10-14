@@ -30,7 +30,7 @@ class PANTHER(Instrument):
     models: dict[str, PantherAbINSModelData]
 
     name: ClassVar[str] = 'panther'
-    model_classes = {'AbINS': (PantherAbINSModelData, ModelSettings, PantherAbINSModelParameters)}
+    model_classes = {'AbINS': (PantherAbINSModelData, PantherAbINSModelParameters, ModelSettings)}
 
     def get_resolution_function(self, model: str, setting: list[str], e_init: float, **_):
         model = self.models[model]

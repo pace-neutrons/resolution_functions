@@ -22,7 +22,7 @@ class Instrument(ABC):
     default_model: str
 
     name: ClassVar[str]
-    model_classes: ClassVar[dict[str, tuple[type[InstrumentModelData], type[ModelSettings], type[ModelParameters]]]]
+    model_classes: ClassVar[dict[str, tuple[type[InstrumentModelData], type[ModelParameters], type[ModelSettings]]]]
 
     @classmethod
     def from_file(cls, path: str, version: Optional[str] = None):
@@ -49,7 +49,7 @@ class Instrument(ABC):
     def _convert_data(cls, version_data: dict) -> dict[str, InstrumentModelData]:
         models = {}
         for model_name, model_data in version_data['models'].items():
-            model_data_class, model_settings_class, model_parameters_class = cls.model_classes[model_name]
+            model_data_class, model_parameters_class, model_settings_class = cls.model_classes[model_name]
             models[model_name] = model_data_class(function=model_data['function'],
                                                   citation=model_data['citation'],
                                                   settings=model_settings_class(**model_data['settings']),
@@ -83,8 +83,8 @@ class ModelParameters:
 class InstrumentModelData:
     function: str
     citation: str
-    settings: ModelSettings = ModelSettings()
     parameters: ModelParameters = ModelParameters()
+    settings: ModelSettings = ModelSettings()
 
     def get_coefficients(self) -> list[float]:
         raise NotImplementedError()
