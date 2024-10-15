@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from abc import ABC
 from dataclasses import dataclass
-from typing import ClassVar, Callable, TYPE_CHECKING
+from typing import ClassVar, Callable, TYPE_CHECKING, Union
 
 from .instrument import Instrument, InstrumentModelData, ModelParameters, ModelSettings
 from .model_functions import InstrumentModel
@@ -51,3 +52,80 @@ class PANTHER(Instrument):
     model_dataclasses = {'AbINS': (PantherAbINSModelData, PantherAbINSModelParameters, ModelSettings)}
     model_functions = {'AbINS': PantherAbINSModel}
 
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class PyChopModelData(InstrumentModelData):
+    parameters: PyChopModelParameters
+    settings: dict[str, PyChopModelSettings]
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class PyChopModelParameters(ModelParameters):
+    d_chopper_sample: float
+    d_sample_detector: float
+    aperture_width: float
+    theta: float
+    q_size: float
+    e_init: float
+    max_wavenumber: float
+    chopper_frequency_default: float
+    chopper_allowed_frequencies: list[int]
+    default_frequencies: list[float]
+    frequency_matrix: list[list[float]]
+    choppers: dict[str, PyChopModelChopperParameters]
+    imod: int
+    measured_wavelength: list[float]
+    measured_width: list[float]
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
+class PyChopModelChopperParameters:
+    fermi: bool
+    distance: float
+    nslot: int
+    slot_width: float
+    slot_ang_pos: Union[list[float], None]
+    guide_width: float
+    radius: float
+    num_disk: int
+    is_phase_independent: bool
+    default_phase: Union[int, str]
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class PyChopModelSettings(ModelSettings):
+    pslit: float
+    radius: float
+    rho: float
+    tjit: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class PyChopInstrument(Instrument, ABC):
+    models: dict[str, PyChopModelData]
+
+    model_dataclasses = {'PyChop': (PyChopModelData, PyChopModelParameters, PyChopModelSettings)}
+
+    @classmethod
+    def _convert_data(cls, version_data: dict) -> dict[str, InstrumentModelData]:
+        models = {}
+        for model_name, model_data in version_data['models'].items():
+            model_data_class, model_parameters_class, model_settings_class = cls.model_dataclasses[model_name]
+
+            model_settings = {name: model_settings_class(**value) for name, value in model_data['settings'].items()}
+
+            choppers = {name: PyChopModelChopperParameters(**value)
+                        for name, value in model_data['parameters'].pop('choppers').items()}
+            model_parameters = model_parameters_class(choppers=choppers, **model_data['parameters'])
+
+            models[model_name] = model_data_class(function=model_data['function'],
+                                                  citation=model_data['citation'],
+                                                  settings=model_settings,
+                                                  parameters=model_parameters
+                                                  )
+        return models
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class MAPS(PyChopInstrument):
+    name = 'maps'
