@@ -25,7 +25,7 @@ class InstrumentModel(ABC):
 
 
 class PolynomialModel1D(InstrumentModel):
-    input = 1
+    input = 1  # tuple of strings
     output = 1
 
     def __init__(self, model_data: InstrumentPolynomialModelData, setting: list[str], **kwargs):

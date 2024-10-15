@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Union
 
 from .direct_instruments import PANTHER
 from .indirect_instruments import TOSCA, Lagrange
-from .instruments_2d import MAPS
+from .direct_instruments import MAPS
 
 if TYPE_CHECKING:
     from .instrument import Instrument
