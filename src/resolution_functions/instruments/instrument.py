@@ -67,7 +67,16 @@ class Instrument(ABC):
     def get_model_parameter(self, model_name: str, parameter_name: str, setting: str) -> Union[Any, None]:
         return self.models[model_name].get_value(parameter_name, setting)
 
-    def get_resolution_function(self, model: str, setting: list[str], **kwargs):
+    def get_resolution_function(self,
+                                model: Optional[str] = None,
+                                setting: Optional[list[str]] = None,
+                                **kwargs):
+        if model is None:
+            model = self.default_model
+
+        if setting is None:
+            setting = self.default_settings
+
         return self.model_functions[model](self.models[model], setting, **kwargs)
 
     @property
