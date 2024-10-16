@@ -4,7 +4,7 @@ import pytest
 import mantid
 from abins.instruments.toscainstrument import ToscaInstrument
 
-from resolution_functions.instruments.indirect_instruments import TOSCA
+from resolution_functions.instruments.instrument import Instrument
 
 
 WAVENUMBER_TO_MEV = 0.12398419843320028
@@ -13,7 +13,7 @@ MEV_TO_WAVENUMBER = 1 / WAVENUMBER_TO_MEV
 
 @pytest.fixture(scope="module")
 def tosca_rf():
-    return TOSCA.from_default('TOSCA')
+    return Instrument.from_default('TOSCA', 'TOSCA')
 
 
 @pytest.fixture(scope="module")
@@ -23,12 +23,12 @@ def tosca_abins():
 
 @pytest.fixture(scope="module")
 def tosca_abins_resolution_function_backward(tosca_rf):
-    return tosca_rf.get_resolution_function('AbINS', ['Backward'])
+    return tosca_rf.get_resolution_function('AbINS')
 
 
 @pytest.fixture(scope="module")
 def tosca_abins_resolution_function_forward(tosca_rf):
-    return tosca_rf.get_resolution_function('AbINS', ['Forward'])
+    return tosca_rf.get_resolution_function('AbINS')
 
 
 @pytest.mark.parametrize('frequencies',
