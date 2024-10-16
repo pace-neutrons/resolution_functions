@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from collections import ChainMap
 import dataclasses
 import os
 import yaml
 from typing import Any, ClassVar, Optional, TYPE_CHECKING, Union
 
-
-if TYPE_CHECKING:
-    from .model_functions import InstrumentModel
+from .models import MODELS
 
 
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
@@ -19,15 +17,12 @@ class InvalidSettingError(Exception):
 
 
 @dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
-class Instrument(ABC):
+class Instrument:
+    name: str
     version: str
-    models: dict[str, InstrumentModelData]
-    default_settings: str
+    models: dict[str, dict[str, Union[str, Union[dict[str, Union[float, int, str, list[float], dict]],
+                                                 dict[str, dict[str, Union[float, int, str, list[float]]]]]]]]
     default_model: str
-
-    name: ClassVar[str]
-    model_dataclasses: ClassVar[dict[str, tuple[type[InstrumentModelData], type[ModelParameters], type[ModelSettings]]]]
-    model_functions: ClassVar[dict[str, type[InstrumentModel]]]
 
     @classmethod
     def from_file(cls, path: str, version: Optional[str] = None):
@@ -37,81 +32,41 @@ class Instrument(ABC):
         if version is None:
             version = data['default_version']
 
-        models = cls._convert_data(data['version'][version])
+        version_data = data['version'][version]
 
         return cls(
+            data['name'],
             version,
-            models,
-            data['default_settings'],
-            data['default_model'],
+            version_data['models'],
+            version_data['default_model'],
         )
 
     @classmethod
-    def from_default(cls, version: Optional[str] = None):
-        return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, cls.name + '.yaml'), version)
-
-    @classmethod
-    def _convert_data(cls, version_data: dict) -> dict[str, InstrumentModelData]:
-        models = {}
-        for model_name, model_data in version_data['models'].items():
-            model_data_class, model_parameters_class, model_settings_class = cls.model_dataclasses[model_name]
-            model_settings = {name: model_settings_class(**value) for name, value in model_data['settings'].items()}
-
-            models[model_name] = model_data_class(function=model_data['function'],
-                                                  citation=model_data['citation'],
-                                                  settings=model_settings,
-                                                  parameters=model_parameters_class(**model_data['parameters'])
-                                                  )
-        return models
+    def from_default(cls, name: str, version: Optional[str] = None):
+        return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, name.lower() + '.yaml'), version)
 
     def get_model_parameter(self, model_name: str, parameter_name: str, setting: str) -> Union[Any, None]:
         return self.models[model_name].get_value(parameter_name, setting)
 
     def get_resolution_function(self,
-                                model: Optional[str] = None,
-                                setting: Optional[list[str]] = None,
+                                model_name: Optional[str] = None,
                                 **kwargs):
-        if model is None:
-            model = self.default_model
+        if model_name is None:
+            model_name = self.default_model
 
-        if setting is None:
-            setting = self.default_settings
+        model = self.models[model_name]
+        available_settings = model['settings']
 
-        return self.model_functions[model](self.models[model], setting, **kwargs)
+        settings = []
+        for kwarg, value in kwargs.items():
+            # TODO: What if settings are passed in but the model does not need them?
+            settings.append(available_settings[kwarg][value])
+
+        model_class = MODELS[model['function']]
+        return model_class(model_class.data_class(function=model['function'],
+                                                  citation=model['citation'],
+                                                  **ChainMap(*settings, model['parameters'])))
 
     @property
     def available_models(self) -> list[str]:
         return list(self.models.keys())
-
-
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
-class ModelSettings:
-    pass
-
-
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
-class ModelParameters:
-    pass
-
-
-@dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
-class InstrumentModelData(ABC):
-    function: str
-    citation: str
-    parameters: ModelParameters = ModelParameters()
-    settings: dict[str, ModelSettings] = dataclasses.field(default_factory=lambda: {'': ModelSettings()})
-
-    def get_value(self, attribute: str, setting: str, default: Optional[Any] = None) -> Any:
-        try:
-            return getattr(self.settings[setting], attribute)
-        except AttributeError:
-            try:
-                return getattr(self.parameters, attribute)
-            except AttributeError:
-                return default
-
-
-class InstrumentPolynomialModelData(InstrumentModelData, ABC):
-    @abstractmethod
-    def get_coefficients(self, setting: list[str]) -> list[float]:
-        raise NotImplementedError()
