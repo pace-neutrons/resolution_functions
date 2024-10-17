@@ -58,14 +58,18 @@ class Instrument:
         available_settings = model['settings']
 
         settings = []
-        for kwarg, value in kwargs.items():
-            # TODO: What if settings are passed in but the model does not need them?
-            settings.append(available_settings[kwarg][value])
+        for setting_name, options in available_settings.items():
+            kwarg = kwargs.pop(setting_name, None)
+            if kwarg is None:
+                kwarg = options['default_setting']
+
+            settings.append(options[kwarg])
 
         model_class = MODELS[model['function']]
         return model_class(model_class.data_class(function=model['function'],
                                                   citation=model['citation'],
-                                                  **ChainMap(*settings, model['parameters'])))
+                                                  **ChainMap(*settings, model['parameters'])),
+                           **kwargs)
 
     @property
     def available_models(self) -> list[str]:
