@@ -95,3 +95,28 @@ class Instrument:
     @property
     def available_models(self) -> list[str]:
         return list(self.models.keys())
+
+    @property
+    def available_models_and_settings(self) -> dict[str, list[str]]:
+        return {model_name: list(model['settings'].keys()) for model_name, model in self.models.items()}
+
+    @property
+    def all_available_models_options(self) -> dict[str, dict[str, list[str]]]:
+        return {model_name: {setting: self._get_options(value) for setting, value in list(model['settings'].items())}
+                for model_name, model in self.models.items()}
+
+    def possible_settings_for_model(self, model: str) -> list[str]:
+        return list(self.models[model]['settings'].keys())
+
+    def possible_options_for_model(self, model: str) -> dict[str, list[str]]:
+        return {setting: self._get_options(value) for setting, value in self.models[model]['settings'].items()}
+
+    def possible_options_for_model_and_setting(self, model: str, setting: str) -> list[str]:
+        return self._get_options(self.models[model]['settings'][setting])
+
+    @staticmethod
+    def _get_options(setting: dict[str, Union[str, dict]]) -> list[str]:
+        return [value for value in setting.keys() if value != 'default_setting']
+
+    def default_option_for_setting(self, model: str, setting: str) -> str:
+        return self.models[model]['settings'][setting]['default_setting']
