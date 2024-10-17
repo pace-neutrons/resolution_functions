@@ -11,8 +11,6 @@ if TYPE_CHECKING:
     from jaxtyping import Float
 
 
-
-
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class ToscaBookModelData(ModelData):
     primary_flight_path: float
