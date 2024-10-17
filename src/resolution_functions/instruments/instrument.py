@@ -4,12 +4,21 @@ from collections import ChainMap
 import dataclasses
 import os
 import yaml
-from typing import Any, ClassVar, Optional, TYPE_CHECKING, Union
+from typing import Any, Optional, Union
 
 from .models import MODELS
 
 
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
+
+INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
+    'Lagrange': ('lagrange', None),
+    'MAPS': ('maps', None),
+    'PANTHER': ('panther', None),
+    'TFXA': ('tosca', 'TFXA'),
+    'TOSCA': ('tosca', None),
+    'VISION': ('vision', None),
+}
 
 
 class InvalidSettingError(Exception):
@@ -43,7 +52,11 @@ class Instrument:
 
     @classmethod
     def from_default(cls, name: str, version: Optional[str] = None):
-        return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, name.lower() + '.yaml'), version)
+        file_name, implied_version = INSTRUMENT_MAP[name]
+        if version is None:
+            version = implied_version
+
+        return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, file_name + '.yaml'), version)
 
     def get_model_parameter(self, model_name: str, parameter_name: str, setting: str) -> Union[Any, None]:
         return self.models[model_name].get_value(parameter_name, setting)
