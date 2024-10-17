@@ -4,7 +4,7 @@ from collections import ChainMap
 import dataclasses
 import os
 import yaml
-from typing import Any, Literal, Optional, Union
+from typing import Any, Optional, Union
 
 from .models import MODELS
 
@@ -20,9 +20,9 @@ INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
     'VISION': ('vision', None),
 }
 
-INSTRUMENTS = Union[Literal['Lagrange'], Literal['MAPS'], Literal['PANTHER'], Literal['TFXA'], Literal['TOSCA'], \
-                    Literal['VISION']]
 
+class InvalidInstrumentError(Exception):
+    pass
 
 class InvalidSettingError(Exception):
     pass
@@ -54,8 +54,13 @@ class Instrument:
         )
 
     @classmethod
-    def from_default(cls, name: INSTRUMENTS, version: Optional[str] = None):
-        file_name, implied_version = INSTRUMENT_MAP[name]
+    def from_default(cls, name: str, version: Optional[str] = None):
+        try:
+            file_name, implied_version = INSTRUMENT_MAP[name]
+        except KeyError:
+            raise InvalidInstrumentError(f'"{name}" is not a valid instrument name. Only the following instruments are '
+                                         f'supported: {list(INSTRUMENT_MAP.keys())}')
+
         if version is None:
             version = implied_version
 
