@@ -4,7 +4,7 @@ from collections import ChainMap
 import dataclasses
 import os
 import yaml
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from .models import MODELS
 
@@ -19,6 +19,9 @@ INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
     'TOSCA': ('tosca', None),
     'VISION': ('vision', None),
 }
+
+INSTRUMENTS = Union[Literal['Lagrange'], Literal['MAPS'], Literal['PANTHER'], Literal['TFXA'], Literal['TOSCA'], \
+                    Literal['VISION']]
 
 
 class InvalidSettingError(Exception):
@@ -51,7 +54,7 @@ class Instrument:
         )
 
     @classmethod
-    def from_default(cls, name: str, version: Optional[str] = None):
+    def from_default(cls, name: INSTRUMENTS, version: Optional[str] = None):
         file_name, implied_version = INSTRUMENT_MAP[name]
         if version is None:
             version = implied_version
