@@ -1,6 +1,5 @@
+name: 'MAPS'
 default_version: 'MAPS'
-default_settings: ["A"]
-default_model: "PyCHOP"
 
 version:
     MAPS:
@@ -42,24 +41,27 @@ version:
                     radius: 290.               # Disk radius
                     num_disk: 1
         settings: &maps_settings
-            A:
-                pslit: 1.087e-3  # m
-                radius: 49.0e-3  # m
-                rho: 1.300  # m
-                tjit: 0.0             # Jitter time (us)
-            B:
-                pslit: 1.812e-3  # m
-                radius: 49.0e-3  # m
-                rho: 0.92  # m
-                tjit: 0.0             # Jitter time (us)
-            S:
-                pslit: 2.899e-3  # m
-                radius: 49.0e-3  # m
-                rho: 1.300  # m
-                tjit: 0.0             # Jitter time (us)
+            chopper_package:
+                default_setting: 'A'
+                A:
+                    pslit: 1.087e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 1.300  # m
+                    tjit: 0.0             # Jitter time (us)
+                B:
+                    pslit: 1.812e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 0.92  # m
+                    tjit: 0.0             # Jitter time (us)
+                S:
+                    pslit: 2.899e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 1.300  # m
+                    tjit: 0.0             # Jitter time (us)
+        default_model: 'PyChop_fit'
         models:
             PyChop_fit:
-                function: "2d_fit"
+                function: "pychop_fit"
                 citation: ""
                 parameters:
                     <<: *maps_constants
