@@ -1,6 +1,5 @@
+name: 'PANTHER'
 default_version: 'PANTHER'
-default_settings: ["PANTHER"]
-default_model: "AbINS"
 
 version:
     PANTHER:
@@ -8,12 +7,13 @@ version:
             q_size: 100
             e_init: 150 # meV
         settings: {}
+        default_model: "AbINS"
         models:
             AbINS:
                 # Resolution function fitted to incident energy and energy transfer:
                 # sigma = polyval(abs_meV, ɛ) + polyval(ei_dependence, E_i) + polyval(ei_energy_product, E_i × ɛ)
                 # (Here a quartic polynomial in ɛ, plus quadratic on Ei and cubic on ɛ×Ei)
-                function: "multiple_polynomial_ei"
+                function: "panther_abins_polynomial"
                 citation: ""
                 settings: {}
                 parameters:
