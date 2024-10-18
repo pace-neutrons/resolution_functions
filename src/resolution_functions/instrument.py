@@ -4,9 +4,12 @@ from collections import ChainMap
 import dataclasses
 import os
 import yaml
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, TYPE_CHECKING
 
 from .models import MODELS
+
+if TYPE_CHECKING:
+    from .models.model_base import ModelData, InstrumentModel
 
 
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
@@ -37,6 +40,13 @@ class Instrument:
     default_model: str
 
     @classmethod
+    def available_versions(cls, path: str):
+        with open(path, 'r') as f:
+            data = yaml.safe_load(f)
+
+        return data.keys()
+
+    @classmethod
     def from_file(cls, path: str, version: Optional[str] = None):
         with open(path, 'r') as f:
             data = yaml.safe_load(f)
@@ -55,23 +65,24 @@ class Instrument:
 
     @classmethod
     def from_default(cls, name: str, version: Optional[str] = None):
-        try:
-            file_name, implied_version = INSTRUMENT_MAP[name]
-        except KeyError:
-            raise InvalidInstrumentError(f'"{name}" is not a valid instrument name. Only the following instruments are '
-                                         f'supported: {list(INSTRUMENT_MAP.keys())}')
+        path, implied_version = cls._get_file(name)
 
         if version is None:
             version = implied_version
 
-        return cls.from_file(os.path.join(INSTRUMENT_DATA_PATH, file_name + '.yaml'), version)
+        return cls.from_file(path, version)
 
-    def get_model_parameter(self, model_name: str, parameter_name: str, setting: str) -> Union[Any, None]:
-        return self.models[model_name].get_value(parameter_name, setting)
+    @staticmethod
+    def _get_file(instrument_name: str) -> tuple[str, Union[str, None]]:
+        try:
+            file_name, implied_version = INSTRUMENT_MAP[instrument_name]
+        except KeyError:
+            raise InvalidInstrumentError(f'"{instrument_name}" is not a valid instrument name. Only the following instruments are '
+                                         f'supported: {list(INSTRUMENT_MAP.keys())}')
 
-    def get_resolution_function(self,
-                                model_name: Optional[str] = None,
-                                **kwargs):
+        return os.path.join(INSTRUMENT_DATA_PATH, file_name + '.yaml'), implied_version
+
+    def get_model_data(self, model_name: Optional[str] = None, **kwargs) -> ModelData:
         if model_name is None:
             model_name = self.default_model
 
@@ -87,10 +98,23 @@ class Instrument:
             settings.append(options[kwarg])
 
         model_class = MODELS[model['function']]
-        return model_class(model_class.data_class(function=model['function'],
-                                                  citation=model['citation'],
-                                                  **ChainMap(*settings, model['parameters'])),
-                           **kwargs)
+        return model_class.data_class(function=model['function'],
+                                      citation=model['citation'],
+                                      **ChainMap(*settings, model['parameters']))
+
+    def get_resolution_function(self, model_name: Optional[str] = None, **kwargs) -> InstrumentModel:
+        model_class = MODELS[self.models[model_name]['function']]
+
+        return model_class(self.get_model_data(model_name), **kwargs)
+
+    @classmethod
+    def instrument_versions(cls, instrument_name: str) -> list[str]:
+        path, _ = cls._get_file(instrument_name)
+
+        with open(path, 'r') as f:
+            data = yaml.safe_load(f)
+
+        return list(data.keys())
 
     @property
     def available_models(self) -> list[str]:
