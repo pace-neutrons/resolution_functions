@@ -32,6 +32,7 @@ class PyChopModelData(ModelData):
     chopper_allowed_frequencies: list[int]
     default_frequencies: list[float]
     frequency_matrix: list[list[float]]
+    mod_pars: list[float]
     choppers: dict[str, Chopper]
     imod: int
     measured_wavelength: list[float]
@@ -88,7 +89,8 @@ class PyChopModel(InstrumentModel):
         x0, xa, xm = self._get_distances(model_data.choppers)
         x1, x2 = model_data.d_chopper_sample, model_data.d_sample_detector
 
-        tsq_moderator = self.get_moderator_width(model_data.measured_width, model_data.measured_wavelength, e_init, model_data.imod) ** 2
+        tsq_moderator = self.get_moderator_width_squared(model_data.measured_width, model_data.measured_wavelength,
+                                                         model_data.mod_pars, e_init, model_data.imod)
         tsq_chopper = self.get_chopper_width_squared(model_data, True, e_init, chopper_frequency)
 
         # For Disk chopper spectrometers, the opening times of the first chopper can be the effective moderator time
@@ -155,10 +157,11 @@ class PyChopModel(InstrumentModel):
         return np.dot(frequency_matrix, frequency) + f0
 
     @staticmethod
-    def get_moderator_width(measured_width: list[float],
-                            measured_wavelength: list[float],
-                            e_init: float,
-                            imod: int):
+    def get_moderator_width_squared(measured_width: list[float],
+                                    measured_wavelength: list[float],
+                                    mod_pars: list[float],
+                                    e_init: float,
+                                    imod: int):
         wavelengths = np.array(measured_wavelength)
         idx = np.argsort(wavelengths)
         wavelengths = wavelengths[idx]
@@ -169,11 +172,32 @@ class PyChopModel(InstrumentModel):
         wavelength = np.sqrt(E2L / e_init)
         if wavelength >= wavelengths[0]:  # Larger than the smallest OG value
             width = interpolated_width(min([wavelength, wavelengths[-1]])) / 1e6  # Table has widths in microseconds
-            return width  # in FWHM
-        elif imod == 3:
-            return Polynomial()
+            return width ** 2  # in FWHM
         else:
-            return np.sqrt()
+            return PyChopModel._get_moderator_width_analytical(mod_pars, e_init, imod)
+
+    @staticmethod
+    def _get_moderator_width_analytical(mod_pars: list[float], e_init: float, imod: int) -> float:
+        if imod == 0:
+            return np.array(mod_pars) * 1e-3 / 1.95 / (437.392 * np.sqrt(e_init)) ** 2 * SIGMA2FWHMSQ
+        elif imod == 1:
+            return PyChopModel._get_moderator_width_ikeda_carpenter(*mod_pars, e_init=e_init)
+        elif imod == 2:
+            ei_sqrt = np.sqrt(e_init)
+            delta_0, delta_G = mod_pars[0] * 1e-3, mod_pars[1] * 1e-3
+            return ((delta_0 + delta_G * ei_sqrt) / 1.96 / (437.392 * ei_sqrt)) ** 2 * SIGMA2FWHMSQ
+        elif imod == 3:
+            return Polynomial(mod_pars)(np.sqrt(E2L / e_init)) ** 2 * 1e-12
+        else:
+            raise NotImplementedError()
+
+    @staticmethod
+    def _get_moderator_width_ikeda_carpenter(s1: float, s2: float, b1: float, b2: float, e_mod: float, e_init: float):
+        sig = np.sqrt(s1 ** 2 + s2 ** 2 * 81.8048 / e_init)
+        a = 4.37392e-4 * sig * np.sqrt(e_init)
+        b = b2 if e_init > 130. else b1
+        r = np.exp(- e_init / e_mod)
+        return (3. / a ** 2 + (r * (2. - r)) / b ** 2) * 1e-12 * SIGMA2FWHMSQ
 
     def get_chopper_width_squared(self,
                                   model_data: PyChopModelData,

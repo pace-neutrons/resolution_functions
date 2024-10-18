@@ -17,6 +17,7 @@ version:
             frequency_matrix:
                 [[0, 1],                    # f1 is the Fermi frequency
                  [1, 0]]                    # f2 is the Disk frequency
+            mod_pars: [ 38.6, 0.5226 ]      # Parameters for time profile
             choppers:
                 Disk:
                     fermi: false
