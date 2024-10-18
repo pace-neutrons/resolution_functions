@@ -66,32 +66,35 @@ class PyChopModel(InstrumentModel):
                  model_data: PyChopModelData,
                  e_init: float,
                  chopper_frequency: Optional[float] = None,
+                 fitting_order: Optional[int] = 4,
                  **kwargs):
 
         if chopper_frequency is None:
             chopper_frequency = model_data.chopper_frequency_default
 
         # TODO: chopper frequency may be a bit more complicated
-        self.polynomial = self._precompute_resolution(model_data, e_init, chopper_frequency)
+        fake_frequencies, resolution = self._precompute_resolution(model_data, e_init, chopper_frequency)
+        self.polynomial = Polynomial.fit(fake_frequencies, resolution, fitting_order)
 
     def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
         return self.polynomial(frequencies)
 
-    def _precompute_resolution(self,
+    @classmethod
+    def _precompute_resolution(cls,
                                model_data: PyChopModelData,
                                e_init: float,
-                               chopper_frequency: float,
-                               fitting_order: int = 4) -> Polynomial:
+                               chopper_frequency: float
+                               ) -> tuple[Float[np.ndarray, 'frequency'], Float[np.ndarray, 'resolution']]:
         fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
         #fake_frequencies[fake_frequencies >= e_init] = np.nan
 
         tsq_jit = model_data.tjit ** 2
-        x0, xa, xm = self._get_distances(model_data.choppers)
+        x0, xa, xm = cls._get_distances(model_data.choppers)
         x1, x2 = model_data.d_chopper_sample, model_data.d_sample_detector
 
-        tsq_moderator = self.get_moderator_width_squared(model_data.measured_width, model_data.measured_wavelength,
+        tsq_moderator = cls.get_moderator_width_squared(model_data.measured_width, model_data.measured_wavelength,
                                                          model_data.mod_pars, e_init, model_data.imod)
-        tsq_chopper = self.get_chopper_width_squared(model_data, True, e_init, chopper_frequency)
+        tsq_chopper = cls.get_chopper_width_squared(model_data, True, e_init, chopper_frequency)
 
         # For Disk chopper spectrometers, the opening times of the first chopper can be the effective moderator time
         if tsq_chopper[1] is not None:
@@ -101,7 +104,7 @@ class PyChopModel(InstrumentModel):
             tsq_moderator = tsmeff if (tsq_chopper[1] > tsmeff) else tsq_chopper[1]
 
         tsq_chopper = tsq_chopper[0]
-        tanthm = np.tan(model_data.theta * np.pi / 180.0)
+        tanthm = np.tan(np.deg2rad(model_data.theta))
 
         vi = E2V * np.sqrt(e_init)
         vf = E2V * np.sqrt(e_init - fake_frequencies)
@@ -123,7 +126,7 @@ class PyChopModel(InstrumentModel):
         e_final = e_init - fake_frequencies
         resolution =  (2 * E2V * np.sqrt(e_final ** 3 * vsq_van)) / x2 / SIGMA2FWHM
 
-        return Polynomial.fit(fake_frequencies, resolution, fitting_order)
+        return fake_frequencies, resolution
 
     def parse_chopper_data(self, chopper_parameters: dict[str, PyChopModelChopperParameters]):
         distances, nslot, slot_ang_pos, slot_width, guide_width, radius, num_disk = [], [], [], [], [], [], []
@@ -146,7 +149,8 @@ class PyChopModel(InstrumentModel):
 
         return distances, nslot, slot_ang_pos, slot_width, guide_width, radius, num_disk, idx_phase_independent, default_phase
 
-    def get_long_frequency(self, frequency: list[float], model_data: PyChopModelData):
+    @staticmethod
+    def get_long_frequency(frequency: list[float], model_data: PyChopModelData):
         frequency += model_data.default_frequencies[len(frequency):]
         frequency_matrix = np.array(model_data.frequency_matrix)
         try:
@@ -199,7 +203,8 @@ class PyChopModel(InstrumentModel):
         r = np.exp(- e_init / e_mod)
         return (3. / a ** 2 + (r * (2. - r)) / b ** 2) * 1e-12 * SIGMA2FWHMSQ
 
-    def get_chopper_width_squared(self,
+    @classmethod
+    def get_chopper_width_squared(cls,
                                   model_data: PyChopModelData,
                                   is_fermi: bool,
                                   e_init: float,
@@ -207,13 +212,13 @@ class PyChopModel(InstrumentModel):
         if is_fermi:
             pslit, radius, rho = model_data.pslit, model_data.radius, model_data.rho
 
-            return self.get_fermi_width_squared(e_init, chopper_frequency, pslit, radius, rho), None
+            return cls.get_fermi_width_squared(e_init, chopper_frequency, pslit, radius, rho), None
         else:
             distances, nslot, slot_ang_pos, slot_width, guide_width, radius, num_disk, idx_phase_independent, \
-                default_phase = self.parse_chopper_data(chopper_parameters)
-            frequencies = self.get_long_frequency([chopper_frequency], model_data)
+                default_phase = cls.parse_chopper_data(chopper_parameters)
+            frequencies = cls.get_long_frequency([chopper_frequency], model_data)
 
-            return self.get_other_width_squared(e_init, frequencies, distances, nslot, slot_ang_pos, slot_width,
+            return cls.get_other_width_squared(e_init, frequencies, distances, nslot, slot_ang_pos, slot_width,
                                                 guide_width, radius, num_disk, default_phase, idx_phase_independent)
 
     @staticmethod
