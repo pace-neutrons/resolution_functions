@@ -80,7 +80,7 @@ class PyChopModel(InstrumentModel):
         return self.polynomial(frequencies)
 
     @classmethod
-    def _precompute_resolution(cls,
+    def _precompute_van_var(cls,
                                model_data: PyChopModelData,
                                e_init: float,
                                chopper_frequency: float
@@ -105,13 +105,16 @@ class PyChopModel(InstrumentModel):
 
         tsq_chopper = tsq_chopper[0]
         tanthm = np.tan(np.deg2rad(model_data.theta))
+        omega = chopper_frequency * 2 * np.pi
 
         vi = E2V * np.sqrt(e_init)
         vf = E2V * np.sqrt(e_init - fake_frequencies)
-        g1 = 1.0 - ((chopper_frequency * 2 * np.pi * tanthm / vi) * (xa + x1))
-        f1 = 1.0 + (x1 / x0) * g1
-
         vratio = (vi / vf) ** 3
+
+        factor = omega * (xa + x1)
+        g1 = (1.0 - ((omega * tanthm / vi) * (xa + x1)))
+        f1 = (1.0 + (x1 / x0) * g1) / factor
+        g1 /= factor
 
         modfac = (x1 + vratio * x2) / x0
         chpfac = 1.0 + modfac
@@ -122,9 +125,17 @@ class PyChopModel(InstrumentModel):
         tsq_jit *= chpfac ** 2
         tsq_aperture = apefac ** 2 * (model_data.aperture_width ** 2 / 12.0) * SIGMA2FWHMSQ
 
-        vsq_van = tsq_moderator + tsq_chopper + tsq_jit + tsq_aperture
+        return fake_frequencies, tsq_moderator + tsq_chopper + tsq_jit + tsq_aperture
+
+    @classmethod
+    def _precompute_resolution(cls,
+                               model_data: PyChopModelData,
+                               e_init: float,
+                               chopper_frequency: float
+                               ) -> tuple[Float[np.ndarray, 'frequency'], Float[np.ndarray, 'resolution']]:
+        fake_frequencies, vsq_van = cls._precompute_van_var(model_data, e_init, chopper_frequency)
         e_final = e_init - fake_frequencies
-        resolution =  (2 * E2V * np.sqrt(e_final ** 3 * vsq_van)) / x2 / SIGMA2FWHM
+        resolution = (2 * E2V * np.sqrt(e_final ** 3 * vsq_van)) / model_data.d_sample_detector / SIGMA2FWHM
 
         return fake_frequencies, resolution
 
