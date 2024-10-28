@@ -7,6 +7,7 @@ from typing import Optional, TypedDict, TYPE_CHECKING, Union
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 from scipy.interpolate import interp1d
+from scipy.spatial.distance import chebyshev
 
 from .model_base import InstrumentModel, ModelData
 
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
 
 E2L = 81.8042103582802156
 E2V = 437.393362604208619
+E2K = 0.48259640220781652
 SIGMA2FWHM = 2 * np.sqrt(2 * np.log(2))
 SIGMA2FWHMSQ = SIGMA2FWHM**2
 
@@ -37,6 +39,9 @@ class PyChopModelData(ModelData):
     imod: int
     measured_wavelength: list[float]
     measured_width: list[float]
+    idet: int
+    detector_dd: float
+    detector_phi: float
     pslit: float
     radius: float
     rho: float
@@ -95,6 +100,7 @@ class PyChopModel(InstrumentModel):
         tsq_moderator = cls.get_moderator_width_squared(model_data.measured_width, model_data.measured_wavelength,
                                                          model_data.mod_pars, e_init, model_data.imod)
         tsq_chopper = cls.get_chopper_width_squared(model_data, True, e_init, chopper_frequency)
+        tsq_detector = cls._get_detector_width_squared(model_data, fake_frequencies, e_init)
 
         # For Disk chopper spectrometers, the opening times of the first chopper can be the effective moderator time
         if tsq_chopper[1] is not None:
@@ -124,6 +130,7 @@ class PyChopModel(InstrumentModel):
         tsq_chopper *= chpfac ** 2
         tsq_jit *= chpfac ** 2
         tsq_aperture = apefac ** 2 * (model_data.aperture_width ** 2 / 12.0) * SIGMA2FWHMSQ
+        tsq_detector *= (1. / vf) ** 2
 
         return fake_frequencies, tsq_moderator + tsq_chopper + tsq_jit + tsq_aperture
 
@@ -356,6 +363,66 @@ class PyChopModel(InstrumentModel):
             ap_chop = mod_chop
 
         return mod_chop, ap_chop, choppers[0]['distance']
+
+    @classmethod
+    def _get_detector_width_squared(cls, model_data: PyChopModelData,
+                                    fake_frequencies: Float[np.ndarray, 'frequency'],
+                                    e_init: float):
+        wfs = np.sqrt(E2K * (e_init - fake_frequencies))
+        t2rad = 0.063
+        atms = 10.
+        const = 50.04685368
+
+        if model_data.idet == 1:
+            raise NotImplementedError()
+        elif model_data.idet == 2:
+            rad = model_data.detector_dd * 0.5
+            reff = rad * (1.0 - t2rad)
+            var = 2.0 * (rad * (1.0 - t2rad)) * (const * atms)
+            alf = var / wfs
+
+            assert not np.any(alf < 0.)
+
+            return cls._get_he_detector_width_squared(alf) * reff ** 2 * SIGMA2FWHMSQ
+
+    @staticmethod
+    def _get_he_detector_width_squared(alf: Float[np.ndarray, 'ALF']) -> Float[np.ndarray, 'ALF']:
+        out = np.zeros(np.shape(alf))
+        coefficients_low = [0.613452291529095, -0.3621914072547197, 6.0117947617747081e-02,
+                  1.8037337764424607e-02, -1.4439005957980123e-02, 3.8147446724517908e-03, 1.3679160269450818e-05,
+                  -3.7851338401354573e-04, 1.3568342238781006e-04, -1.3336183765173537e-05, -7.5468390663036011e-06,
+                  3.7919580869305580e-06, -6.4560788919254541e-07, -1.0509789897250599e-07, 9.0282233408123247e-08,
+                  -2.1598200223849062e-08, -2.6200750125049410e-10, 1.8693270043002030e-09, -6.0097600840247623e-10,
+                  4.7263196689684150e-11, 3.3052446335446462e-11, -1.4738090470256537e-11, 2.1945176231774610e-12,
+                  4.7409048908875206e-13, -3.3502478569147342e-13]
+
+        coefficients_high = [0.9313232069059375, 7.5988886169808666e-02, -8.3110620384910993e-03,
+                  1.1236935254690805e-03, -1.0549380723194779e-04, -3.8256672783453238e-05, 2.2883355513325654e-05,
+                  -2.4595515448511130e-06, -2.2063956882489855e-06, 7.2331970290773207e-07, 2.2080170614557915e-07,
+                  -1.2957057474505262e-07, -2.9737380539129887e-08, 2.2171316129693253e-08, 5.9127004825576534e-09,
+                  -3.7179338302495424e-09, -1.4794271269158443e-09, 5.5412448241032308e-10, 3.8726354734119894e-10,
+                  -4.6562413924533530e-11, -9.2734525614091013e-11, -1.1246343578630302e-11, 1.6909724176450425e-11,
+                  5.6146245985821963e-12, -2.7408274955176282e-12]
+
+        g0 = (32.0 - 3.0 * (np.pi ** 2)) / 48.0
+        g1 = 14.0 / 3.0 - (np.pi ** 2) / 8.0
+
+        chebyshev_low = np.polynomial.Chebyshev(coefficients_low, [0., 10.])
+        chebyshev_high = np.polynomial.Chebyshev(coefficients_high, [-1., 1.])
+
+        first_indices = alf <= 9.
+        last_indices = alf >= 10.
+        mid_indices = np.logical_not(np.logical_or(first_indices, last_indices))
+
+        out[first_indices] = 0.25 * chebyshev_low(alf[first_indices])
+        out[last_indices] = g0 + g1 * chebyshev_high(1. - 18. / alf[last_indices]) / alf[last_indices] ** 2
+
+        mid_alf = alf[mid_indices]
+        guess1 = 0.25 * chebyshev_low(mid_alf)
+        guess2 = g0 + g1 * chebyshev_high(1. - 18. / mid_alf) / mid_alf ** 2
+        out[mid_indices] = (10. - mid_alf) * guess1 + (mid_alf - 9.) * guess2
+
+        return out
 
     # def _create_tau_resolution(self, model: str,
     #                           setting: list[str],
