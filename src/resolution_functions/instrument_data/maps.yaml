@@ -17,7 +17,13 @@ version:
             frequency_matrix:
                 [[0, 1],                    # f1 is the Fermi frequency
                  [1, 0]]                    # f2 is the Disk frequency
-            mod_pars: [ 38.6, 0.5226 ]      # Parameters for time profile
+            moderator:
+                type: 2
+                scaling_function: "soft_hat"
+                scaling_parameters: [1.0, 0.0, 0.0, 150.0, 0.01, 70.0]
+                measured_wavelength: [ 3.81593, 5.39537, 2.2052, 2.70006, 3.25499, 1.70813, 3.11649, 1.44378, 2.41516, 1.91018, 2.47745, 1.27303, 2.07872, 1.05928, 1.55951 ]
+                measured_width: [ 54, 62, 40, 44, 48, 35, 47, 30, 41, 37, 40, 25, 38, 20, 31 ]
+                parameters: [ 38.6, 0.5226 ]      # Parameters for time profile
             detector:
                 type: 2
                 phi: 0.0
@@ -76,9 +82,6 @@ version:
                 citation: ""
                 parameters:
                     <<: *maps_constants
-                    imod: 2
-                    measured_wavelength: [ 3.81593, 5.39537, 2.2052, 2.70006, 3.25499, 1.70813, 3.11649, 1.44378, 2.41516, 1.91018, 2.47745, 1.27303, 2.07872, 1.05928, 1.55951 ]
-                    measured_width: [ 54, 62, 40, 44, 48, 35, 47, 30, 41, 37, 40, 25, 38, 20, 31 ]
                 settings: *maps_settings
 #            PyChop_tau:
 #                function: "2d_tau"

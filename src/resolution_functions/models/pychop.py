@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from copy import deepcopy
+from math import erf
 from typing import Optional, TypedDict, TYPE_CHECKING, Union
 
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 from scipy.interpolate import interp1d
-from scipy.spatial.distance import chebyshev
 
 from .model_base import InstrumentModel, ModelData
 
@@ -34,11 +34,8 @@ class PyChopModelData(ModelData):
     chopper_allowed_frequencies: list[int]
     default_frequencies: list[float]
     frequency_matrix: list[list[float]]
-    mod_pars: list[float]
     choppers: dict[str, Chopper]
-    imod: int
-    measured_wavelength: list[float]
-    measured_width: list[float]
+    moderator: Moderator
     detector: None | Detector
     sample: None | Sample
     pslit: float
@@ -74,6 +71,15 @@ class Detector(TypedDict):
     depth: float
 
 
+class Moderator(TypedDict):
+    type: int
+    parameters: list[float]
+    scaling_function: None | str
+    scaling_parameters: list[float]
+    measured_wavelength: list[float]
+    measured_width: list[float]
+
+
 class PyChopModel(InstrumentModel):
     input = 1
     output = 1
@@ -85,7 +91,7 @@ class PyChopModel(InstrumentModel):
                  e_init: float,
                  chopper_frequency: Optional[float] = None,
                  fitting_order: Optional[int] = 4,
-                 **kwargs):
+                 **_):
 
         if chopper_frequency is None:
             chopper_frequency = model_data.chopper_frequency_default
@@ -98,20 +104,30 @@ class PyChopModel(InstrumentModel):
         return self.polynomial(frequencies)
 
     @classmethod
-    def _precompute_van_var(cls,
+    def _precompute_resolution(cls,
                                model_data: PyChopModelData,
                                e_init: float,
                                chopper_frequency: float
                                ) -> tuple[Float[np.ndarray, 'frequency'], Float[np.ndarray, 'resolution']]:
         fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
-        #fake_frequencies[fake_frequencies >= e_init] = np.nan
+        vsq_van = cls._precompute_van_var(model_data, e_init, chopper_frequency, fake_frequencies)
+        e_final = e_init - fake_frequencies
+        resolution = (2 * E2V * np.sqrt(e_final ** 3 * vsq_van)) / model_data.d_sample_detector / SIGMA2FWHM
 
+        return fake_frequencies, resolution
+
+    @classmethod
+    def _precompute_van_var(cls,
+                            model_data: PyChopModelData,
+                            e_init: float,
+                            chopper_frequency: float,
+                            fake_frequencies: Float[np.ndarray, 'frequency'],
+                            ) -> Float[np.ndarray, 'resolution']:
         tsq_jit = model_data.tjit ** 2
         x0, xa, xm = cls._get_distances(model_data.choppers)
         x1, x2 = model_data.d_chopper_sample, model_data.d_sample_detector
 
-        tsq_moderator = cls.get_moderator_width_squared(model_data.measured_width, model_data.measured_wavelength,
-                                                         model_data.mod_pars, e_init, model_data.imod)
+        tsq_moderator = cls.get_moderator_width_squared(model_data.moderator, e_init)
         tsq_chopper = cls.get_chopper_width_squared(model_data, True, e_init, chopper_frequency)
 
         # For Disk chopper spectrometers, the opening times of the first chopper can be the effective moderator time
@@ -131,12 +147,8 @@ class PyChopModel(InstrumentModel):
 
         factor = omega * (xa + x1)
         g1 = (1.0 - ((omega * tanthm / vi) * (xa + x1)))
-        g2 = (1.0 - ((omega * tanthm / vi) * (x0 - xa)))
-
         f1 = (1.0 + (x1 / x0) * g1) / factor
-        f2 = (1.0 + (x1 / x0) * g2) / factor
         g1 /= factor
-        g2 /= factor
 
         modfac = (x1 + vratio * x2) / x0
         chpfac = 1.0 + modfac
@@ -150,32 +162,27 @@ class PyChopModel(InstrumentModel):
         vsq_van = tsq_moderator + tsq_chopper + tsq_jit + tsq_aperture
 
         if model_data.detector is not None:
-            tsq_detector = cls._get_detector_width_squared(model_data.detector, fake_frequencies, e_init)
-            vsq_van += (1. / vf) ** 2 * tsq_detector
+            tsq_detector = (1. / vf) ** 2 * cls._get_detector_width_squared(model_data.detector, fake_frequencies, e_init)
+            vsq_van += tsq_detector
+
             phi = np.deg2rad(model_data.detector['phi'])
         else:
             phi = 0.
 
         if model_data.sample is not None:
+            g2 = (1.0 - (omega * tanthm / vi) * (x0 - xa))
+            f2 = (1.0 + (x1 / x0) * g2) / factor
+            g2 /= factor
+
             gamma = np.deg2rad(model_data.sample['gamma'])
             bb = - np.sin(gamma) / vi + np.sin(gamma - phi) / vf - f2 * np.cos(gamma)
             sample_factor = bb - (vratio * x2 / x0) * g2 * np.cos(gamma)
 
-            vsq_van += sample_factor ** 2 * cls._get_sample_width_squared(model_data.sample)
+            tsq_sample = sample_factor ** 2 * cls._get_sample_width_squared(model_data.sample)
+            vsq_van += tsq_sample
 
-        return fake_frequencies, vsq_van
-
-    @classmethod
-    def _precompute_resolution(cls,
-                               model_data: PyChopModelData,
-                               e_init: float,
-                               chopper_frequency: float
-                               ) -> tuple[Float[np.ndarray, 'frequency'], Float[np.ndarray, 'resolution']]:
-        fake_frequencies, vsq_van = cls._precompute_van_var(model_data, e_init, chopper_frequency)
-        e_final = e_init - fake_frequencies
-        resolution = (2 * E2V * np.sqrt(e_final ** 3 * vsq_van)) / model_data.d_sample_detector / SIGMA2FWHM
-
-        return fake_frequencies, resolution
+        # return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample
+        return vsq_van
 
     def parse_chopper_data(self, chopper_parameters: dict[str, PyChopModelChopperParameters]):
         distances, nslot, slot_ang_pos, slot_width, guide_width, radius, num_disk = [], [], [], [], [], [], []
@@ -209,16 +216,14 @@ class PyChopModel(InstrumentModel):
 
         return np.dot(frequency_matrix, frequency) + f0
 
-    @staticmethod
-    def get_moderator_width_squared(measured_width: list[float],
-                                    measured_wavelength: list[float],
-                                    mod_pars: list[float],
-                                    e_init: float,
-                                    imod: int):
-        wavelengths = np.array(measured_wavelength)
+    @classmethod
+    def get_moderator_width_squared(cls,
+                                    moderator_data: Moderator,
+                                    e_init: float,):
+        wavelengths = np.array(moderator_data['measured_wavelength'])
         idx = np.argsort(wavelengths)
         wavelengths = wavelengths[idx]
-        widths = np.array(measured_width)[idx]
+        widths = np.array(moderator_data['measured_width'])[idx]
 
         interpolated_width = interp1d(wavelengths, widths, kind='slinear')
 
@@ -227,10 +232,18 @@ class PyChopModel(InstrumentModel):
             width = interpolated_width(min([wavelength, wavelengths[-1]])) / 1e6  # Table has widths in microseconds
             return width ** 2  # in FWHM
         else:
-            return PyChopModel._get_moderator_width_analytical(mod_pars, e_init, imod)
+            return cls._get_moderator_width_analytical(moderator_data['type'],
+                                                       moderator_data['parameters'],
+                                                       moderator_data['scaling_function'],
+                                                       moderator_data['scaling_parameters'],
+                                                       e_init)
 
     @staticmethod
-    def _get_moderator_width_analytical(mod_pars: list[float], e_init: float, imod: int) -> float:
+    def _get_moderator_width_analytical(imod: int,
+                                        mod_pars: list[float],
+                                        scaling_function: str | None,
+                                        scaling_parameters: list[float],
+                                        e_init: float) -> float:
         if imod == 0:
             return np.array(mod_pars) * 1e-3 / 1.95 / (437.392 * np.sqrt(e_init)) ** 2 * SIGMA2FWHMSQ
         elif imod == 1:
@@ -238,6 +251,11 @@ class PyChopModel(InstrumentModel):
         elif imod == 2:
             ei_sqrt = np.sqrt(e_init)
             delta_0, delta_G = mod_pars[0] * 1e-3, mod_pars[1] * 1e-3
+
+            if scaling_function is not None:
+                func = MODERATOR_MODIFICATION_FUNCTIONS[scaling_function]
+                delta_0 *= func(e_init, scaling_parameters)
+
             return ((delta_0 + delta_G * ei_sqrt) / 1.96 / (437.392 * ei_sqrt)) ** 2 * SIGMA2FWHMSQ
         elif imod == 3:
             return Polynomial(mod_pars)(np.sqrt(E2L / e_init)) ** 2 * 1e-12
@@ -483,3 +501,29 @@ class PyChopModel(InstrumentModel):
     #
     #     return resolution
 
+
+def soft_hat(x, p):
+    """
+    ! Soft hat function, from Herbert subroutine library.
+    ! For rescaling t-mod at low energy to account for broader moderator term
+    """
+    x = np.array(x)
+    sig2fwhh = np.sqrt(8 * np.log(2))
+    height, grad, x1, x2 = tuple(p[:4])
+    sig1, sig2 = tuple(np.abs(p[4:6] / sig2fwhh))
+    # linearly interpolate sig for x1<x<x2
+    sig = ((x2 - x) * sig1 - (x1 - x) * sig2) / (x2 - x1)
+    if np.shape(sig):
+        sig[x < x1] = sig1
+        sig[x > x2] = sig2
+    # calculate blurred hat function with gradient
+    e1 = (x1 - x) / (np.sqrt(2) * sig)
+    e2 = (x2 - x) / (np.sqrt(2) * sig)
+    y = (erf(e2) - erf(e1)) * ((height + grad * (x - (x2 + x1) / 2)) / 2)
+    y = y + 1
+    return y
+
+
+MODERATOR_MODIFICATION_FUNCTIONS = {
+    'soft_hat': soft_hat
+}
