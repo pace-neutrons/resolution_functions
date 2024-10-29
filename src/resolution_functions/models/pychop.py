@@ -39,9 +39,8 @@ class PyChopModelData(ModelData):
     imod: int
     measured_wavelength: list[float]
     measured_width: list[float]
-    idet: int
-    detector_dd: float
-    detector_phi: float
+    detector: None | Detector
+    sample: None | Sample
     pslit: float
     radius: float
     rho: float
@@ -59,6 +58,20 @@ class Chopper(TypedDict):
     num_disk: int
     is_phase_independent: bool
     default_phase: Union[int, str]
+
+
+class Sample(TypedDict):
+    type: int
+    thickness: float
+    width: float
+    height: float
+    gamma: float
+    
+    
+class Detector(TypedDict):
+    type: int
+    phi: float
+    depth: float
 
 
 class PyChopModel(InstrumentModel):
@@ -100,7 +113,6 @@ class PyChopModel(InstrumentModel):
         tsq_moderator = cls.get_moderator_width_squared(model_data.measured_width, model_data.measured_wavelength,
                                                          model_data.mod_pars, e_init, model_data.imod)
         tsq_chopper = cls.get_chopper_width_squared(model_data, True, e_init, chopper_frequency)
-        tsq_detector = cls._get_detector_width_squared(model_data, fake_frequencies, e_init)
 
         # For Disk chopper spectrometers, the opening times of the first chopper can be the effective moderator time
         if tsq_chopper[1] is not None:
@@ -119,8 +131,12 @@ class PyChopModel(InstrumentModel):
 
         factor = omega * (xa + x1)
         g1 = (1.0 - ((omega * tanthm / vi) * (xa + x1)))
+        g2 = (1.0 - ((omega * tanthm / vi) * (x0 - xa)))
+
         f1 = (1.0 + (x1 / x0) * g1) / factor
+        f2 = (1.0 + (x1 / x0) * g2) / factor
         g1 /= factor
+        g2 /= factor
 
         modfac = (x1 + vratio * x2) / x0
         chpfac = 1.0 + modfac
@@ -130,9 +146,24 @@ class PyChopModel(InstrumentModel):
         tsq_chopper *= chpfac ** 2
         tsq_jit *= chpfac ** 2
         tsq_aperture = apefac ** 2 * (model_data.aperture_width ** 2 / 12.0) * SIGMA2FWHMSQ
-        tsq_detector *= (1. / vf) ** 2
 
-        return fake_frequencies, tsq_moderator + tsq_chopper + tsq_jit + tsq_aperture
+        vsq_van = tsq_moderator + tsq_chopper + tsq_jit + tsq_aperture
+
+        if model_data.detector is not None:
+            tsq_detector = cls._get_detector_width_squared(model_data.detector, fake_frequencies, e_init)
+            vsq_van += (1. / vf) ** 2 * tsq_detector
+            phi = np.deg2rad(model_data.detector['phi'])
+        else:
+            phi = 0.
+
+        if model_data.sample is not None:
+            gamma = np.deg2rad(model_data.sample['gamma'])
+            bb = - np.sin(gamma) / vi + np.sin(gamma - phi) / vf - f2 * np.cos(gamma)
+            sample_factor = bb - (vratio * x2 / x0) * g2 * np.cos(gamma)
+
+            vsq_van += sample_factor ** 2 * cls._get_sample_width_squared(model_data.sample)
+
+        return fake_frequencies, vsq_van
 
     @classmethod
     def _precompute_resolution(cls,
@@ -365,7 +396,7 @@ class PyChopModel(InstrumentModel):
         return mod_chop, ap_chop, choppers[0]['distance']
 
     @classmethod
-    def _get_detector_width_squared(cls, model_data: PyChopModelData,
+    def _get_detector_width_squared(cls, detector_data: Detector,
                                     fake_frequencies: Float[np.ndarray, 'frequency'],
                                     e_init: float):
         wfs = np.sqrt(E2K * (e_init - fake_frequencies))
@@ -373,10 +404,10 @@ class PyChopModel(InstrumentModel):
         atms = 10.
         const = 50.04685368
 
-        if model_data.idet == 1:
+        if detector_data['type'] == 1:
             raise NotImplementedError()
-        elif model_data.idet == 2:
-            rad = model_data.detector_dd * 0.5
+        else:
+            rad = detector_data['depth'] * 0.5
             reff = rad * (1.0 - t2rad)
             var = 2.0 * (rad * (1.0 - t2rad)) * (const * atms)
             alf = var / wfs
@@ -423,6 +454,11 @@ class PyChopModel(InstrumentModel):
         out[mid_indices] = (10. - mid_alf) * guess1 + (mid_alf - 9.) * guess2
 
         return out
+
+    @staticmethod
+    def _get_sample_width_squared(sample_data: Sample) -> float:
+        scaling_factor = 0.125 if sample_data['type'] == 2 else 1 / 12
+        return sample_data['width'] ** 2 * scaling_factor * SIGMA2FWHMSQ
 
     # def _create_tau_resolution(self, model: str,
     #                           setting: list[str],

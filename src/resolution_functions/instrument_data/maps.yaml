@@ -18,9 +18,16 @@ version:
                 [[0, 1],                    # f1 is the Fermi frequency
                  [1, 0]]                    # f2 is the Disk frequency
             mod_pars: [ 38.6, 0.5226 ]      # Parameters for time profile
-            idet: 2
-            detector_phi: 0.0
-            detector_dd: 0.025  # Detector depth (m)
+            detector:
+                type: 2
+                phi: 0.0
+                depth: 0.025  # Detector depth (m)
+            sample:
+                type: 0  # Sample type: 0==flat plate, 1==ellipse, 2==annulus, 3==sphere, 4==solid cylinder
+                thickness: 2e-3  # Thickness (m)
+                width: 4.8e-2  # Width (m)
+                height: 4.8e-2  # Height (m)
+                gamma: 0.0  # Angle of x-axis to ki (degrees)
             choppers:
                 Disk:
                     fermi: false
