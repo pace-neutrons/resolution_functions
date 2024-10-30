@@ -6,6 +6,8 @@ import pytest
 
 from PyChop.Instruments import Instrument as PyChopInstrument, soft_hat
 from PyChop.Chop import tube_mts
+# import mantid
+# from pychop.Instruments import Instrument as PyChopInstrument
 
 from resolution_functions.instrument import Instrument
 from resolution_functions.models.pychop import PyChopModel, PyChopModelData, SIGMA2FWHM
