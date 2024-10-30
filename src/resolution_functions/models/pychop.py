@@ -112,9 +112,9 @@ class PyChopModel(InstrumentModel):
         fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
         vsq_van = cls._precompute_van_var(model_data, e_init, chopper_frequency, fake_frequencies)
         e_final = e_init - fake_frequencies
-        resolution = (2 * E2V * np.sqrt(e_final ** 3 * vsq_van)) / model_data.d_sample_detector / SIGMA2FWHM
+        resolution = (2 * E2V * np.sqrt(e_final ** 3 * vsq_van)) / model_data.d_sample_detector
 
-        return fake_frequencies, resolution
+        return fake_frequencies, resolution / SIGMA2FWHM
 
     @classmethod
     def _precompute_van_var(cls,
@@ -220,6 +220,7 @@ class PyChopModel(InstrumentModel):
     def get_moderator_width_squared(cls,
                                     moderator_data: Moderator,
                                     e_init: float,):
+        # TODO: Sort the data in the yaml file and remove sorting below
         wavelengths = np.array(moderator_data['measured_wavelength'])
         idx = np.argsort(wavelengths)
         wavelengths = wavelengths[idx]
@@ -244,6 +245,7 @@ class PyChopModel(InstrumentModel):
                                         scaling_function: str | None,
                                         scaling_parameters: list[float],
                                         e_init: float) -> float:
+        # TODO: Look into composition
         if imod == 0:
             return np.array(mod_pars) * 1e-3 / 1.95 / (437.392 * np.sqrt(e_init)) ** 2 * SIGMA2FWHMSQ
         elif imod == 1:
