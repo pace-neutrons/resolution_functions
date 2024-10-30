@@ -105,7 +105,7 @@ class Instrument:
     def get_resolution_function(self, model_name: Optional[str] = None, **kwargs) -> InstrumentModel:
         model_class = MODELS[self.models[model_name]['function']]
 
-        return model_class(self.get_model_data(model_name), **kwargs)
+        return model_class(self.get_model_data(model_name, **kwargs), **kwargs)
 
     @classmethod
     def instrument_versions(cls, instrument_name: str) -> list[str]:
