@@ -8,7 +8,7 @@ import mantid
 from abins.instruments.pychop import PyChopInstrument
 
 from resolution_functions.instrument import Instrument
-
+from resolution_functions.models.pychop import NoTransmissionError
 
 WAVENUMBER_TO_MEV = 0.12398419843320028
 MEV_TO_WAVENUMBER = 1 / WAVENUMBER_TO_MEV
@@ -24,9 +24,6 @@ for instr, settings in zip(instruments, instrument_settings):
     instrument_matrix.extend(lst)
     instrument_ids.extend([f'{i[0]}_{s}' for i, s in lst])
 
-print(instrument_matrix, instrument_ids)
-print(len(instrument_matrix), len(instrument_ids))
-
 
 @pytest.fixture(scope="module", params=instrument_matrix, ids=instrument_ids)
 def abins_rf_2d(request):
@@ -34,17 +31,32 @@ def abins_rf_2d(request):
     abins = PyChopInstrument(name=name, setting=setting)
     rf = Instrument.from_default(name, version)
 
-    return abins, rf, setting
+    return abins, rf, name, version, setting
 
 
 ef_matrix = list(itertools.product(energies, chopper_frequencies))
 ef_ids = [f'ei={e},f={f}' for e, f in ef_matrix]
 
+invalid = {
+    'MAPS': {
+        'MAPS': {
+            'A': {
+                50: [450, 500, 550, 600],
+                60: [500, 550, 600],
+                70: [500, 550, 600],
+                80: [550, 600],
+                90: [600],
+                100: [600],
+            }
+        }
+    }
+}
 
-@pytest.fixture(params=ef_matrix, ids=ef_ids)
-def d2_abins_plus_rf_abins_resolution_function(abins_rf_2d, request):
-    abins, rf_2d, setting = abins_rf_2d
-    energy, chopper_frequency = request.param
+
+@pytest.mark.parametrize('matrix', ef_matrix, ids=ef_ids)
+def test_against_abins(matrix, abins_rf_2d,):
+    abins, rf_2d, name, version, setting = abins_rf_2d
+    energy, chopper_frequency = matrix
 
     frequencies = np.linspace(0, energy, 1000)
 
@@ -53,19 +65,24 @@ def d2_abins_plus_rf_abins_resolution_function(abins_rf_2d, request):
     abins._pychop_instrument.chopper_system.setFrequency(chopper_frequency)
     abins._pychop_instrument.frequency = chopper_frequency
 
-    rf = rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy, chopper_frequency=chopper_frequency)
-    return abins, rf, frequencies
 
+    try:
+        forbidden_frequencies = invalid[name][version][setting][energy]
+    except KeyError:
+        forbidden_frequencies = []
 
-def test_2d_against_abins(d2_abins_plus_rf_abins_resolution_function):
-    abins, rf, frequencies = d2_abins_plus_rf_abins_resolution_function
+    if chopper_frequency in forbidden_frequencies:
+        with pytest.raises(NoTransmissionError):
+            rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy, chopper_frequency=chopper_frequency)
+    else:
+        rf = rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy,
+                                           chopper_frequency=chopper_frequency)
+        actual = rf(frequencies)
 
-    actual = rf(frequencies)
+        abins._polyfits = {}
+        expected = abins.calculate_sigma(frequencies * MEV_TO_WAVENUMBER) * WAVENUMBER_TO_MEV
 
-    abins._polyfits = {}
-    expected = abins.calculate_sigma(frequencies * MEV_TO_WAVENUMBER) * WAVENUMBER_TO_MEV
-
-    assert_allclose(actual, expected, rtol=1e-5)
+        assert_allclose(actual, expected, rtol=1e-5)
 
 
 # def test_polynomial(d2_abins_plus_rf_abins_resolution_function):

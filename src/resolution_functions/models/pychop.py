@@ -303,8 +303,8 @@ class PyChopModel(InstrumentModel):
         gamm = (2.00 * radius ** 2 / pslit) * abs(1.00 / rho - 2.00 * chopper_frequency / (437.392 * np.sqrt(e_init)))
 
         if gamm >= 4.:
-            # TODO: Log warning
-            return np.nan
+            raise NoTransmissionError(f'The combination of e_init={e_init} and chopper_frequency={chopper_frequency} '
+                                      f'is not valid because the Fermi chopper has no transmission at these values.')
         elif gamm <= 1.:
             gsqr = (1.00 - (gamm ** 2) ** 2 / 10.00) / (1.00 - (gamm ** 2) / 6.00)
         else:
@@ -532,3 +532,7 @@ def soft_hat(x, p):
 MODERATOR_MODIFICATION_FUNCTIONS = {
     'soft_hat': soft_hat
 }
+
+
+class NoTransmissionError(Exception):
+    pass
