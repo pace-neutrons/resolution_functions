@@ -28,11 +28,11 @@ class PyChopModelData(ModelData):
     aperture_width: float
     theta: float
     q_size: float
-    e_init: float
+    default_e_init: float
     max_wavenumber: float
-    chopper_frequency_default: float
-    chopper_allowed_frequencies: list[int]
+    default_chopper_frequency: float
     default_frequencies: list[float]
+    allowed_chopper_frequencies: list[int]
     frequency_matrix: list[list[float]]
     choppers: dict[str, Chopper]
     moderator: Moderator
@@ -88,13 +88,16 @@ class PyChopModel(InstrumentModel):
 
     def __init__(self,
                  model_data: PyChopModelData,
-                 e_init: float,
+                 e_init: Optional[float] = None,
                  chopper_frequency: Optional[float] = None,
                  fitting_order: Optional[int] = 4,
                  **_):
 
         if chopper_frequency is None:
-            chopper_frequency = model_data.chopper_frequency_default
+            chopper_frequency = model_data.default_chopper_frequency
+
+        if e_init is None:
+            e_init = model_data.default_e_init
 
         # TODO: chopper frequency may be a bit more complicated
         fake_frequencies, resolution = self._precompute_resolution(model_data, e_init, chopper_frequency)
