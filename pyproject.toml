@@ -40,4 +40,4 @@ include-package-data = true
 where =  ["src"]
 
 [tool.setuptools.package-data]
-resolution_functions = ["instruments/instrument_data/*.yaml"]
+resolution_functions = ["instrument_data/*.yaml"]
