@@ -9,7 +9,7 @@ import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 from scipy.interpolate import interp1d
 
-from .model_base import InstrumentModel, ModelData
+from .model_base import InstrumentModel, ModelData, InvalidInputError
 
 if TYPE_CHECKING:
     from jaxtyping import Float
@@ -29,6 +29,7 @@ class PyChopModelData(ModelData):
     theta: float
     q_size: float
     default_e_init: float
+    allowed_e_init: list[float]
     max_wavenumber: float
     default_chopper_frequency: float
     default_frequencies: list[float]
@@ -96,8 +97,17 @@ class PyChopModel(InstrumentModel):
         if chopper_frequency is None:
             chopper_frequency = model_data.default_chopper_frequency
 
+        if chopper_frequency not in range(*model_data.allowed_chopper_frequencies):
+            raise InvalidInputError(f'The provided chopper frequency ({chopper_frequency}) is not allowed; only the '
+                                    f'following frequencies are possible: '
+                                    f'{list(range(*model_data.allowed_chopper_frequencies))}')
+
         if e_init is None:
             e_init = model_data.default_e_init
+
+        if not model_data.allowed_e_init[0] <= e_init <= model_data.allowed_e_init[1]:
+            raise InvalidInputError(f'The provided incident energy ({e_init}) is not allowed; only values within the '
+                                    f'range of {model_data.allowed_e_init} are possible.')
 
         # TODO: chopper frequency may be a bit more complicated
         fake_frequencies, resolution = self._precompute_resolution(model_data, e_init, chopper_frequency)
@@ -299,8 +309,8 @@ class PyChopModel(InstrumentModel):
                                 pslit: float,
                                 radius: float,
                                 rho: float) -> float:
-        chopper_frequency *= 2 * np.pi
-        gamm = (2.00 * radius ** 2 / pslit) * abs(1.00 / rho - 2.00 * chopper_frequency / (437.392 * np.sqrt(e_init)))
+        frequency = 2 * np.pi * chopper_frequency
+        gamm = (2.00 * radius ** 2 / pslit) * abs(1.00 / rho - 2.00 * frequency / (437.392 * np.sqrt(e_init)))
 
         if gamm >= 4.:
             raise NoTransmissionError(f'The combination of e_init={e_init} and chopper_frequency={chopper_frequency} '
@@ -311,7 +321,7 @@ class PyChopModel(InstrumentModel):
             groot = np.sqrt(gamm)
             gsqr = 0.60 * gamm * ((groot - 2.00) ** 2) * (groot + 8.00) / (groot + 4.00)
 
-        sigma =  ((pslit / (2.00 * radius * chopper_frequency)) ** 2 / 6.00) * gsqr
+        sigma =  ((pslit / (2.00 * radius * frequency)) ** 2 / 6.00) * gsqr
         return sigma * SIGMA2FWHMSQ
 
     @staticmethod

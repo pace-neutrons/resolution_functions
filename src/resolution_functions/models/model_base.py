@@ -5,6 +5,10 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 
+class InvalidInputError(Exception):
+    pass
+
+
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class ModelData(ABC):
     function: str

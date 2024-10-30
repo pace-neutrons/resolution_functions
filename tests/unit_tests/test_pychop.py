@@ -6,11 +6,13 @@ import pytest
 
 from PyChop.Instruments import Instrument as PyChopInstrument, soft_hat
 from PyChop.Chop import tube_mts
+
 # import mantid
 # from pychop.Instruments import Instrument as PyChopInstrument
 
 from resolution_functions.instrument import Instrument
-from resolution_functions.models.pychop import PyChopModel, PyChopModelData, SIGMA2FWHM
+from resolution_functions.models.pychop import PyChopModel, PyChopModelData, SIGMA2FWHM, NoTransmissionError
+from resolution_functions.models.model_base import InvalidInputError
 
 DEBUG = False
 
@@ -24,13 +26,30 @@ def get_fake_frequencies(e_init: float):
     return np.linspace(0, e_init, 40, endpoint=False)
 
 
-@pytest.fixture(params=['A', 'B', 'S'])
+@pytest.fixture(scope="module", params=['A', 'B', 'S'])
 def maps_data(request):
     maps = Instrument.from_default('MAPS', 'MAPS')
     rf = maps.get_model_data('PyChop_fit', chopper_package=request.param)
 
     pc = PyChopInstrument('MAPS', chopper=request.param)
     return rf, pc
+
+
+@pytest.mark.parametrize('chopper_frequency',
+                         [49.99999, -0.048, -np.inf, 600.00017, np.inf, 13554, np.nan, 50.5, 57.5, 500.0000001, 480])
+def test_invalid_chopper_frequency(chopper_frequency, maps_data: tuple[PyChopModelData, PyChopInstrument]):
+    with pytest.raises(InvalidInputError) as e:
+        PyChopModel(maps_data[0], chopper_frequency=chopper_frequency)
+
+    assert 'The provided chopper frequency' in str(e.value)
+
+
+@pytest.mark.parametrize('e_init', [-5, -0.00048, -np.inf, 2000.1, np.inf, 13554.1654, np.nan])
+def test_invalid_e_init(e_init, maps_data: tuple[PyChopModelData, PyChopInstrument]):
+    with pytest.raises(InvalidInputError) as e:
+        PyChopModel(maps_data[0], e_init=e_init)
+
+    assert 'The provided incident energy' in str(e.value)
 
 
 def test_distances(maps_data: tuple[PyChopModelData, PyChopInstrument]):
@@ -68,9 +87,15 @@ def test_chopper_width(matrix, maps_data: tuple[PyChopModelData, PyChopInstrumen
     e_init, chopper_frequency = matrix
     maps_data, pychop = maps_data
 
-    actual = PyChopModel.get_chopper_width_squared(maps_data, True, e_init, chopper_frequency)
     pychop.chopper_system.setFrequency(chopper_frequency)
     expected = pychop.chopper_system.getWidthSquared(e_init)
+
+    if np.isnan(expected[0]):
+        with pytest.raises(NoTransmissionError):
+            PyChopModel.get_chopper_width_squared(maps_data, True, e_init, chopper_frequency)
+        return
+
+    actual = PyChopModel.get_chopper_width_squared(maps_data, True, e_init, chopper_frequency)
 
     assert_allclose(actual[0], expected[0], rtol=0, atol=1e-8)
 
@@ -131,12 +156,17 @@ def test_precompute_van_var(matrix, maps_data: tuple[PyChopModelData, PyChopInst
     maps_data, pychop = maps_data
     fake_frequencies = get_fake_frequencies(e_init)
 
-    actual = PyChopModel._precompute_van_var(maps_data, e_init, chopper_frequency, fake_frequencies)
-
     pychop.chopper_system.setFrequency(chopper_frequency)
     expected, _, _ = pychop.getVanVar(Ei_in=e_init, Etrans=fake_frequencies)
 
-    assert_allclose(actual, expected)
+    if np.any(np.isnan(expected)):
+        with pytest.raises(NoTransmissionError):
+            PyChopModel._precompute_van_var(maps_data, e_init, chopper_frequency, fake_frequencies)
+
+    else:
+        actual = PyChopModel._precompute_van_var(maps_data, e_init, chopper_frequency, fake_frequencies)
+
+        assert_allclose(actual, expected)
 
 
 @pytest.mark.skipif(not DEBUG, reason='Not debugging; normal version of the function only returns vsq_van')
@@ -167,10 +197,15 @@ def test_precompute_resolution(matrix, maps_data: tuple[PyChopModelData, PyChopI
     e_init, chopper_frequency = matrix
     maps_data, pychop = maps_data
 
-    actual = PyChopModel._precompute_resolution(maps_data, e_init, chopper_frequency)
-
     pychop.chopper_system.setFrequency(chopper_frequency)
     fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
     expected_resolution = pychop.getResolution(Ei_in=e_init, Etrans=fake_frequencies)
 
-    assert_allclose(actual[1], expected_resolution / SIGMA2FWHM)
+    if np.any(np.isnan(expected_resolution)):
+        with pytest.raises(NoTransmissionError):
+            PyChopModel._precompute_resolution(maps_data, e_init, chopper_frequency)
+
+    else:
+        actual = PyChopModel._precompute_resolution(maps_data, e_init, chopper_frequency)
+
+        assert_allclose(actual[1], expected_resolution / SIGMA2FWHM)
