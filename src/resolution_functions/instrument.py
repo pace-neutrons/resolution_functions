@@ -18,6 +18,7 @@ INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
     'Lagrange': ('lagrange', None),
     'MAPS': ('maps', None),
     'MARI': ('mari', None),
+    'MERLIN': ('merlin', None),
     'PANTHER': ('panther', None),
     'TFXA': ('tosca', 'TFXA'),
     'TOSCA': ('tosca', None),

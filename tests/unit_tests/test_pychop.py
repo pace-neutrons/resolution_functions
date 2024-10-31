@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from PyChop.Instruments import Instrument as PyChopInstrument, soft_hat
+from PyChop.Instruments import Instrument as PyChopInstrument
 from PyChop.Chop import tube_mts
 
 # import mantid
@@ -21,8 +21,8 @@ CHOPPER_FREQ = np.arange(50, 601, 50)
 MATRIX = list(itertools.product(EINIT, CHOPPER_FREQ))
 MATRIX_IDS = [f'e_init={ei},f={f}' for ei, f in MATRIX]
 
-INSTRUMENTS = [[('MAPS', 'MAPS')], [('MARI', 'MARI')]]
-INSTRUMENT_SETTINGS = [['A', 'S'], ['A', 'B', 'C', 'G', 'R', 'S']]
+INSTRUMENTS = [[('MAPS', 'MAPS')], [('MARI', 'MARI')], [('MERLIN', 'MERLIN')]]
+INSTRUMENT_SETTINGS = [['A', 'S'], ['A', 'B', 'C', 'G', 'R', 'S'], ['G', 'S']]
 
 INSTRUMENT_MATRIX, INSTRUMENT_IDS = [], []
 for instr, settings in zip(INSTRUMENTS, INSTRUMENT_SETTINGS):

@@ -1,0 +1,82 @@
+name: 'MERLIN'
+default_version: 'MERLIN'
+
+version:
+    MERLIN:
+        constants: &maps_constants
+            d_chopper_sample: 1.925               # Distance (x1) from final chopper to sample (m)
+            d_sample_detector: 2.5                  # Distance (x2) from sample to detector (m)
+            aperture_width: 0.06667         # Width of aperture at moderator face (m)
+            theta: 26.7                   # Angle beamline makes with moderator face (degrees)
+            q_size: 100
+            default_e_init: 400  # meV
+            max_wavenumber: 2000  # meV
+            default_chopper_frequency: 400
+            default_frequencies: [ 400 ]
+            allowed_chopper_frequencies: [50, 601, 50]
+            frequency_matrix:
+                [ [ 0 ],                       # Only the Fermi frequency should be variable
+                  [ 1 ] ]
+            moderator:
+                type: 2
+                scaling_function: null
+                scaling_parameters: null
+                measured_wavelength: [3.81238, 5.38791, 2.20214, 2.69636, 3.25068, 1.70664, 1.9078, 1.4425, 3.11379, 2.41294, 2.47528, 1.27219, 2.07682, 1.05882, 1.55818]
+                measured_width: [49, 56, 34, 37, 42, 29, 30, 25, 40, 34, 35, 21, 31, 18, 26]
+                parameters: [80.0, 0.5226]      # Parameters for time profile
+            detector:
+                type: 2
+                phi: 0.0
+                depth: 0.025  # Detector depth (m)
+            sample:
+                type: 0  # Sample type: 0==flat plate, 1==ellipse, 2==annulus, 3==sphere, 4==solid cylinder
+                thickness: 2e-3  # Thickness (m)
+                width: 4.0e-2  # Width (m)
+                height: 4.0e-2  # Height (m)
+                gamma: 0.0  # Angle of x-axis to ki (degrees)
+            choppers:
+                Disk:
+                    fermi: false
+                    distance: 9.3
+                    nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_width: 950            # Slot width in mm
+                    slot_ang_pos: null
+                    guide_width: 64           # Width of guide after chopper in mm
+                    radius: 250               # Disk radius
+                    num_disk: 1
+                    is_phase_independent: True  # Is this disk to be phased independently?
+                    default_phase: 1500        # What is the default phase for this disk (either a time in microseconds
+                Fermi:
+                    fermi: true
+                    distance: 9.995  # m
+                    aperture_distance: 7.19  # m
+                    # Default compatibility arguments:
+                    nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_ang_pos: null
+                    slot_width: 10.            # Slot width in mm
+                    guide_width: 10.           # Width of guide after chopper in mm
+                    radius: 290.               # Disk radius
+                    num_disk: 1
+        settings: &maps_settings
+            chopper_package:
+                default_setting: 'G'
+                G:
+                    pslit: 0.2e-3  # m
+                    radius: 5.0e-3  # m
+                    rho: 1000  # m
+                    tjit: 0.0             # Jitter time (us)
+                    allowed_e_init: [0, 181]
+                S:
+                    pslit: 2.280e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 1.300  # m
+                    tjit: 0.0             # Jitter time (us)
+                    allowed_e_init: [ 7, 2000 ]  # meV
+        default_model: 'PyChop_fit'
+        models:
+            PyChop_fit:
+                function: "pychop_fit"
+                citation: ""
+                parameters:
+                    <<: *maps_constants
+                settings: *maps_settings

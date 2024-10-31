@@ -14,8 +14,8 @@ from resolution_functions.models.pychop import NoTransmissionError
 WAVENUMBER_TO_MEV = 0.12398419843320028
 MEV_TO_WAVENUMBER = 1 / WAVENUMBER_TO_MEV
 
-INSTRUMENTS = [[('MAPS', 'MAPS')], [('MARI', 'MARI')]]
-INSTRUMENT_SETTINGS = [['A', 'S'], ['A', 'R', 'S']]
+INSTRUMENTS = [[('MAPS', 'MAPS')], [('MARI', 'MARI')], [('MERLIN', 'MERLIN')]]
+INSTRUMENT_SETTINGS = [['A', 'S'], ['A', 'R', 'S'], ['S']]
 ENERGIES = np.arange(50, 500, 10)
 CHOPPER_FREQUENCIES = np.arange(50, 601, 50)
 
@@ -84,8 +84,10 @@ def _test_against_abins(abins, rf_2d, setting, matrix):
         assert_allclose(actual, expected, rtol=1e-5)
 
 
-@pytest.fixture(scope='module', params=[(('MARI', 'MARI'), 'G')], ids=['MARI_G'])
-def mari_g(request):
+@pytest.fixture(scope='module',
+                params=[(('MARI', 'MARI'), 'G'), (('MERLIN', 'MERLIN'), 'G')],
+                ids=['MARI_G', 'MERLIN_G'])
+def g_choppers(request):
     (name, version), setting = request.param
     return _abins_rf_2d(name, version, setting)
 
@@ -94,7 +96,7 @@ ef, ids = get_ef_matrix(np.arange(10, 181, 5), CHOPPER_FREQUENCIES)
 
 
 @pytest.mark.parametrize('matrix', ef, ids=ids)
-def test_mari_g_against_abins(matrix, mari_g,):
-    abins, rf_2d, setting = mari_g
+def test_g_choppers_against_abins(matrix, g_choppers,):
+    abins, rf_2d, setting = g_choppers
     _test_against_abins(abins, rf_2d, setting, matrix)
 
