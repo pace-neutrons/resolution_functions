@@ -3,7 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from copy import deepcopy
 from math import erf
-from typing import Optional, TypedDict, TYPE_CHECKING, Union
+from typing import Optional, TYPE_CHECKING, Union
+import sys
+
+if sys.version_info < (3, 11):
+    from typing_extensions import TypedDict, NotRequired
+else:
+    from typing import TypedDict, NotRequired
+
 
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
@@ -48,6 +55,7 @@ class PyChopModelData(ModelData):
 class Chopper(TypedDict):
     fermi: bool
     distance: float
+    aperture_distance: NotRequired[float]
     nslot: int
     slot_width: float
     slot_ang_pos: Union[list[float], None]
@@ -194,7 +202,7 @@ class PyChopModel(InstrumentModel):
             tsq_sample = sample_factor ** 2 * cls._get_sample_width_squared(model_data.sample)
             vsq_van += tsq_sample
 
-        # return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample
+        return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample
         return vsq_van
 
     def parse_chopper_data(self, chopper_parameters: dict[str, PyChopModelChopperParameters]):
@@ -419,11 +427,11 @@ class PyChopModel(InstrumentModel):
 
     @staticmethod
     def _get_distances(choppers: dict[str, Chopper]) -> tuple[float, float, float]:
-        choppers = list(choppers.values())
+        choppers: list[Chopper] = list(choppers.values())
         mod_chop = choppers[-1]['distance']
         try:
             ap_chop = choppers[-1]['aperture_distance']
-        except AttributeError:
+        except KeyError:
             ap_chop = mod_chop
 
         return mod_chop, ap_chop, choppers[0]['distance']
