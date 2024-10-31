@@ -167,7 +167,7 @@ class PyChopModel(InstrumentModel):
         vratio = (vi / vf) ** 3
 
         factor = omega * (xa + x1)
-        g1 = (1.0 - ((omega * tanthm / vi) * (xa + x1)))
+        g1 = (1.0 - (omega * tanthm / vi) * (xa + x1))
         f1 = (1.0 + (x1 / x0) * g1) / factor
         g1 /= factor
 
@@ -202,7 +202,7 @@ class PyChopModel(InstrumentModel):
             tsq_sample = sample_factor ** 2 * cls._get_sample_width_squared(model_data.sample)
             vsq_van += tsq_sample
 
-        return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample
+        # return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample
         return vsq_van
 
     def parse_chopper_data(self, chopper_parameters: dict[str, PyChopModelChopperParameters]):
@@ -231,6 +231,7 @@ class PyChopModel(InstrumentModel):
         frequency += model_data.default_frequencies[len(frequency):]
         frequency_matrix = np.array(model_data.frequency_matrix)
         try:
+            # TODO: Look into treating this correctly
             f0 = model_data.constant_frequencies
         except AttributeError:
             f0 = np.zeros(np.shape(frequency_matrix)[0])

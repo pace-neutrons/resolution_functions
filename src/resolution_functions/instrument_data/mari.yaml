@@ -1,0 +1,106 @@
+name: 'MARI'
+default_version: 'MARI'
+
+version:
+    MARI:
+        constants: &mari_constants
+            d_chopper_sample: 1.689              # Distance (x1) from final chopper to sample (m)
+            d_sample_detector: 4.022                  # Distance (x2) from sample to detector (m)
+            aperture_width: 0.06667        # Width of aperture at moderator face (m)
+            theta: 13.0                   # Angle beamline makes with moderator face (degrees)
+            q_size: 100
+            default_e_init: 500  # meV
+            max_wavenumber: 2000  # meV
+            default_chopper_frequency: 400
+            default_frequencies: [ 400 ]
+            allowed_chopper_frequencies: [50, 601, 50]
+            frequency_matrix:
+                [ [ 0 ],                       # Only the Fermi frequency should be variable
+                  [ 1 ] ]
+            moderator:
+                type: 2
+                scaling_function: null
+                scaling_parameters: null
+                measured_wavelength: [4.0240, 5.6898, 2.3250, 2.8480, 1.5224, 3.4331, 1.8009, 1.1167]
+                measured_width: [53.2, 62, 39.2, 44.8, 18.8, 48.8, 27.2, 12.4]
+                parameters: [ 38.6, 0.5226 ]      # Parameters for time profile
+            detector:
+                type: 2
+                phi: 0.0
+                depth: 0.025  # Detector depth (m)
+            sample:
+                type: 2  # Sample type: 0==flat plate, 1==ellipse, 2==annulus, 3==sphere, 4==solid cylinder
+                thickness: 2e-2  # Thickness (m)
+                width: 1.9e-2  # Width (m)
+                height: 5e-2  # Height (m)
+                gamma: 0.0  # Angle of x-axis to ki (degrees)
+            choppers:
+                Disk:
+                    fermi: false
+                    distance: 7.85  # (m)
+                    nslot: 4                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_width: 65            # Slot width in mm
+                    slot_ang_pos: [0, 36.48, 72.76, 145.52]
+                    guide_width: 60           # Width of guide after chopper in mm
+                    radius: 367               # Disk radius
+                    num_disk: 1
+                    is_phase_independent: True  # Is this disk to be phased independently?
+                    default_phase: "0"         # What is the default phase for this disk (either a time in microseconds
+                Fermi:
+                    fermi: true
+                    distance: 10.05  # m
+                    aperture_distance: 7.19  # m
+                    # Default compatibility arguments:
+                    nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_ang_pos: None
+                    slot_width: 10.            # Slot width in mm
+                    guide_width: 10.           # Width of guide after chopper in mm
+                    radius: 290.               # Disk radius
+                    num_disk: 1
+        settings: &mari_settings
+            chopper_package:
+                default_setting: 'A'
+                A:
+                    pslit: 0.760e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 1.300  # m
+                    tjit: 0.0             # Jitter time (us)
+                    allowed_e_init: [0, 2000]  # meV
+                B:
+                    pslit: 1.140e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 0.82  # m
+                    tjit: 0.0             # Jitter time (us)
+                    allowed_e_init: [0, 2000]  # meV
+                C:
+                    pslit: 1.520e-3          # Neutron transparent slit width (mm)
+                    radius: 49.0e-3          # Chopper package radius (mm)
+                    rho: 0.58            # Chopper package curvature (mm)
+                    tjit: 0.0             # Jitter time (us)
+                    allowed_e_init: [0, 2000]  # meV
+                G:
+                    pslit: 0.380e-3          # Neutron transparent slit width (mm)
+                    radius: 10.0e-3          # Chopper package radius (mm)
+                    rho: 0.8            # Chopper package curvature (mm)
+                    tjit: 0.0             # Jitter time (us)
+                    allowed_e_init: [ 0, 181 ]   # Limits on ei for this chopper (setting Ei outside this will give error)
+                R:
+                    pslit: 1.143e-3          # Neutron transparent slit width (mm)
+                    radius: 49.0e-3          # Chopper package radius (mm)
+                    rho: 1.300           # Chopper package curvature (mm)
+                    tjit: 0.0             # Jitter time (us)
+                    allowed_e_init: [0, 2000]  # meV
+                S:
+                    pslit: 2.280e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 1.300  # m
+                    tjit: 0.0             # Jitter time (us)
+                    allowed_e_init: [ 0, 2000 ]  # meV
+        default_model: 'PyChop_fit'
+        models:
+            PyChop_fit:
+                function: "pychop_fit"
+                citation: ""
+                parameters:
+                    <<: *mari_constants
+                settings: *mari_settings

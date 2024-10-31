@@ -17,6 +17,7 @@ INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
     'Lagrange': ('lagrange', None),
     'MAPS': ('maps', None),
+    'MARI': ('mari', None),
     'PANTHER': ('panther', None),
     'TFXA': ('tosca', 'TFXA'),
     'TOSCA': ('tosca', None),

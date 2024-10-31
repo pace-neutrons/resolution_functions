@@ -21,39 +21,59 @@ CHOPPER_FREQ = np.arange(50, 601, 50)
 MATRIX = list(itertools.product(EINIT, CHOPPER_FREQ))
 MATRIX_IDS = [f'e_init={ei},f={f}' for ei, f in MATRIX]
 
+INSTRUMENTS = [[('MAPS', 'MAPS')], [('MARI', 'MARI')]]
+INSTRUMENT_SETTINGS = [['A', 'S'], ['A', 'B', 'C', 'G', 'R', 'S']]
+
+INSTRUMENT_MATRIX, INSTRUMENT_IDS = [], []
+for instr, settings in zip(INSTRUMENTS, INSTRUMENT_SETTINGS):
+    lst = list(itertools.product(instr, settings))
+    INSTRUMENT_MATRIX.extend(lst)
+    INSTRUMENT_IDS.extend([f'{i[0]}_{s}' for i, s in lst])
+
 
 def get_fake_frequencies(e_init: float):
     return np.linspace(0, e_init, 40, endpoint=False)
 
 
-@pytest.fixture(scope="module", params=['A', 'B', 'S'])
+@pytest.fixture(scope="module", params=INSTRUMENT_MATRIX, ids=INSTRUMENT_IDS)
 def maps_data(request):
-    maps = Instrument.from_default('MAPS', 'MAPS')
-    rf = maps.get_model_data('PyChop_fit', chopper_package=request.param)
+    (name, version), setting = request.param
+    maps = Instrument.from_default(name, version)
+    rf = maps.get_model_data('PyChop_fit', chopper_package=setting)
 
-    pc = PyChopInstrument('MAPS', chopper=request.param)
+    pc = PyChopInstrument(name, chopper=setting)
+    return rf, pc
+
+
+@pytest.fixture(scope="module", params=INSTRUMENTS, ids=[i[0][0] for i in INSTRUMENTS])
+def data_arb_chopper(request):
+    (name, version) = request.param[0]
+    maps = Instrument.from_default(name, version)
+    rf = maps.get_model_data('PyChop_fit')
+
+    pc = PyChopInstrument(name, chopper=maps.default_option_for_setting('PyChop_fit', 'chopper_package'))
     return rf, pc
 
 
 @pytest.mark.parametrize('chopper_frequency',
                          [49.99999, -0.048, -np.inf, 600.00017, np.inf, 13554, np.nan, 50.5, 57.5, 500.0000001, 480])
-def test_invalid_chopper_frequency(chopper_frequency, maps_data: tuple[PyChopModelData, PyChopInstrument]):
+def test_invalid_chopper_frequency(chopper_frequency, data_arb_chopper: tuple[PyChopModelData, PyChopInstrument]):
     with pytest.raises(InvalidInputError) as e:
-        PyChopModel(maps_data[0], chopper_frequency=chopper_frequency)
+        PyChopModel(data_arb_chopper[0], chopper_frequency=chopper_frequency)
 
     assert 'The provided chopper frequency' in str(e.value)
 
 
 @pytest.mark.parametrize('e_init', [-5, -0.00048, -np.inf, 2000.1, np.inf, 13554.1654, np.nan])
-def test_invalid_e_init(e_init, maps_data: tuple[PyChopModelData, PyChopInstrument]):
+def test_invalid_e_init(e_init, data_arb_chopper: tuple[PyChopModelData, PyChopInstrument]):
     with pytest.raises(InvalidInputError) as e:
-        PyChopModel(maps_data[0], e_init=e_init)
+        PyChopModel(data_arb_chopper[0], e_init=e_init)
 
     assert 'The provided incident energy' in str(e.value)
 
 
-def test_distances(maps_data: tuple[PyChopModelData, PyChopInstrument]):
-    maps_data, pychop = maps_data
+def test_distances(data_arb_chopper: tuple[PyChopModelData, PyChopInstrument]):
+    maps_data, pychop = data_arb_chopper
     x0, xa, xm = PyChopModel._get_distances(maps_data.choppers)
     expected = pychop.chopper_system.getDistances()
 
@@ -176,19 +196,24 @@ def test_debug_precompute_van_var(matrix, maps_data: tuple[PyChopModelData, PyCh
     maps_data, pychop = maps_data
     fake_frequencies = get_fake_frequencies(e_init)
 
-    vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample = \
-        PyChopModel._precompute_van_var(maps_data, e_init, chopper_frequency, fake_frequencies)
-
     pychop.chopper_system.setFrequency(chopper_frequency)
     expected_result, expected, _ = pychop.getVanVar(Ei_in=e_init, Etrans=fake_frequencies)
 
-    assert_allclose(tsq_moderator, expected['moderator'])
-    assert_allclose(tsq_chopper, expected['chopper'])
-    assert_allclose(tsq_jit, expected['jitter'])
-    assert_allclose(tsq_aperture, expected['aperture'])
-    assert_allclose(tsq_detector, expected['detector'])
-    assert_allclose(tsq_sample, expected['sample'])
-    assert_allclose(vsq_van, expected_result)
+    if np.any(np.isnan(expected_result)):
+        with pytest.raises(NoTransmissionError):
+            PyChopModel._precompute_resolution(maps_data, e_init, chopper_frequency)
+
+    else:
+        vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample = \
+            PyChopModel._precompute_van_var(maps_data, e_init, chopper_frequency, fake_frequencies)
+
+        assert_allclose(tsq_moderator, expected['moderator'])
+        assert_allclose(tsq_chopper, expected['chopper'])
+        assert_allclose(tsq_jit, expected['jitter'])
+        assert_allclose(tsq_aperture, expected['aperture'])
+        assert_allclose(tsq_detector, expected['detector'])
+        assert_allclose(tsq_sample, expected['sample'])
+        assert_allclose(vsq_van, expected_result)
 
 
 @pytest.mark.skipif(DEBUG, reason='Debugging precompute_van_var; its outputs have been temporarily changed.')
