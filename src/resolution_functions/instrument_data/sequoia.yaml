@@ -1,0 +1,103 @@
+name: 'SEQUOIA'
+default_version: 'SEQUOIA'
+
+version:
+    SEQUOIA:
+        constants: &constants
+            d_chopper_sample: 2.0               # Distance (x1) from final chopper to sample (m)
+            d_sample_detector: 5.5                  # Distance (x2) from sample to detector (m)
+            aperture_width: 0.050         # Width of aperture at moderator face (m)
+            theta: -13.75                   # Angle beamline makes with moderator face (degrees)
+            q_size: 100
+            default_e_init: 500  # meV
+            allowed_e_init: [ 8, 2000 ]  # meV
+            max_wavenumber: 2000  # meV
+            default_chopper_frequency: 300
+            default_frequencies: [ 300 ]
+            allowed_chopper_frequencies: [50, 601, 50]
+            frequency_matrix: [[1]]
+            moderator:
+                type: 1
+                scaling_function: null
+                scaling_parameters: null
+                measured_wavelength: null
+                measured_width: null
+                parameters: [119.63, 33.618, .037, .17, 172.42]      # Parameters for time profile
+            detector:
+                type: 2
+                phi: 0.0
+                depth: 0.025  # Detector depth (m)
+            sample:
+                type: 0  # Sample type: 0==flat plate, 1==ellipse, 2==annulus, 3==sphere, 4==solid cylinder
+                thickness: 2e-3  # Thickness (m)
+                width: 4.8e-2  # Width (m)
+                height: 4.8e-2  # Height (m)
+                gamma: 0.0  # Angle of x-axis to ki (degrees)
+            choppers:
+                Fermi:
+                    fermi: true
+                    distance: 18.01  # m
+                    aperture_distance: 17.0  # m
+                    # Default compatibility arguments:
+                    nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_ang_pos: None
+                    slot_width: 10.            # Slot width in mm
+                    guide_width: 10.           # Width of guide after chopper in mm
+                    radius: 290.               # Disk radius
+                    num_disk: 1
+        settings: &settings
+            chopper_package:
+                default_setting: 'ARCS-100-1.5-AST'
+                Fine:
+                    pslit: 1.087e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 1.300  # m
+                    tjit: 0.0             # Jitter time (us)
+                Sloppy:
+                    pslit: 1.812e-3  # m
+                    radius: 49.0e-3  # m
+                    rho: 0.92  # m
+                    tjit: 0.0             # Jitter time (us)
+                SEQ-100-2.0-AST:
+                    pslit: 2.03e-3  # m
+                    radius: 50.0e-3  # m
+                    rho: 0.5800  # m
+                    tjit: 0.0             # Jitter time (us)
+                SEQ-700-3.5-AST:
+                    pslit: 3.56e-3  # m
+                    radius: 50.0e-3  # m
+                    rho: 1.5350  # m
+                    tjit: 0.0             # Jitter time (us)
+                ARCS-100-1.5-AST:
+                    pslit: 1.52e-3  # m
+                    radius: 50.0e-3  # m
+                    rho: 0.5800  # m
+                    tjit: 0.0             # Jitter time (us)
+                ARCS-700-1.5-AST:
+                    pslit: 1.52e-3  # m
+                    radius: 50.0e-3  # m
+                    rho: 1.5350  # m
+                    tjit: 0.0             # Jitter time (us)
+                ARCS-700-0.5-AST:
+                    pslit: 0.51e-3  # m
+                    radius: 50.0e-3  # m
+                    rho: 1.5350  # m
+                    tjit: 0.0             # Jitter time (us)
+                ARCS-100-1.5-SMI:
+                    pslit: 1.52e-3  # m
+                    radius: 50.0e-3  # m
+                    rho: 0.5800  # m
+                    tjit: 0.0             # Jitter time (us)
+                ARCS-700-1.5-SMI:
+                    pslit: 1.52e-3  # m
+                    radius: 50.0e-3  # m
+                    rho: 1.5350  # m
+                    tjit: 0.0             # Jitter time (us)
+        default_model: 'PyChop_fit'
+        models:
+            PyChop_fit:
+                function: "pychop_fit"
+                citation: ""
+                parameters:
+                    <<: *constants
+                settings: *settings

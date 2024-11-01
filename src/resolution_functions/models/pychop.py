@@ -98,7 +98,7 @@ class PyChopModel(InstrumentModel):
     def __init__(self,
                  model_data: PyChopModelData,
                  e_init: Optional[float] = None,
-                 chopper_frequency: Optional[float] = None,
+                 chopper_frequency: Optional[float] = None,  # TODO: int
                  fitting_order: Optional[int] = 4,
                  **_):
 
@@ -242,24 +242,26 @@ class PyChopModel(InstrumentModel):
     def get_moderator_width_squared(cls,
                                     moderator_data: Moderator,
                                     e_init: float,):
-        # TODO: Sort the data in the yaml file and remove sorting below
-        wavelengths = np.array(moderator_data['measured_wavelength'])
-        idx = np.argsort(wavelengths)
-        wavelengths = wavelengths[idx]
-        widths = np.array(moderator_data['measured_width'])[idx]
+        wavelengths = moderator_data['measured_wavelength']
+        if wavelengths is not None:
+            # TODO: Sort the data in the yaml file and remove sorting below
+            wavelengths = np.array(wavelengths)
+            idx = np.argsort(wavelengths)
+            wavelengths = wavelengths[idx]
+            widths = np.array(moderator_data['measured_width'])[idx]
 
-        interpolated_width = interp1d(wavelengths, widths, kind='slinear')
+            interpolated_width = interp1d(wavelengths, widths, kind='slinear')
 
-        wavelength = np.sqrt(E2L / e_init)
-        if wavelength >= wavelengths[0]:  # Larger than the smallest OG value
-            width = interpolated_width(min([wavelength, wavelengths[-1]])) / 1e6  # Table has widths in microseconds
-            return width ** 2  # in FWHM
-        else:
-            return cls._get_moderator_width_analytical(moderator_data['type'],
-                                                       moderator_data['parameters'],
-                                                       moderator_data['scaling_function'],
-                                                       moderator_data['scaling_parameters'],
-                                                       e_init)
+            wavelength = np.sqrt(E2L / e_init)
+            if wavelength >= wavelengths[0]:  # Larger than the smallest OG value
+                width = interpolated_width(min([wavelength, wavelengths[-1]])) / 1e6  # Table has widths in microseconds
+                return width ** 2  # in FWHM
+
+        return cls._get_moderator_width_analytical(moderator_data['type'],
+                                                   moderator_data['parameters'],
+                                                   moderator_data['scaling_function'],
+                                                   moderator_data['scaling_parameters'],
+                                                   e_init)
 
     @staticmethod
     def _get_moderator_width_analytical(imod: int,

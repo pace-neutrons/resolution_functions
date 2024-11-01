@@ -23,6 +23,7 @@ INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
     'TFXA': ('tosca', 'TFXA'),
     'TOSCA': ('tosca', None),
     'VISION': ('vision', None),
+    'SEQUOIA': ('sequoia', None),
 }
 
 

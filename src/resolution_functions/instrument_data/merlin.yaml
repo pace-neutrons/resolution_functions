@@ -3,7 +3,7 @@ default_version: 'MERLIN'
 
 version:
     MERLIN:
-        constants: &maps_constants
+        constants: &constants
             d_chopper_sample: 1.925               # Distance (x1) from final chopper to sample (m)
             d_sample_detector: 2.5                  # Distance (x2) from sample to detector (m)
             aperture_width: 0.06667         # Width of aperture at moderator face (m)
@@ -57,7 +57,7 @@ version:
                     guide_width: 10.           # Width of guide after chopper in mm
                     radius: 290.               # Disk radius
                     num_disk: 1
-        settings: &maps_settings
+        settings: &settings
             chopper_package:
                 default_setting: 'G'
                 G:
@@ -78,5 +78,5 @@ version:
                 function: "pychop_fit"
                 citation: ""
                 parameters:
-                    <<: *maps_constants
-                settings: *maps_settings
+                    <<: *constants
+                settings: *settings
