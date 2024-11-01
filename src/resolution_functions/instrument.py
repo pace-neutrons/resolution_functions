@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
 
 INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
+    'ARCS': ('arcs', None),
     'Lagrange': ('lagrange', None),
     'MAPS': ('maps', None),
     'MARI': ('mari', None),

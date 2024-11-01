@@ -22,17 +22,20 @@ MATRIX = list(itertools.product(EINIT, CHOPPER_FREQ))
 MATRIX_IDS = [f'e_init={ei},f={f}' for ei, f in MATRIX]
 
 INSTRUMENTS = [
+    [('ARCS', 'ARCS')],
     [('MAPS', 'MAPS')],
     [('MARI', 'MARI')],
     [('MERLIN', 'MERLIN')],
-    [('SEQUOIA', 'SEQUOIA')]
+    [('SEQUOIA', 'SEQUOIA')],
 ]
 INSTRUMENT_SETTINGS = [
+    ['SEQ-100-2.0-AST', 'SEQ-700-3.5-AST', 'ARCS-100-1.5-AST', 'ARCS-700-1.5-AST',
+     'ARCS-700-0.5-AST', 'ARCS-100-1.5-SMI', 'ARCS-700-1.5-SMI'],
     ['A', 'S'],
     ['A', 'B', 'C', 'G', 'R', 'S'],
     ['G', 'S'],
     ['Fine', 'Sloppy', 'SEQ-100-2.0-AST', 'SEQ-700-3.5-AST', 'ARCS-100-1.5-AST', 'ARCS-700-1.5-AST',
-     'ARCS-700-0.5-AST', 'ARCS-100-1.5-SMI', 'ARCS-700-1.5-SMI']
+     'ARCS-700-0.5-AST', 'ARCS-100-1.5-SMI', 'ARCS-700-1.5-SMI'],
 ]
 
 INSTRUMENT_MATRIX, INSTRUMENT_IDS = [], []
