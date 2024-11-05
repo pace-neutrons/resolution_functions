@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from .polynomial import PolynomialModel1D, DiscontinuousPolynomialModel1D
 from .panther_abins import PantherAbINSModel
-from .pychop import PyChopModel
+from .pychop import PyChopModelFermi, PyChopModelNonFermi
 from .tosca_book import ToscaBookModel
 from .vision_paper import VisionPaperModel
 
@@ -18,5 +18,6 @@ MODELS: dict[str, type[InstrumentModel]] = {
     'tosca_book': ToscaBookModel,
     'vision_paper': VisionPaperModel,
     'panther_abins_polynomial': PantherAbINSModel,
-    'pychop_fit': PyChopModel,
+    'pychop_fit_fermi': PyChopModelFermi,
+    'pychop_fit_nonfermi': PyChopModelNonFermi,
 }

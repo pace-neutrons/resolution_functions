@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from copy import deepcopy
 from math import erf
@@ -38,24 +39,39 @@ class PyChopModelData(ModelData):
     default_e_init: float
     allowed_e_init: list[float]
     max_wavenumber: float
-    default_chopper_frequency: float
-    default_frequencies: list[float]
-    allowed_chopper_frequencies: list[int]
     frequency_matrix: list[list[float]]
-    choppers: dict[str, Chopper]
+    choppers: dict[str, FermiChopper | DiskChopper]
     moderator: Moderator
     detector: None | Detector
     sample: None | Sample
-    pslit: float
-    radius: float
-    rho: float
     tjit: float
 
 
-class Chopper(TypedDict):
-    fermi: bool
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class PyChopModelDataFermi(PyChopModelData):
+    default_chopper_frequency: int
+    allowed_chopper_frequencies: list[int]
+    pslit: float
+    radius: float
+    rho: float
+
+
+@dataclass(init=True, repr=True, frozen=True, slots=True)
+class PyChopModelDataNonFermi(PyChopModelData):
+    default_chopper_frequency: list[int]
+    allowed_chopper_frequencies: list[list[int]]
+    constant_frequencies: list[int]
+    source_frequency: float
+    n_frame: int
+
+
+class FermiChopper(TypedDict):
     distance: float
-    aperture_distance: NotRequired[float]
+    aperture_distance: float
+
+
+class DiskChopper(TypedDict):
+    distance: float
     nslot: int
     slot_width: float
     slot_ang_pos: Union[list[float], None]
@@ -89,7 +105,7 @@ class Moderator(TypedDict):
     measured_width: list[float]
 
 
-class PyChopModel(InstrumentModel):
+class PyChopModel(InstrumentModel, ABC):
     input = 1
     output = 1
 
@@ -97,19 +113,10 @@ class PyChopModel(InstrumentModel):
 
     def __init__(self,
                  model_data: PyChopModelData,
+                 chopper_frequency: list[int],
                  e_init: Optional[float] = None,
-                 chopper_frequency: Optional[float] = None,  # TODO: int
                  fitting_order: Optional[int] = 4,
                  **_):
-
-        if chopper_frequency is None:
-            chopper_frequency = model_data.default_chopper_frequency
-
-        if chopper_frequency not in range(*model_data.allowed_chopper_frequencies):
-            raise InvalidInputError(f'The provided chopper frequency ({chopper_frequency}) is not allowed; only the '
-                                    f'following frequencies are possible: '
-                                    f'{list(range(*model_data.allowed_chopper_frequencies))}')
-
         if e_init is None:
             e_init = model_data.default_e_init
 
@@ -128,7 +135,7 @@ class PyChopModel(InstrumentModel):
     def _precompute_resolution(cls,
                                model_data: PyChopModelData,
                                e_init: float,
-                               chopper_frequency: float
+                               chopper_frequency: list[int]
                                ) -> tuple[Float[np.ndarray, 'frequency'], Float[np.ndarray, 'resolution']]:
         fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
         vsq_van = cls._precompute_van_var(model_data, e_init, chopper_frequency, fake_frequencies)
@@ -141,7 +148,7 @@ class PyChopModel(InstrumentModel):
     def _precompute_van_var(cls,
                             model_data: PyChopModelData,
                             e_init: float,
-                            chopper_frequency: float,
+                            chopper_frequency: list[int],
                             fake_frequencies: Float[np.ndarray, 'frequency'],
                             ) -> Float[np.ndarray, 'resolution']:
         tsq_jit = model_data.tjit ** 2
@@ -149,7 +156,7 @@ class PyChopModel(InstrumentModel):
         x1, x2 = model_data.d_chopper_sample, model_data.d_sample_detector
 
         tsq_moderator = cls.get_moderator_width_squared(model_data.moderator, e_init)
-        tsq_chopper = cls.get_chopper_width_squared(model_data, True, e_init, chopper_frequency)
+        tsq_chopper = cls.get_chopper_width_squared(model_data, e_init, chopper_frequency)
 
         # For Disk chopper spectrometers, the opening times of the first chopper can be the effective moderator time
         if tsq_chopper[1] is not None:
@@ -160,7 +167,7 @@ class PyChopModel(InstrumentModel):
 
         tsq_chopper = tsq_chopper[0]
         tanthm = np.tan(np.deg2rad(model_data.theta))
-        omega = chopper_frequency * 2 * np.pi
+        omega = chopper_frequency[0] * 2 * np.pi
 
         vi = E2V * np.sqrt(e_init)
         vf = E2V * np.sqrt(e_init - fake_frequencies)
@@ -204,39 +211,6 @@ class PyChopModel(InstrumentModel):
 
         # return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample
         return vsq_van
-
-    def parse_chopper_data(self, chopper_parameters: dict[str, PyChopModelChopperParameters]):
-        distances, nslot, slot_ang_pos, slot_width, guide_width, radius, num_disk = [], [], [], [], [], [], []
-        idx_phase_independent, default_phase = [], []
-        for i, chopper in enumerate(self.constants['choppers'].values()):
-            distances.append(chopper['distance'])
-            nslot.append(chopper['nslot'])
-            slot_ang_pos.append(chopper['slot_ang_pos'])
-            slot_width.append(chopper['slot_width'])
-            guide_width.append(chopper['guide_width'])
-            radius.append(chopper['radius'])
-            num_disk.append(chopper['num_disk'])
-
-            if not chopper['fermi'] and chopper['is_phase_independent']:
-                idx_phase_independent.append(i)
-                default_phase.append(chopper['default_phase'])
-            else:
-                idx_phase_independent.append(False)
-                default_phase.append(False)
-
-        return distances, nslot, slot_ang_pos, slot_width, guide_width, radius, num_disk, idx_phase_independent, default_phase
-
-    @staticmethod
-    def get_long_frequency(frequency: list[float], model_data: PyChopModelData):
-        frequency += model_data.default_frequencies[len(frequency):]
-        frequency_matrix = np.array(model_data.frequency_matrix)
-        try:
-            # TODO: Look into treating this correctly
-            f0 = model_data.constant_frequencies
-        except AttributeError:
-            f0 = np.zeros(np.shape(frequency_matrix)[0])
-
-        return np.dot(frequency_matrix, frequency) + f0
 
     @classmethod
     def get_moderator_width_squared(cls,
@@ -297,140 +271,16 @@ class PyChopModel(InstrumentModel):
         return (3. / a ** 2 + (r * (2. - r)) / b ** 2) * 1e-12 * SIGMA2FWHMSQ
 
     @classmethod
+    @abstractmethod
     def get_chopper_width_squared(cls,
                                   model_data: PyChopModelData,
-                                  is_fermi: bool,
                                   e_init: float,
-                                  chopper_frequency: float) -> tuple[float, float | None]:
-        if is_fermi:
-            pslit, radius, rho = model_data.pslit, model_data.radius, model_data.rho
-
-            return cls.get_fermi_width_squared(e_init, chopper_frequency, pslit, radius, rho), None
-        else:
-            distances, nslot, slot_ang_pos, slot_width, guide_width, radius, num_disk, idx_phase_independent, \
-                default_phase = cls.parse_chopper_data(chopper_parameters)
-            frequencies = cls.get_long_frequency([chopper_frequency], model_data)
-
-            return cls.get_other_width_squared(e_init, frequencies, distances, nslot, slot_ang_pos, slot_width,
-                                                guide_width, radius, num_disk, default_phase, idx_phase_independent)
+                                  chopper_frequency: list[int]) -> tuple[float, float | None]:
+        raise NotImplementedError()
 
     @staticmethod
-    def get_fermi_width_squared(e_init: float,
-                                chopper_frequency: float,
-                                pslit: float,
-                                radius: float,
-                                rho: float) -> float:
-        frequency = 2 * np.pi * chopper_frequency
-        gamm = (2.00 * radius ** 2 / pslit) * abs(1.00 / rho - 2.00 * frequency / (437.392 * np.sqrt(e_init)))
-
-        if gamm >= 4.:
-            raise NoTransmissionError(f'The combination of e_init={e_init} and chopper_frequency={chopper_frequency} '
-                                      f'is not valid because the Fermi chopper has no transmission at these values.')
-        elif gamm <= 1.:
-            gsqr = (1.00 - (gamm ** 2) ** 2 / 10.00) / (1.00 - (gamm ** 2) / 6.00)
-        else:
-            groot = np.sqrt(gamm)
-            gsqr = 0.60 * gamm * ((groot - 2.00) ** 2) * (groot + 8.00) / (groot + 4.00)
-
-        sigma =  ((pslit / (2.00 * radius * frequency)) ** 2 / 6.00) * gsqr
-        return sigma * SIGMA2FWHMSQ
-
-    @staticmethod
-    def get_other_width_squared(e_init: float,
-                                frequencies: list[float],
-                                chopper_distances: list[float],
-                                nslot: list[int | None],
-                                slots_ang_pos: list[list[float] | None],
-                                slot_widths: list[float],
-                                guide_widths: list[float],
-                                radii: list[float],
-                                num_disk: list[int],
-                                phase: list[str | int | bool],
-                                idx_phase_independent: list[int | bool],
-                                source_rep: float = 50,
-                                n_frame: int = 1,
-                                ) -> tuple[float, float]:
-        # conversion factors
-        lam2TOF = 252.7784  # the conversion from wavelength to TOF at 1m, multiply by distance
-        uSec = 1e6  # seconds to microseconds
-        lam = np.sqrt(81.8042 / e_init)  # convert from energy to wavelenth
-
-        # if there's only one disk we prepend a dummy disk with full opening at zero distance
-        # so that the distance calculations (which needs the difference between disk pos) works
-        if len(chopper_distances) == 1:
-            for lst, prepend in zip([chopper_distances, nslot, slots_ang_pos, slot_widths, guide_widths, radii, num_disk],
-                                    [0, 1, None, 3141, 10, 500, 1]):
-                lst.insert(0, prepend)
-
-            prepend_disk = True
-        else:
-            prepend_disk = False
-
-        p_frames = source_rep / n_frame
-
-        if prepend_disk:
-            frequencies = np.array([source_rep, frequencies[0]])
-
-        chop_times = []
-
-        # first we optimise on the main Ei
-        for i, (freq, distance, slot, angles, slot_width, guide_width, radius, n_disk, this_phase, ph_ind) in (
-                enumerate(zip(frequencies, chopper_distances, nslot, slots_ang_pos, slot_widths, guide_widths, radii, num_disk, phase, idx_phase_independent))):
-            # loop over each chopper
-            # checks whether this chopper should have an independently set phase / delay
-            islt = int(this_phase) if (ph_ind and isinstance(this_phase, str)) else 0
-
-            if ph_ind and not isinstance(this_phase, str):
-                # effective chopper velocity (if 2 disks effective velocity is double)
-                chopVel = 2 * np.pi * radius * n_disk * freq
-                # full opening time
-                t_full_op = uSec * (slot_width + guide_width) / chopVel
-                realTimeOp = np.array([this_phase, this_phase + t_full_op])
-            else:
-                # the opening time of the chopper so that it is open for the focus wavelength
-                t_open = lam2TOF * lam * distance
-                # effective chopper velocity (if 2 disks effective velocity is double)
-                chopVel = 2 * np.pi * radius * n_disk * freq
-                # full opening time
-                t_full_op = uSec * (slot_width + guide_width) / chopVel
-                # set the chopper phase to be as close to zero as possible
-                realTimeOp = np.array([(t_open - t_full_op / 2.0), (t_open + t_full_op / 2.0)])
-
-            chop_times.append([])
-            if slots_ang_pos and slot > 1 and angles:
-                tslots = [(uSec * angles[j] / 360.0 / freq) for j in range(slot)]
-                tslots = [[(t + r * (uSec / freq)) - tslots[0] for r in range(int(freq / p_frames))] for t in
-                          tslots]
-                realTimeOp -= np.max(tslots[islt % slot])
-                islt = 0
-                next_win_t = uSec / source_rep + (uSec / freq)
-
-                while realTimeOp[0] < next_win_t:
-                    chop_times[i].append(deepcopy(realTimeOp))
-                    slt0 = islt % slot
-                    slt1 = (islt + 1) % slot
-                    angdiff = angles[slt1] - angles[slt0]
-                    if (slt1 - slt0) != 1:
-                        angdiff += 360
-                    realTimeOp += uSec * (angdiff / 360.0) / freq
-                    islt += 1
-            else:
-                # If angular positions of slots not defined, assumed evenly spaced (LET, MERLIN)
-                next_win_t = uSec / (slot * freq)
-                realTimeOp -= next_win_t * np.ceil(realTimeOp[0] / next_win_t)
-
-                while realTimeOp[0] < (uSec / p_frames + next_win_t):
-                    chop_times[i].append(deepcopy(realTimeOp))
-                    realTimeOp += next_win_t
-
-        wd0 = (chop_times[1][1] - chop_times[1][0]) / 2.0 / 1.0e6
-        wd1 = (chop_times[0][1] - chop_times[0][0]) / 2.0 / 1.0e6
-
-        return wd0 ** 2, wd1 ** 2
-
-    @staticmethod
-    def _get_distances(choppers: dict[str, Chopper]) -> tuple[float, float, float]:
-        choppers: list[Chopper] = list(choppers.values())
+    def _get_distances(choppers: dict[str, FermiChopper | DiskChopper]) -> tuple[float, float, float]:
+        choppers: list[FermiChopper | DiskChopper] = list(choppers.values())
         mod_chop = choppers[-1]['distance']
         try:
             ap_chop = choppers[-1]['aperture_distance']
@@ -526,6 +376,180 @@ class PyChopModel(InstrumentModel):
     #         term2 = (1 + l1 / l2 * energy_term) ** 2
     #
     #     return resolution
+
+
+class PyChopModelFermi(PyChopModel):
+    data_class = PyChopModelDataFermi
+
+    def __init__(self,
+                 model_data: PyChopModelDataFermi,
+                 e_init: Optional[float] = None,
+                 chopper_frequency: Optional[int] = None,  # TODO: int
+                 fitting_order: Optional[int] = 4,
+                 **_):
+        if chopper_frequency is None:
+            chopper_frequency = model_data.default_chopper_frequency
+
+        if chopper_frequency not in range(*model_data.allowed_chopper_frequencies):
+            raise InvalidInputError(f'The provided chopper frequency ({chopper_frequency}) is not allowed; only the '
+                                    f'following frequencies are possible: '
+                                    f'{list(range(*model_data.allowed_chopper_frequencies))}')
+
+        super().__init__(model_data, [chopper_frequency], e_init, fitting_order)
+
+    @classmethod
+    def get_chopper_width_squared(cls,
+                                  model_data: PyChopModelDataFermi,
+                                  e_init: float,
+                                  chopper_frequency: list[int]) -> tuple[float, None]:
+        frequency = 2 * np.pi * chopper_frequency[0]
+        gamm = (2.00 * model_data.radius ** 2 / model_data.pslit) * \
+               abs(1.00 / model_data.rho - 2.00 * frequency / (437.392 * np.sqrt(e_init)))
+
+        if gamm >= 4.:
+            raise NoTransmissionError(f'The combination of e_init={e_init} and chopper_frequency={chopper_frequency} '
+                                      f'is not valid because the Fermi chopper has no transmission at these values.')
+        elif gamm <= 1.:
+            gsqr = (1.00 - (gamm ** 2) ** 2 / 10.00) / (1.00 - (gamm ** 2) / 6.00)
+        else:
+            groot = np.sqrt(gamm)
+            gsqr = 0.60 * gamm * ((groot - 2.00) ** 2) * (groot + 8.00) / (groot + 4.00)
+
+        sigma = ((model_data.pslit / (2.00 * model_data.radius * frequency)) ** 2 / 6.00) * gsqr
+        return sigma * SIGMA2FWHMSQ, None
+
+
+class PyChopModelNonFermi(PyChopModel):
+    data_class = PyChopModelDataNonFermi
+
+    def __init__(self,
+                 model_data: PyChopModelDataNonFermi,
+                 e_init: Optional[float] = None,
+                 chopper_frequency: Optional[list[int]] = None,  # TODO: int
+                 fitting_order: Optional[int] = 4,
+                 **_):
+        if chopper_frequency is None:
+            chopper_frequency = model_data.default_chopper_frequency
+
+        for frequency, allowed_chopper_frequencies in zip(chopper_frequency, model_data.allowed_chopper_frequencies):
+            if frequency not in range(*allowed_chopper_frequencies):
+                raise InvalidInputError(f'The provided chopper frequency ({frequency}) is not allowed; only the'
+                                        f' following frequencies are possible: '
+                                        f'{list(range(*allowed_chopper_frequencies))}')
+
+        super().__init__(model_data, chopper_frequency, e_init, fitting_order)
+
+    @staticmethod
+    def get_long_frequency(frequency: list[int], model_data: PyChopModelDataNonFermi):
+        frequency += model_data.default_chopper_frequency[len(frequency):]
+        frequency_matrix = np.array(model_data.frequency_matrix)
+
+        return np.dot(frequency_matrix, frequency) + model_data.constant_frequencies
+
+    @classmethod
+    def _get_chop_times(cls,
+                      model_data: PyChopModelDataNonFermi,
+                      e_init: float,
+                      chopper_frequency: list[int]) -> list[list[np.ndarray]]:
+        frequencies = cls.get_long_frequency(chopper_frequency, model_data)
+        choppers = model_data.choppers
+
+        # conversion factors
+        lam2TOF = 252.7784  # the conversion from wavelength to TOF at 1m, multiply by distance
+        uSec = 1e6  # seconds to microseconds
+        lam = np.sqrt(81.8042 / e_init)  # convert from energy to wavelenth
+
+        p_frames = model_data.source_frequency / model_data.n_frame
+
+        # if there's only one disk we prepend a dummy disk with full opening at zero distance
+        # so that the distance calculations (which needs the difference between disk pos) works
+        if len(choppers) == 1:
+            choppers = {
+                'prepended': {
+                    'distance': 0,
+                    'nslot': 1,
+                    'slot_ang_pos': None,
+                    'slot_width': 3141,
+                    'guide_width': 10,
+                    'radius': 500,
+                    'num_disk': 1
+                },
+                **choppers
+            }
+            frequencies = np.array([model_data.source_frequency, frequencies[0]])
+
+        chop_times = []
+
+        # first we optimise on the main Ei
+        for i, (frequency, chopper) in enumerate(zip(frequencies, choppers.values())):
+            chopper: DiskChopper
+            this_phase, phase_independence = chopper['default_phase'], chopper['is_phase_independent']
+
+            # checks whether this chopper should have an independently set phase / delay
+            is_phase_str = isinstance(this_phase, str)
+            islt = int(this_phase) if (phase_independence and is_phase_str) else 0
+
+            if phase_independence and not is_phase_str:
+                # effective chopper velocity (if 2 disks effective velocity is double)
+                chopVel = 2 * np.pi * chopper['radius'] * chopper['num_disk'] * frequency
+
+                # full opening time
+                t_full_op = uSec * (chopper['slot_width'] + chopper['guide_width']) / chopVel
+                realTimeOp = np.array([this_phase, this_phase + t_full_op])
+            else:
+                # the opening time of the chopper so that it is open for the focus wavelength
+                t_open = lam2TOF * lam * chopper['distance']
+                # effective chopper velocity (if 2 disks effective velocity is double)
+                chopVel = 2 * np.pi * chopper['radius'] * chopper['num_disk'] * frequency
+
+                # full opening time
+                t_full_op = uSec * (chopper['slot_width'] + chopper['guide_width']) / chopVel
+                # set the chopper phase to be as close to zero as possible
+                realTimeOp = np.array([(t_open - t_full_op / 2.0), (t_open + t_full_op / 2.0)])
+
+            slot, angles = chopper['nslot'], chopper['slot_ang_pos']
+
+            chop_times.append([])
+            if slot > 1 and angles:
+                tslots = [(uSec * angles[j] / 360.0 / frequency) for j in range(slot)]
+                tslots = [[(t + r * (uSec / frequency)) - tslots[0] for r in range(int(frequency / p_frames))] for t in
+                          tslots]
+                realTimeOp -= np.max(tslots[islt % slot])
+                islt = 0
+                next_win_t = uSec / model_data.source_frequency + (uSec / frequency)
+
+                while realTimeOp[0] < next_win_t:
+                    chop_times[i].append(deepcopy(realTimeOp))
+                    slt0 = islt % slot
+                    slt1 = (islt + 1) % slot
+                    angdiff = angles[slt1] - angles[slt0]
+                    if (slt1 - slt0) != 1:
+                        angdiff += 360
+                    realTimeOp += uSec * (angdiff / 360.0) / frequency
+                    islt += 1
+            else:
+                # If angular positions of slots not defined, assumed evenly spaced (LET, MERLIN)
+                next_win_t = uSec / (slot * frequency)
+                realTimeOp -= next_win_t * np.ceil(realTimeOp[0] / next_win_t)
+
+                while realTimeOp[0] < (uSec / p_frames + next_win_t):
+                    chop_times[i].append(deepcopy(realTimeOp))
+                    realTimeOp += next_win_t
+
+        return chop_times
+
+    @classmethod
+    def get_chopper_width_squared(cls,
+                                  model_data: PyChopModelDataNonFermi,
+                                  e_init: float,
+                                  chopper_frequency: list[int]) -> tuple[float, float]:
+        chop_times = cls._get_chop_times(model_data, e_init, chopper_frequency)
+        chop_times = [chop_times[0][0], chop_times[-1][0]]
+
+        wd0 = (chop_times[1][1] - chop_times[1][0]) / 2.0 / 1.0e6
+        wd1 = (chop_times[0][1] - chop_times[0][0]) / 2.0 / 1.0e6
+
+        return wd0 ** 2, wd1 ** 2
 
 
 def soft_hat(x, p):

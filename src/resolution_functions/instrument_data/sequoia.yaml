@@ -13,7 +13,6 @@ version:
             allowed_e_init: [ 4, 6000 ]  # meV
             max_wavenumber: 2000  # meV
             default_chopper_frequency: 300
-            default_frequencies: [ 300 ]
             allowed_chopper_frequencies: [60, 601, 60]
             frequency_matrix: [[1]]
             moderator:
@@ -35,16 +34,8 @@ version:
                 gamma: 0.0  # Angle of x-axis to ki (degrees)
             choppers:
                 Fermi:
-                    fermi: true
                     distance: 18.01  # m
                     aperture_distance: 17.0  # m
-                    # Default compatibility arguments:
-                    nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
-                    slot_ang_pos: null
-                    slot_width: 10.            # Slot width in mm
-                    guide_width: 10.           # Width of guide after chopper in mm
-                    radius: 290.               # Disk radius
-                    num_disk: 1
         settings: &settings
             chopper_package:
                 default_setting: 'ARCS-100-1.5-AST'
@@ -96,7 +87,7 @@ version:
         default_model: 'PyChop_fit'
         models:
             PyChop_fit:
-                function: "pychop_fit"
+                function: "pychop_fit_fermi"
                 citation: ""
                 parameters:
                     <<: *constants
