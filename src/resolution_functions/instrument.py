@@ -88,6 +88,10 @@ class Instrument:
         return os.path.join(INSTRUMENT_DATA_PATH, file_name + '.yaml'), implied_version
 
     def get_model_data(self, model_name: Optional[str] = None, **kwargs) -> ModelData:
+        out, _ = self._get_model_data(model_name, **kwargs)
+        return out
+
+    def _get_model_data(self, model_name: Optional[str] = None, **kwargs) -> tuple[ModelData, str]:
         if model_name is None:
             model_name = self.default_model
 
@@ -105,12 +109,13 @@ class Instrument:
         model_class = MODELS[model['function']]
         return model_class.data_class(function=model['function'],
                                       citation=model['citation'],
-                                      **ChainMap(*settings, model['parameters']))
+                                      **ChainMap(*settings, model['parameters'])), model_name
 
     def get_resolution_function(self, model_name: Optional[str] = None, **kwargs) -> InstrumentModel:
+        model_data, model_name = self._get_model_data(model_name, **kwargs)
         model_class = MODELS[self.models[model_name]['function']]
 
-        return model_class(self.get_model_data(model_name, **kwargs), **kwargs)
+        return model_class(model_data, **kwargs)
 
     @classmethod
     def instrument_versions(cls, instrument_name: str) -> list[str]:
