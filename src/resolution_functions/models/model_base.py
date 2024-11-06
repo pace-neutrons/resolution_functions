@@ -14,6 +14,14 @@ class ModelData(ABC):
     function: str
     citation: str
 
+    @property
+    def restrictions(self) -> dict[str, list[int | float]]:
+        return {}
+
+    @property
+    def defaults(self) -> dict:
+        return {}
+
 
 class InstrumentModel(ABC):
     input: ClassVar[int]

@@ -10,7 +10,7 @@ from .models import MODELS
 
 if TYPE_CHECKING:
     from .models.model_base import ModelData, InstrumentModel
-
+    from inspect import Signature
 
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
 
@@ -32,6 +32,7 @@ INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
 class InvalidInstrumentError(Exception):
     pass
 
+
 class InvalidSettingError(Exception):
     pass
 
@@ -41,7 +42,7 @@ class Instrument:
     name: str
     version: str
     models: dict[str, dict[str, Union[str, Union[dict[str, Union[float, int, str, list[float], dict]],
-                                                 dict[str, dict[str, Union[float, int, str, list[float]]]]]]]]
+    dict[str, dict[str, Union[float, int, str, list[float]]]]]]]]
     default_model: str
 
     @classmethod
@@ -82,8 +83,9 @@ class Instrument:
         try:
             file_name, implied_version = INSTRUMENT_MAP[instrument_name]
         except KeyError:
-            raise InvalidInstrumentError(f'"{instrument_name}" is not a valid instrument name. Only the following instruments are '
-                                         f'supported: {list(INSTRUMENT_MAP.keys())}')
+            raise InvalidInstrumentError(
+                f'"{instrument_name}" is not a valid instrument name. Only the following instruments are '
+                f'supported: {list(INSTRUMENT_MAP.keys())}')
 
         return os.path.join(INSTRUMENT_DATA_PATH, file_name + '.yaml'), implied_version
 
@@ -116,6 +118,48 @@ class Instrument:
         model_class = MODELS[self.models[model_name]['function']]
 
         return model_class(model_data, **kwargs)
+
+    def get_model_signature(self, model_name: Optional[str] = None, **kwargs) -> Signature:
+        from inspect import signature, Signature, Parameter
+        from typing import Annotated, Literal
+
+        model_data, model_name = self._get_model_data(model_name, **kwargs)
+        model_class = MODELS[self.models[model_name]['function']]
+
+        signature = signature(model_class)
+
+        params = {
+            'model_name': Parameter('model_name',
+                                    Parameter.POSITIONAL_OR_KEYWORD,
+                                    default=model_name,
+                                    annotation=Optional[str])
+        }
+
+        for setting_name, options in self.models[model_name]['settings'].items():
+            option_names = self._get_options(options)
+            params[setting_name] = Parameter(setting_name,
+                                             Parameter.KEYWORD_ONLY,
+                                             default=options['default_setting'],
+                                             annotation=Literal[tuple(option_names)])
+
+        for key, value in signature.parameters.items():
+            if key == 'model_data':
+                continue
+
+            args = {}
+            try:
+                args['default'] = model_data.defaults[key]
+            except KeyError:
+                pass
+
+            try:
+                args['annotation'] = Annotated[value.annotation, f'restriction={model_data.restrictions[key]}']
+            except KeyError:
+                pass
+
+            params[key] = value.replace(**args, kind=Parameter.KEYWORD_ONLY)
+
+        return Signature(parameters=list(params.values()))
 
     @classmethod
     def instrument_versions(cls, instrument_name: str) -> list[str]:

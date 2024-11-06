@@ -4,13 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from copy import deepcopy
 from math import erf
-from typing import Optional, TYPE_CHECKING, Union
-import sys
-
-if sys.version_info < (3, 11):
-    from typing_extensions import TypedDict, NotRequired
-else:
-    from typing import TypedDict, NotRequired
+from typing import Optional, TypedDict, TYPE_CHECKING, Union
 
 
 import numpy as np
@@ -55,6 +49,14 @@ class PyChopModelDataFermi(PyChopModelData):
     radius: float
     rho: float
 
+    @property
+    def restrictions(self) -> dict[str, list[int | float]]:
+        return {'e_init': self.allowed_e_init, 'chopper_frequency': self.allowed_chopper_frequencies}
+
+    @property
+    def defaults(self) -> dict:
+        return {'e_init': self.default_e_init, 'chopper_frequency': self.default_chopper_frequency}
+
 
 @dataclass(init=True, repr=True, frozen=True, slots=True)
 class PyChopModelDataNonFermi(PyChopModelData):
@@ -63,6 +65,14 @@ class PyChopModelDataNonFermi(PyChopModelData):
     constant_frequencies: list[int]
     source_frequency: float
     n_frame: int
+
+    @property
+    def restrictions(self) -> dict[str, list[int | float]]:
+        return {'e_init': self.allowed_e_init, 'chopper_frequency': self.allowed_chopper_frequencies}
+
+    @property
+    def defaults(self) -> dict:
+        return {'e_init': self.default_e_init, 'chopper_frequency': self.default_chopper_frequency}
 
 
 class FermiChopper(TypedDict):
