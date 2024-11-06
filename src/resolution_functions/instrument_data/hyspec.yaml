@@ -1,0 +1,92 @@
+name: 'HYSPEC'
+default_version: 'HYSPEC'
+
+version:
+    HYSPEC:
+        constants: &constants
+            d_chopper_sample: 3.61               # Distance (x1) from final chopper to sample (m)
+            d_sample_detector: 4.5                  # Distance (x2) from sample to detector (m)
+            aperture_width: 0.0         # Width of aperture at moderator face (m)
+            theta: 32.0                   # Angle beamline makes with moderator face (degrees)
+            q_size: 100
+            default_e_init: 30  # meV
+            allowed_e_init: [ 3.6, 61.0 ]  # meV
+            max_wavenumber: 2000  # meV
+            default_chopper_frequency: 180
+            allowed_chopper_frequencies: [60, 421, 60]
+            frequency_matrix:
+                [ [ 0 ],
+                  [ 0 ],
+                  [ 1 ] ]                       #   f1: The frequency of the resolution chopper (Chopper 4)
+            moderator:
+                type: 3
+                scaling_function: null
+                scaling_parameters: null
+                measured_wavelength: [28.60141458, 26.65479018, 24.84065387, 23.14998844, 21.57439041,
+                                       20.10602826, 18.73760346, 17.46231422, 16.27382172, 15.16621852,
+                                       14.13399926, 13.17203328, 12.27553911, 11.44006072, 10.66144534,
+                                        9.93582285,  9.25958654,  8.62937515,  8.04205622,  7.49471047,
+                                        6.9846173 ,  6.50924128,  6.06621956,  5.65335009,  5.26858069,
+                                        4.90999885,  4.57582225,  4.26438985,  3.97415367,  3.70367109,
+                                        3.45159766,  3.21668046,  2.99775183,  2.79372357,  2.60358156,
+                                        2.42638069,  2.2612402 ,  2.10733923,  1.96391283,  1.83024809,
+                                        1.70568063,  1.58959128,  1.48140303,  1.38057811,  1.28661538,
+                                        1.19904779,  1.11744009,  1.04138664,  0.97050943,  0.90445614]
+                measured_width: [349.37, 354.02, 358.23, 361.74, 364.36, 365.84, 366.  , 364.71,
+                                   361.86, 357.47, 351.6 , 344.4 , 336.06, 326.81, 316.87, 306.49,
+                                   295.86, 285.14, 274.45, 263.89, 253.48, 243.24, 233.12, 223.05,
+                                   212.97, 202.77, 192.43, 181.89, 171.24, 160.57, 150.08, 139.97,
+                                   130.4 , 121.38, 112.68, 103.81,  94.24,  83.71,  72.47,  61.31,
+                                    51.03,  42.13,  34.74,  28.75,  23.98,  20.19,  17.17,  14.77,
+                                    12.85,  11.29 ]
+                parameters: [0.0]      # Parameters for time profile
+            detector:
+                type: 2
+                phi: 60.0
+                depth: 0.025  # Detector depth (m)
+            sample:
+                type: 2  # Sample type: 0==flat plate, 1==ellipse, 2==annulus, 3==sphere, 4==solid cylinder
+                thickness: 1.0e-2  # Thickness (m)
+                width: 1.0e-2  # Width (m)
+                height: 3.0e-2  # Height (m)
+                gamma: 0.0  # Angle of x-axis to ki (degrees)
+            choppers:
+                T1A:
+                    distance: 9.400
+                    nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_width: 94.7            # Slot width in mm
+                    slot_ang_pos: null
+                    guide_width: 40           # Width of guide after chopper in mm
+                    radius: 250               # Disk radius
+                    num_disk: 1
+                    is_phase_independent: False  # Is this disk to be phased independently?
+                    default_phase: 0        # What is the default phase for this disk (either a time in microseconds
+                T1B:
+                    distance: 36.46
+                    nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                    slot_width: 94.7            # Slot width in mm
+                    slot_ang_pos: null
+                    guide_width: 40           # Width of guide after chopper in mm
+                    radius: 250               # Disk radius
+                    num_disk: 1
+                    is_phase_independent: False  # Is this disk to be phased independently?
+                    default_phase: 0        # What is the default phase for this disk (either a time in microseconds
+                Fermi:
+                    distance: 37.17  # m
+                    aperture_distance: 37.0  # m
+        settings: &settings
+            chopper_package:
+                default_setting: 'OnlyOne'
+                OnlyOne:
+                    pslit: 0.6e-3  # m
+                    radius: 5.0e-3  # m
+                    rho: 1000.0  # m
+                    tjit: 0.0
+        default_model: 'PyChop_fit'
+        models:
+            PyChop_fit:
+                function: "pychop_fit_fermi"
+                citation: ""
+                parameters:
+                    <<: *constants
+                settings: *settings

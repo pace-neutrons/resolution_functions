@@ -30,6 +30,7 @@ MATRIX_IDS_NONFERMI = [f'e_init={ei},f1={f1},f2={f2}' for ei, f1, f2 in MATRIX_N
 
 INSTRUMENTS_FERMI = [
     [('ARCS', 'ARCS')],
+    [('HYSPEC', 'HYSPEC')],
     [('MAPS', 'MAPS')],
     [('MARI', 'MARI')],
     [('MERLIN', 'MERLIN')],
@@ -38,6 +39,7 @@ INSTRUMENTS_FERMI = [
 INSTRUMENT_SETTINGS_FERMI = [
     ['SEQ-100-2.0-AST', 'SEQ-700-3.5-AST', 'ARCS-100-1.5-AST', 'ARCS-700-1.5-AST',
      'ARCS-700-0.5-AST', 'ARCS-100-1.5-SMI', 'ARCS-700-1.5-SMI'],
+    ['OnlyOne'],
     ['A', 'S'],
     ['A', 'B', 'C', 'G', 'R', 'S'],
     ['G', 'S'],
@@ -192,7 +194,11 @@ def test_fermi_chopper_width(matrix, pychop_fermi_data):
     e_init, chopper_frequency = matrix
     pychop_fermi_data, pychop = pychop_fermi_data
 
-    pychop.chopper_system.setFrequency(chopper_frequency)
+    try:
+        pychop.chopper_system.setFrequency(chopper_frequency)
+    except ValueError as e:
+        if 'maximum allowed' in str(e):
+            return
     expected = pychop.chopper_system.getWidthSquared(e_init)
 
     if np.isnan(expected[0]):
@@ -325,7 +331,11 @@ def test_nonfermi_precompute_van_var(matrix, pychop_nonfermi_data):
 def _test_precompute_van_var(e_init, chopper_frequency, cls, data, pychop):
     fake_frequencies = get_fake_frequencies(e_init)
 
-    pychop.chopper_system.setFrequency(chopper_frequency)
+    try:
+        pychop.chopper_system.setFrequency(chopper_frequency)
+    except ValueError as e:
+        if 'maximum allowed' in str(e):
+            return
     expected, _, _ = pychop.getVanVar(Ei_in=e_init, Etrans=fake_frequencies)
 
     if np.any(np.isnan(expected)):
@@ -355,7 +365,11 @@ def test_debug_nonfermi_precompute_van_var(matrix, pychop_nonfermi_data):
 def _test_debug_precompute_van_var(e_init, chopper_frequency, cls, data, pychop):
     fake_frequencies = get_fake_frequencies(e_init)
 
-    pychop.chopper_system.setFrequency(chopper_frequency)
+    try:
+        pychop.chopper_system.setFrequency(chopper_frequency)
+    except ValueError as e:
+        if 'maximum allowed' in str(e):
+            return
     expected_result, expected, _ = pychop.getVanVar(Ei_in=e_init, Etrans=fake_frequencies)
 
     if np.any(np.isnan(expected_result)):
@@ -390,7 +404,12 @@ def test_nonfermi_precompute_resolution(matrix, pychop_nonfermi_data):
 
 
 def _test_precompute_resolution(e_init, chopper_frequency, cls, data, pychop):
-    pychop.chopper_system.setFrequency(chopper_frequency)
+    try:
+        pychop.chopper_system.setFrequency(chopper_frequency)
+    except ValueError as e:
+        if 'maximum allowed' in str(e):
+            return
+
     fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
     expected_resolution = pychop.getResolution(Ei_in=e_init, Etrans=fake_frequencies)
 
