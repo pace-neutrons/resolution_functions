@@ -119,7 +119,7 @@ version:
         default_model: 'PyChop_fit'
         models:
             PyChop_fit:
-                function: "pychop_fit_nonfermi"
+                function: "pychop_fit_let"
                 citation: ""
                 parameters:
                     <<: *constants

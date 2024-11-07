@@ -111,6 +111,13 @@ def cncs_data():
     return rf
 
 
+@pytest.fixture(scope="module")
+def let_data():
+    cncs = Instrument.from_default('LET', 'LET')
+    rf = cncs.get_model_data('PyChop_fit')
+    return rf
+
+
 @pytest.mark.parametrize('chopper_frequency',
                          [49.99999, -0.048, -np.inf, 600.00017, np.inf, 13554, np.nan, 50.5, 57.5, 500.0000001, 480])
 def test_fermi_invalid_chopper_frequency(chopper_frequency, mari_data: tuple[PyChopModelDataFermi, PyChopInstrument]):
@@ -131,17 +138,35 @@ def test_fermi_invalid_e_init(e_init, mari_data: tuple[PyChopModelDataFermi, PyC
 @pytest.mark.parametrize('chopper_frequency',
                          [[59.99999, 60], [-0.048] * 2, [-np.inf, 0], [120, 300.00017], [np.inf, np.inf],
                           [300, np.nan], [60.5, 60], [180, 67.5], [600, 600], [130, 130]])
-def test_nonfermi_invalid_chopper_frequency(chopper_frequency, cncs_data: PyChopModelDataNonFermi):
+def test_cncs_invalid_chopper_frequency(chopper_frequency, cncs_data: PyChopModelDataNonFermi):
     with pytest.raises(InvalidInputError) as e:
-        PyChopModelNonFermi(cncs_data, chopper_frequency=chopper_frequency)
+        PyChopModelCNCS(cncs_data, resolution_disk_frequency=chopper_frequency[0], fermi_frequency=chopper_frequency[1])
 
     assert 'The provided chopper frequency' in str(e.value)
 
 
-@pytest.mark.parametrize('e_init', [-5, -0.00048, -np.inf, 2000.1, np.inf, 13554.1654, np.nan])
-def test_nonfermi_invalid_e_init(e_init, cncs_data: PyChopModelDataNonFermi):
+@pytest.mark.parametrize('e_init', [-5, -0.00048, -np.inf, 80.1, np.inf, 13554.1654, np.nan])
+def test_cncs_invalid_e_init(e_init, cncs_data: PyChopModelDataNonFermi):
     with pytest.raises(InvalidInputError) as e:
-        PyChopModelNonFermi(cncs_data, e_init=e_init)
+        PyChopModelCNCS(cncs_data, e_init=e_init)
+
+    assert 'The provided incident energy' in str(e.value)
+
+
+@pytest.mark.parametrize('chopper_frequency',
+                         [[59.99999, 60], [-0.048] * 2, [-np.inf, 0], [120, 300.00017], [np.inf, np.inf],
+                          [300, np.nan], [60.5, 60], [180, 67.5], [600, 600], [135, 135]])
+def test_let_invalid_chopper_frequency(chopper_frequency, let_data: PyChopModelDataNonFermi):
+    with pytest.raises(InvalidInputError) as e:
+        PyChopModelLET(let_data, resolution_frequency=chopper_frequency[0], pulse_remover_frequency=chopper_frequency[1])
+
+    assert 'The provided chopper frequency' in str(e.value)
+
+
+@pytest.mark.parametrize('e_init', [-5, -0.00048, -np.inf, 30.0001, np.inf, 13554.1654, np.nan])
+def test_let_invalid_e_init(e_init, let_data: PyChopModelDataNonFermi):
+    with pytest.raises(InvalidInputError) as e:
+        PyChopModelLET(let_data, e_init=e_init)
 
     assert 'The provided incident energy' in str(e.value)
 
