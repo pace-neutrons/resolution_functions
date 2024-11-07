@@ -211,7 +211,7 @@ def test_nonfermi_moderator_width(e_init, pychop_nonfermi_data):
 
 
 def _test_moderator_width(e_init, cls, data, pychop):
-    actual = cls.get_moderator_width_squared(data.moderator, e_init)
+    actual = cls._get_moderator_width_squared(data.moderator, e_init)
     expected = pychop.moderator.getWidthSquared(e_init)
 
     assert_allclose(actual, expected)
@@ -231,10 +231,10 @@ def test_fermi_chopper_width(matrix, pychop_fermi_data):
 
     if np.isnan(expected[0]):
         with pytest.raises(NoTransmissionError):
-            PyChopModelFermi.get_chopper_width_squared(pychop_fermi_data, e_init, [chopper_frequency])
+            PyChopModelFermi._get_chopper_width_squared(pychop_fermi_data, e_init, [chopper_frequency])
         return
 
-    actual = PyChopModelFermi.get_chopper_width_squared(pychop_fermi_data, e_init, [chopper_frequency])
+    actual = PyChopModelFermi._get_chopper_width_squared(pychop_fermi_data, e_init, [chopper_frequency])
 
     assert_allclose(actual[0], expected[0], rtol=0, atol=1e-8)
     assert actual[1] is None
@@ -248,7 +248,7 @@ def test_nonfermi_chopper_width(matrix, pychop_nonfermi_data):
     pychop.chopper_system.setFrequency(chopper_frequencies)
     expected = pychop.chopper_system.getWidthSquared(e_init)
 
-    actual = PyChopModelNonFermi.get_chopper_width_squared(data, e_init, chopper_frequencies)
+    actual = PyChopModelNonFermi._get_chopper_width_squared(data, e_init, chopper_frequencies)
 
     assert_allclose(actual[0], expected[0], rtol=0, atol=1e-8)
     assert_allclose(actual[1], expected[1], rtol=0, atol=1e-8)
