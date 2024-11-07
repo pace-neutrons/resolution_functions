@@ -495,6 +495,7 @@ class PyChopModelNonFermi(PyChopModel, ABC):
         chop_times = []
 
         # first we optimise on the main Ei
+        # TODO: Calculate only the first and last choppers (only those used upstream)
         for i, (frequency, chopper) in enumerate(zip(frequencies, choppers.values())):
             chopper: DiskChopper
             this_phase, phase_independence = chopper['default_phase'], chopper['is_phase_independent']
@@ -558,10 +559,9 @@ class PyChopModelNonFermi(PyChopModel, ABC):
                                    e_init: float,
                                    chopper_frequency: list[int]) -> tuple[float, float]:
         chop_times = cls._get_chop_times(model_data, e_init, chopper_frequency)
-        chop_times = [chop_times[0][0], chop_times[-1][0]]
 
-        wd0 = (chop_times[1][1] - chop_times[1][0]) * 0.5e-6
-        wd1 = (chop_times[0][1] - chop_times[0][0]) * 0.5e-6
+        wd0 = (chop_times[-1][0][1] - chop_times[-1][0][0]) * 0.5e-6
+        wd1 = (chop_times[0][0][1] - chop_times[0][0][0]) * 0.5e-6
 
         return wd0 ** 2, wd1 ** 2
 
