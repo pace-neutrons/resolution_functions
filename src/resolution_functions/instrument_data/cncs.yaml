@@ -6,7 +6,6 @@ version:
         choppers: &choppers
             Fermi:
                 distance: 6.413  # m
-                # Default compatibility arguments:
                 nslot: 2                  # Number of slots. If slot_ang_pos is specified can omit this entry
                 slot_ang_pos: null
                 slot_width: 20.            # Slot width in mm

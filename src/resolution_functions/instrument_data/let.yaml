@@ -1,0 +1,126 @@
+name: 'LET'
+default_version: 'LET'
+
+version:
+    LET:
+        choppers: &choppers
+            ResolutionDisk:
+                distance: 7.83  # m
+                nslot: 6                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                slot_ang_pos: null
+                slot_width: 40.            # Slot width in mm
+                guide_width: 40.           # Width of guide after chopper in mm
+                radius: 290.               # Disk radius
+                num_disk: 2
+                is_phase_independent: False  # Is this disk to be phased independently?
+                default_phase: 0         # What is the default phase for this disk (either a time in microseconds
+            FrameOverlapDisk:
+                distance: 8.4
+                nslot: 1                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                slot_width: 890            # Slot width in mm
+                slot_ang_pos: null
+                guide_width: 40           # Width of guide after chopper in mm
+                radius: 545               # Disk radius
+                num_disk: 1
+                is_phase_independent: True  # Is this disk to be phased independently?
+                default_phase: 5         # What is the default phase for this disk (either a time in microseconds
+            PulseRemoverDisk:
+                distance: 11.75
+                nslot: 2                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                slot_width: 56            # Slot width in mm
+                slot_ang_pos: null
+                guide_width: 40           # Width of guide after chopper in mm
+                radius: 290               # Disk radius
+                num_disk: 1
+                is_phase_independent: False  # Is this disk to be phased independently?
+                default_phase: 0         # What is the default phase for this disk (either a time in microseconds
+            ContaminationRemoverDisk:
+                distance: 15.66
+                nslot: 6                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                slot_width: 56            # Slot width in mm
+                slot_ang_pos: null
+                guide_width: 40           # Width of guide after chopper in mm
+                radius: 290               # Disk radius
+                num_disk: 1
+                is_phase_independent: False  # Is this disk to be phased independently?
+                default_phase: 0         # What is the default phase for this disk (either a time in microseconds
+            ResolutionDisk2: &chopper5
+                distance: 23.5
+                nslot: 2                  # Number of slots. If slot_ang_pos is specified can omit this entry
+                slot_ang_pos: null
+                guide_width: 20           # Width of guide after chopper in mm
+                radius: 290               # Disk radius
+                num_disk: 2
+                is_phase_independent: False  # Is this disk to be phased independently?
+                default_phase: 0         # What is the default phase for this disk (either a time in microseconds
+        constants: &constants
+            d_chopper_sample: 1.5              # Distance (x1) from final chopper to sample (m)
+            d_sample_detector: 3.5                  # Distance (x2) from sample to detector (m)
+            aperture_width: 0.        # Width of aperture at moderator face (m)
+            theta: 32.0                  # Angle beamline makes with moderator face (degrees)
+            q_size: 100
+            default_e_init: 20  # meV
+            allowed_e_init: [ 0., 30. ]  # meV
+            max_wavenumber: 2000  # meV
+            default_chopper_frequency: [ 240, 120 ]
+            allowed_chopper_frequencies: [[10, 301, 10], [10, 301, 10]]
+            constant_frequencies: [0, 10, 0, 0, 0]
+            source_frequency: 10   # Frequency of source (Hz)
+            n_frame: 1  # Number of frames to calculate time-distance diagram for
+            tjit: 0.
+            moderator:
+                type: 3
+                scaling_function: null
+                scaling_parameters: null
+                measured_wavelength: [3.8063, 2.1961, 6.2121, 5.3820, 1.4371, 1.7010, 2.6920, 1.9013]
+                measured_width: [90.4, 40.8, 154.4, 131.2, 22.4, 25.6, 52.4, 32.4]
+                parameters: [0.535, 49.28, -3.143]      # Parameters for time profile
+            detector: null
+            sample: null
+        settings: &settings
+            chopper_package:
+                default_setting: 'High Flux'
+                High Flux:
+                    frequency_matrix:
+                      [ [ 0, 0.5 ],                  #   f1: The frequency of the resolution chopper (Disk 5)
+                        [ 0, 0 ],                    #   f2: The frequency of the pulse removal chopper (Disk 3)
+                        [ 0, 1 ],                    # Disk 4 is usually run at half f1, and disk 1 at half of f2
+                        [ 0.5, 0 ],
+                        [ 1, 0 ] ]
+                    choppers:
+                        <<: *choppers
+                        ResolutionDisk2:
+                            <<: *chopper5
+                            slot_width: 31            # Slot width in mm
+                Intermediate:
+                    frequency_matrix:
+                      [ [ 0, 0.5 ],                  #   f1: The frequency of the resolution chopper (Disk 5)
+                        [ 0, 0 ],                    #   f2: The frequency of the pulse removal chopper (Disk 3)
+                        [ 0, 1 ],                    # Disk 4 is usually run at half f1, and disk 1 at half of f2
+                        [ 0.5, 0 ],
+                        [ 1, 0 ] ]
+                    choppers:
+                        <<: *choppers
+                        ResolutionDisk2:
+                            <<: *chopper5
+                            slot_width: 20
+                High Resolution:
+                    frequency_matrix:
+                      [ [ 0.5, 0 ],
+                        [ 0, 0 ],
+                        [ 0, 1 ],
+                        [ 0, 1 ],
+                        [ 1, 0 ] ]
+                    choppers:
+                        <<: *choppers
+                        ResolutionDisk2:
+                            <<: *chopper5
+                            slot_width: 15
+        default_model: 'PyChop_fit'
+        models:
+            PyChop_fit:
+                function: "pychop_fit_nonfermi"
+                citation: ""
+                parameters:
+                    <<: *constants
+                settings: *settings

@@ -18,13 +18,14 @@ from resolution_functions.models.model_base import InvalidInputError
 DEBUG = False
 
 EINIT = np.arange(50, 2000, 50)
+EINIT_NONFERMI = np.arange(1, 52, 5)
 
 CHOPPER_FREQ_FERMI = np.arange(50, 601, 50)
 MATRIX_FERMI = list(itertools.product(EINIT, CHOPPER_FREQ_FERMI))
 MATRIX_IDS_FERMI = [f'e_init={ei},f={f}' for ei, f in MATRIX_FERMI]
 
-CHOPPER_FREQ_NONFERMI = np.arange(60, 301, 60)
-MATRIX_NONFERMI = list(itertools.product(EINIT, CHOPPER_FREQ_NONFERMI, CHOPPER_FREQ_NONFERMI))
+CHOPPER_FREQ_NONFERMI = np.arange(10, 301, 20)
+MATRIX_NONFERMI = list(itertools.product(EINIT_NONFERMI, CHOPPER_FREQ_NONFERMI, CHOPPER_FREQ_NONFERMI))
 MATRIX_IDS_NONFERMI = [f'e_init={ei},f1={f1},f2={f2}' for ei, f1, f2 in MATRIX_NONFERMI]
 
 
@@ -55,10 +56,12 @@ for instr, settings in zip(INSTRUMENTS_FERMI, INSTRUMENT_SETTINGS_FERMI):
 
 
 INSTRUMENTS_NONFERMI = [
-    [('CNCS', 'CNCS')]
+    [('CNCS', 'CNCS')],
+    [('LET', 'LET')],
 ]
 INSTRUMENT_SETTINGS_NONFERMI = [
-    ['High Flux', 'Intermediate', 'High Resolution']
+    ['High Flux', 'Intermediate', 'High Resolution'],
+    ['High Flux', 'Intermediate', 'High Resolution'],
 ]
 
 INSTRUMENT_MATRIX_NONFERMI, INSTRUMENT_IDS_NONFERMI = [], []
@@ -158,7 +161,7 @@ def test_fermi_moderator_width_analytical(e_init, pychop_fermi_data):
     _test_moderator_width_analytical(e_init, *pychop_fermi_data, PyChopModelFermi)
 
 
-@pytest.mark.parametrize('e_init', EINIT)
+@pytest.mark.parametrize('e_init', EINIT_NONFERMI, ids=[f'ei={ei}' for ei in EINIT_NONFERMI])
 def test_nonfermi_moderator_width_analytical(e_init, pychop_nonfermi_data):
     _test_moderator_width_analytical(e_init, *pychop_nonfermi_data, PyChopModelNonFermi)
 
@@ -169,7 +172,7 @@ def _test_moderator_width_analytical(e_init, data, pychop, cls):
                                                  data['scaling_parameters'], e_init)
     expected = pychop.moderator.getAnalyticWidthsSquared(e_init)
 
-    assert_allclose(actual, expected, rtol=0, atol=1e-8)
+    assert_allclose(actual, expected)
 
 
 @pytest.mark.parametrize('e_init', EINIT, ids=[f'ei={ei}' for ei in EINIT])
@@ -177,16 +180,16 @@ def test_fermi_moderator_width(e_init, pychop_fermi_data):
     _test_moderator_width(e_init, PyChopModelFermi, *pychop_fermi_data)
 
 
-@pytest.mark.parametrize('e_init', EINIT, ids=[f'ei={ei}' for ei in EINIT])
-def test_nonfermi_moderator_width(e_init, pychop_fermi_data):
-    _test_moderator_width(e_init, PyChopModelNonFermi, *pychop_fermi_data)
+@pytest.mark.parametrize('e_init', EINIT_NONFERMI, ids=[f'ei={ei}' for ei in EINIT_NONFERMI])
+def test_nonfermi_moderator_width(e_init, pychop_nonfermi_data):
+    _test_moderator_width(e_init, PyChopModelNonFermi, *pychop_nonfermi_data)
 
 
 def _test_moderator_width(e_init, cls, data, pychop):
     actual = cls.get_moderator_width_squared(data.moderator, e_init)
     expected = pychop.moderator.getWidthSquared(e_init)
 
-    assert_allclose(actual, expected, rtol=0, atol=1e-8)
+    assert_allclose(actual, expected)
 
 
 @pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=MATRIX_IDS_FERMI)
@@ -198,7 +201,7 @@ def test_fermi_chopper_width(matrix, pychop_fermi_data):
         pychop.chopper_system.setFrequency(chopper_frequency)
     except ValueError as e:
         if 'maximum allowed' in str(e):
-            return
+            pytest.skip('Frequency outside the bounds of this instrument')
     expected = pychop.chopper_system.getWidthSquared(e_init)
 
     if np.isnan(expected[0]):
@@ -252,7 +255,12 @@ def test_chop_times(matrix, pychop_nonfermi_data):
 
     for aa, ee in zip(actual, expected):
         for a, e in zip(aa, ee):
-            assert_allclose(a, e, rtol=0, atol=1e-8)
+            try:
+                assert_allclose(a, e, rtol=0, atol=1e-8)
+            except AssertionError:
+                print(actual)
+                print(expected)
+                raise
 
 
 def test_he_detector_width_squared():
@@ -288,6 +296,9 @@ def test_nonfermi_detector_width_squared(e_init, pychop_nonfermi_data):
 
 
 def _test_get_detector_width_squared(e_init, cls, data, pychop):
+    if data.detector is None:
+        pytest.skip('This instrument does not have a detector defined')
+
     fake_frequencies = get_fake_frequencies(e_init)
 
     actual = cls._get_detector_width_squared(data.detector, fake_frequencies, e_init)
@@ -306,9 +317,12 @@ def test_fermi_sample_width_squared(pychop_fermi_data):
 
 
 def test_nonfermi_sample_width_squared(pychop_nonfermi_data):
-    pychop_nonfermi_data, pychop = pychop_nonfermi_data
+    data, pychop = pychop_nonfermi_data
 
-    actual = PyChopModelFermi._get_sample_width_squared(pychop_nonfermi_data.sample)
+    if data.detector is None:
+        pytest.skip('This instrument does not have a detector defined')
+
+    actual = PyChopModelFermi._get_sample_width_squared(data.sample)
     expected = pychop.sample.getWidthSquared()
 
     assert_allclose(actual, expected)
@@ -335,7 +349,7 @@ def _test_precompute_van_var(e_init, chopper_frequency, cls, data, pychop):
         pychop.chopper_system.setFrequency(chopper_frequency)
     except ValueError as e:
         if 'maximum allowed' in str(e):
-            return
+            pytest.skip('Frequency outside the bounds of this instrument')
     expected, _, _ = pychop.getVanVar(Ei_in=e_init, Etrans=fake_frequencies)
 
     if np.any(np.isnan(expected)):
@@ -369,7 +383,7 @@ def _test_debug_precompute_van_var(e_init, chopper_frequency, cls, data, pychop)
         pychop.chopper_system.setFrequency(chopper_frequency)
     except ValueError as e:
         if 'maximum allowed' in str(e):
-            return
+            pytest.skip('Frequency outside the bounds of this instrument')
     expected_result, expected, _ = pychop.getVanVar(Ei_in=e_init, Etrans=fake_frequencies)
 
     if np.any(np.isnan(expected_result)):
@@ -377,15 +391,21 @@ def _test_debug_precompute_van_var(e_init, chopper_frequency, cls, data, pychop)
             cls._precompute_resolution(data, e_init, list(chopper_frequency))
 
     else:
-        vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample = \
+        vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, *other_tsq = \
             cls._precompute_van_var(data, e_init, list(chopper_frequency), fake_frequencies)
 
         assert_allclose(tsq_moderator, expected['moderator'])
         assert_allclose(tsq_chopper, expected['chopper'])
         assert_allclose(tsq_jit, expected['jitter'])
         assert_allclose(tsq_aperture, expected['aperture'])
-        assert_allclose(tsq_detector, expected['detector'])
-        assert_allclose(tsq_sample, expected['sample'])
+
+        if data.detector is not None:
+            tsq_detector = other_tsq.pop(0)
+            assert_allclose(tsq_detector, expected['detector'])
+
+        if data.sample is not None:
+            assert_allclose(other_tsq[0], expected['sample'])
+
         assert_allclose(vsq_van, expected_result)
 
 
@@ -408,7 +428,7 @@ def _test_precompute_resolution(e_init, chopper_frequency, cls, data, pychop):
         pychop.chopper_system.setFrequency(chopper_frequency)
     except ValueError as e:
         if 'maximum allowed' in str(e):
-            return
+            pytest.skip('Frequency outside the bounds of this instrument')
 
     fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
     expected_resolution = pychop.getResolution(Ei_in=e_init, Etrans=fake_frequencies)

@@ -220,6 +220,7 @@ class PyChopModel(InstrumentModel, ABC):
             vsq_van += tsq_sample
 
         # return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample
+        # return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture
         return vsq_van
 
     @classmethod
@@ -394,7 +395,7 @@ class PyChopModelFermi(PyChopModel):
     def __init__(self,
                  model_data: PyChopModelDataFermi,
                  e_init: Optional[float] = None,
-                 chopper_frequency: Optional[int] = None,  # TODO: int
+                 chopper_frequency: Optional[int] = None,
                  fitting_order: Optional[int] = 4,
                  **_):
         if chopper_frequency is None:
@@ -435,7 +436,7 @@ class PyChopModelNonFermi(PyChopModel):
     def __init__(self,
                  model_data: PyChopModelDataNonFermi,
                  e_init: Optional[float] = None,
-                 chopper_frequency: Optional[list[int]] = None,  # TODO: int
+                 chopper_frequency: Optional[list[int]] = None,
                  fitting_order: Optional[int] = 4,
                  **_):
         if chopper_frequency is None:
@@ -556,8 +557,8 @@ class PyChopModelNonFermi(PyChopModel):
         chop_times = cls._get_chop_times(model_data, e_init, chopper_frequency)
         chop_times = [chop_times[0][0], chop_times[-1][0]]
 
-        wd0 = (chop_times[1][1] - chop_times[1][0]) / 2.0 / 1.0e6
-        wd1 = (chop_times[0][1] - chop_times[0][0]) / 2.0 / 1.0e6
+        wd0 = (chop_times[1][1] - chop_times[1][0]) * 0.5e-6
+        wd1 = (chop_times[0][1] - chop_times[0][0]) * 0.5e-6
 
         return wd0 ** 2, wd1 ** 2
 
