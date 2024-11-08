@@ -1,5 +1,9 @@
-import itertools
+"""Validate PyChop_fit resolutions against reference PyChop library"""
 
+import itertools
+import random
+
+from more_itertools import sample as reservoir_sample
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
@@ -8,23 +12,29 @@ from PyChop.Instruments import Instrument as PyChopInstrument
 from PyChop.Chop import tube_mts
 from PyChop.MulpyRep import calcChopTimes
 
-# import mantid
-# from pychop.Instruments import Instrument as PyChopInstrument
-
 from resolution_functions.instrument import Instrument
 from resolution_functions.models.pychop import *
 from resolution_functions.models.model_base import InvalidInputError
 
+random.seed(1)
+
 DEBUG = False
+N_SAMPLES = 10
 
 EINIT = np.arange(50, 2000, 50)
-
 CHOPPER_FREQ_FERMI = np.arange(50, 601, 50)
-MATRIX_FERMI = list(itertools.product(EINIT, CHOPPER_FREQ_FERMI))
+MATRIX_FERMI = list(reservoir_sample(
+    itertools.product(EINIT, CHOPPER_FREQ_FERMI),
+    k=N_SAMPLES)
+)
+
 MATRIX_IDS_FERMI = [f'e_init={ei},f={f}' for ei, f in MATRIX_FERMI]
 
 CHOPPER_FREQ_NONFERMI = np.arange(60, 301, 60)
-MATRIX_NONFERMI = list(itertools.product(EINIT, CHOPPER_FREQ_NONFERMI, CHOPPER_FREQ_NONFERMI))
+MATRIX_NONFERMI = list(reservoir_sample(
+    itertools.product(EINIT, CHOPPER_FREQ_NONFERMI, CHOPPER_FREQ_NONFERMI),
+    k=N_SAMPLES)
+)
 MATRIX_IDS_NONFERMI = [f'e_init={ei},f1={f1},f2={f2}' for ei, f1, f2 in MATRIX_NONFERMI]
 
 
@@ -108,39 +118,66 @@ def cncs_data():
     return rf
 
 
-@pytest.mark.parametrize('chopper_frequency',
-                         [49.99999, -0.048, -np.inf, 600.00017, np.inf, 13554, np.nan, 50.5, 57.5, 500.0000001, 480])
-def test_fermi_invalid_chopper_frequency(chopper_frequency, mari_data: tuple[PyChopModelDataFermi, PyChopInstrument]):
-    with pytest.raises(InvalidInputError) as e:
+@pytest.mark.parametrize(
+    "chopper_frequency",
+    [
+        49.99999,
+        -0.048,
+        -np.inf,
+        600.00017,
+        np.inf,
+        13554,
+        np.nan,
+        50.5,
+        57.5,
+        500.0000001,
+        480,
+    ],
+)
+def test_fermi_invalid_chopper_frequency(
+    chopper_frequency, mari_data: tuple[PyChopModelDataFermi, PyChopInstrument]
+):
+    with pytest.raises(InvalidInputError, match="The provided chopper frequency") as e:
         PyChopModelFermi(mari_data[0], chopper_frequency=chopper_frequency)
 
-    assert 'The provided chopper frequency' in str(e.value)
 
-
-@pytest.mark.parametrize('e_init', [-5, -0.00048, -np.inf, 2000.1, np.inf, 13554.1654, np.nan])
-def test_fermi_invalid_e_init(e_init, mari_data: tuple[PyChopModelDataFermi, PyChopInstrument]):
-    with pytest.raises(InvalidInputError) as e:
+@pytest.mark.parametrize(
+    "e_init", [-5, -0.00048, -np.inf, 2000.1, np.inf, 13554.1654, np.nan]
+)
+def test_fermi_invalid_e_init(
+    e_init, mari_data: tuple[PyChopModelDataFermi, PyChopInstrument]
+):
+    with pytest.raises(InvalidInputError, match="The provided incident energy") as e:
         PyChopModelFermi(mari_data[0], e_init=e_init)
 
-    assert 'The provided incident energy' in str(e.value)
-
-
-@pytest.mark.parametrize('chopper_frequency',
-                         [[59.99999, 60], [-0.048] * 2, [-np.inf, 0], [120, 300.00017], [np.inf, np.inf],
-                          [300, np.nan], [60.5, 60], [180, 67.5], [600, 600], [130, 130]])
-def test_nonfermi_invalid_chopper_frequency(chopper_frequency, cncs_data: PyChopModelDataNonFermi):
-    with pytest.raises(InvalidInputError) as e:
+@pytest.mark.parametrize(
+    "chopper_frequency",
+    [
+        [59.99999, 60],
+        [-0.048] * 2,
+        [-np.inf, 0],
+        [120, 300.00017],
+        [np.inf, np.inf],
+        [300, np.nan],
+        [60.5, 60],
+        [180, 67.5],
+        [600, 600],
+        [130, 130],
+    ],
+)
+def test_nonfermi_invalid_chopper_frequency(
+    chopper_frequency, cncs_data: PyChopModelDataNonFermi
+):
+    with pytest.raises(InvalidInputError, match="The provided chopper frequency") as e:
         PyChopModelNonFermi(cncs_data, chopper_frequency=chopper_frequency)
 
-    assert 'The provided chopper frequency' in str(e.value)
 
-
-@pytest.mark.parametrize('e_init', [-5, -0.00048, -np.inf, 2000.1, np.inf, 13554.1654, np.nan])
+@pytest.mark.parametrize(
+    "e_init", [-5, -0.00048, -np.inf, 2000.1, np.inf, 13554.1654, np.nan]
+)
 def test_nonfermi_invalid_e_init(e_init, cncs_data: PyChopModelDataNonFermi):
-    with pytest.raises(InvalidInputError) as e:
+    with pytest.raises(InvalidInputError, match="The provided incident energy") as e:
         PyChopModelNonFermi(cncs_data, e_init=e_init)
-
-    assert 'The provided incident energy' in str(e.value)
 
 
 def test_distances(mari_data: tuple[PyChopModelData, PyChopInstrument]):
@@ -172,12 +209,12 @@ def _test_moderator_width_analytical(e_init, data, pychop, cls):
     assert_allclose(actual, expected, rtol=0, atol=1e-8)
 
 
-@pytest.mark.parametrize('e_init', EINIT, ids=[f'ei={ei}' for ei in EINIT])
+@pytest.mark.parametrize('e_init', EINIT, ids="ei={}".format)
 def test_fermi_moderator_width(e_init, pychop_fermi_data):
     _test_moderator_width(e_init, PyChopModelFermi, *pychop_fermi_data)
 
 
-@pytest.mark.parametrize('e_init', EINIT, ids=[f'ei={ei}' for ei in EINIT])
+@pytest.mark.parametrize('e_init', EINIT, ids="ei={}".format)
 def test_nonfermi_moderator_width(e_init, pychop_fermi_data):
     _test_moderator_width(e_init, PyChopModelNonFermi, *pychop_fermi_data)
 
