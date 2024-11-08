@@ -28,14 +28,22 @@ MATRIX_FERMI = list(reservoir_sample(
     k=N_SAMPLES)
 )
 
-MATRIX_IDS_FERMI = [f'e_init={ei},f={f}' for ei, f in MATRIX_FERMI]
-
 CHOPPER_FREQ_NONFERMI = np.arange(60, 301, 60)
 MATRIX_NONFERMI = list(reservoir_sample(
     itertools.product(EINIT, CHOPPER_FREQ_NONFERMI, CHOPPER_FREQ_NONFERMI),
     k=N_SAMPLES)
 )
-MATRIX_IDS_NONFERMI = [f'e_init={ei},f1={f1},f2={f2}' for ei, f1, f2 in MATRIX_NONFERMI]
+
+def matrix_fermi_id(matrix_row: tuple[int, int]) -> str:
+    """Get test id string from Fermi chopper frequencies"""
+    e_init, frequency = matrix_row
+    return f"e_init={e_init},f={frequency}"
+
+
+def matrix_nonfermi_id(matrix_row: tuple[int, int, int]) -> str:
+    """Get test id string from Non-Fermi chopper frequencies"""
+    e_init, f1, f2 = matrix_row
+    return f"e_init={e_init},f1={f1},f2={f2}"
 
 
 INSTRUMENTS_FERMI = [
@@ -57,12 +65,13 @@ INSTRUMENT_SETTINGS_FERMI = [
      'ARCS-700-0.5-AST', 'ARCS-100-1.5-SMI', 'ARCS-700-1.5-SMI'],
 ]
 
-INSTRUMENT_MATRIX_FERMI, INSTRUMENT_IDS_FERMI = [], []
-for instr, settings in zip(INSTRUMENTS_FERMI, INSTRUMENT_SETTINGS_FERMI):
-    lst = list(itertools.product(instr, settings))
-    INSTRUMENT_MATRIX_FERMI.extend(lst)
-    INSTRUMENT_IDS_FERMI.extend([f'{i[0]}_{s}' for i, s in lst])
 
+INSTRUMENT_MATRIX_FERMI = list(
+        itertools.chain.from_iterable(
+            itertools.product(instr, settings)
+                  for instr, settings in zip(INSTRUMENTS_FERMI, INSTRUMENT_SETTINGS_FERMI)
+        )
+)
 
 INSTRUMENTS_NONFERMI = [
     [('CNCS', 'CNCS')]
@@ -71,18 +80,25 @@ INSTRUMENT_SETTINGS_NONFERMI = [
     ['High Flux', 'Intermediate', 'High Resolution']
 ]
 
-INSTRUMENT_MATRIX_NONFERMI, INSTRUMENT_IDS_NONFERMI = [], []
-for instr, settings in zip(INSTRUMENTS_NONFERMI, INSTRUMENT_SETTINGS_NONFERMI):
-    lst = list(itertools.product(instr, settings))
-    INSTRUMENT_MATRIX_NONFERMI.extend(lst)
-    INSTRUMENT_IDS_NONFERMI.extend([f'{i[0]}_{s}' for i, s in lst])
+INSTRUMENT_MATRIX_NONFERMI = list(
+        itertools.chain.from_iterable(
+            itertools.product(instr, settings)
+                  for instr, settings in zip(INSTRUMENTS_NONFERMI, INSTRUMENT_SETTINGS_NONFERMI)
+        )
+)
+
+
+def instrument_id(matrix_row: tuple[tuple[str, str], str]) -> str:
+    """Get test id NAME_SETTING from input row ((NAME, NAME), SETTING)"""
+    (instrument, _), setting = matrix_row
+    return f"{instrument}_{setting}"
 
 
 def get_fake_frequencies(e_init: float):
     return np.linspace(0, e_init, 40, endpoint=False)
 
 
-@pytest.fixture(scope="module", params=INSTRUMENT_MATRIX_FERMI, ids=INSTRUMENT_IDS_FERMI)
+@pytest.fixture(scope="module", params=INSTRUMENT_MATRIX_FERMI, ids=instrument_id)
 def pychop_fermi_data(request):
     (name, version), setting = request.param
     maps = Instrument.from_default(name, version)
@@ -92,7 +108,7 @@ def pychop_fermi_data(request):
     return rf, pc
 
 
-@pytest.fixture(scope="module", params=INSTRUMENT_MATRIX_NONFERMI, ids=INSTRUMENT_IDS_NONFERMI)
+@pytest.fixture(scope="module", params=INSTRUMENT_MATRIX_NONFERMI, ids=instrument_id)
 def pychop_nonfermi_data(request):
     (name, version), setting = request.param
     maps = Instrument.from_default(name, version)
@@ -226,7 +242,7 @@ def _test_moderator_width(e_init, cls, data, pychop):
     assert_allclose(actual, expected, rtol=0, atol=1e-8)
 
 
-@pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=MATRIX_IDS_FERMI)
+@pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=matrix_fermi_id)
 def test_fermi_chopper_width(matrix, pychop_fermi_data):
     e_init, chopper_frequency = matrix
     pychop_fermi_data, pychop = pychop_fermi_data
@@ -249,7 +265,7 @@ def test_fermi_chopper_width(matrix, pychop_fermi_data):
     assert actual[1] is None
 
 
-@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=MATRIX_IDS_NONFERMI)
+@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=matrix_nonfermi_id)
 def test_nonfermi_chopper_width(matrix, pychop_nonfermi_data):
     e_init, *chopper_frequencies = matrix
     data, pychop = pychop_nonfermi_data
@@ -263,7 +279,7 @@ def test_nonfermi_chopper_width(matrix, pychop_nonfermi_data):
     assert_allclose(actual[1], expected[1], rtol=0, atol=1e-8)
 
 
-@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=MATRIX_IDS_NONFERMI)
+@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=matrix_nonfermi_id)
 def test_long_frequency(matrix, pychop_nonfermi_data):
     e_init, *chopper_frequencies = matrix
     data, pychop = pychop_nonfermi_data
@@ -276,7 +292,7 @@ def test_long_frequency(matrix, pychop_nonfermi_data):
     assert_allclose(actual, expected)
 
 
-@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=MATRIX_IDS_NONFERMI)
+@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=matrix_nonfermi_id)
 def test_chop_times(matrix, pychop_nonfermi_data):
     e_init, *chopper_frequencies = matrix
     data, pychop = pychop_nonfermi_data
@@ -352,14 +368,14 @@ def test_nonfermi_sample_width_squared(pychop_nonfermi_data):
 
 
 @pytest.mark.skipif(DEBUG, reason='Debugging precompute_van_var; its outputs have been temporarily changed.')
-@pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=MATRIX_IDS_FERMI)
+@pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=matrix_fermi_id)
 def test_fermi_precompute_van_var(matrix, pychop_fermi_data):
     e_init, chopper_frequency = matrix
     _test_precompute_van_var(e_init, [chopper_frequency], PyChopModelFermi, *pychop_fermi_data)
 
 
 @pytest.mark.skipif(DEBUG, reason='Debugging precompute_van_var; its outputs have been temporarily changed.')
-@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=MATRIX_IDS_NONFERMI)
+@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=matrix_nonfermi_id)
 def test_nonfermi_precompute_van_var(matrix, pychop_nonfermi_data):
     e_init, *chopper_frequency = matrix
     _test_precompute_van_var(e_init, chopper_frequency, PyChopModelNonFermi, *pychop_nonfermi_data)
@@ -386,14 +402,14 @@ def _test_precompute_van_var(e_init, chopper_frequency, cls, data, pychop):
 
 
 @pytest.mark.skipif(not DEBUG, reason='Not debugging; normal version of the function only returns vsq_van')
-@pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=MATRIX_IDS_FERMI)
+@pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=matrix_fermi_id)
 def test_debug_fermi_precompute_van_var(matrix, pychop_fermi_data):
     e_init, chopper_frequency = matrix
     _test_debug_precompute_van_var(e_init, [chopper_frequency], PyChopModelFermi, *pychop_fermi_data)
 
 
 @pytest.mark.skipif(not DEBUG, reason='Not debugging; normal version of the function only returns vsq_van')
-@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=MATRIX_IDS_NONFERMI)
+@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=matrix_nonfermi_id)
 def test_debug_nonfermi_precompute_van_var(matrix, pychop_nonfermi_data):
     e_init, *chopper_frequency = matrix
     _test_debug_precompute_van_var(e_init, chopper_frequency, PyChopModelNonFermi, *pychop_nonfermi_data)
@@ -427,14 +443,14 @@ def _test_debug_precompute_van_var(e_init, chopper_frequency, cls, data, pychop)
 
 
 @pytest.mark.skipif(DEBUG, reason='Debugging precompute_van_var; its outputs have been temporarily changed.')
-@pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=MATRIX_IDS_FERMI)
+@pytest.mark.parametrize('matrix', MATRIX_FERMI, ids=matrix_fermi_id)
 def test_fermi_precompute_resolution(matrix, pychop_fermi_data):
     e_init, chopper_frequency = matrix
     _test_precompute_resolution(e_init, [chopper_frequency], PyChopModelFermi, *pychop_fermi_data)
 
 
 @pytest.mark.skipif(DEBUG, reason='Debugging precompute_van_var; its outputs have been temporarily changed.')
-@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=MATRIX_IDS_NONFERMI)
+@pytest.mark.parametrize('matrix', MATRIX_NONFERMI, ids=matrix_nonfermi_id)
 def test_nonfermi_precompute_resolution(matrix, pychop_nonfermi_data):
     e_init, *chopper_frequency = matrix
     _test_precompute_resolution(e_init, chopper_frequency, PyChopModelNonFermi, *pychop_nonfermi_data)
