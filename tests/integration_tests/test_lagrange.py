@@ -25,29 +25,17 @@ def lagrange_abins_plus_rf_abins_resolution_function(lagrange_rf, request):
 
 
 @pytest.mark.parametrize(
-    "frequencies", [np.arange(100, 1000, 50)], ids=["frequencies=100:1000:50"]
+    "frequencies",
+    [
+        pytest.param(np.arange(100, 1000, 50), id="high frequencies: 100:1000:50"),
+        pytest.param(
+            np.arange(10, 100, 10),
+            id="low frequencies: 10:100:10",
+            marks=pytest.mark.xfail(reason="LAGRANGE low frequencies to be fixed in Abins"),
+        ),
+    ],
 )
-def test_lagrange_against_abins_high_frequencies(
-    frequencies, lagrange_abins_plus_rf_abins_resolution_function
-):
-    _test_lagrange_against_abins(
-        frequencies, lagrange_abins_plus_rf_abins_resolution_function
-    )
-
-
-@pytest.mark.skip("Waiting for low-frequency Lagrange resolution to be fixed in AbINS")
-@pytest.mark.parametrize(
-    "frequencies", [np.arange(10, 100, 10)], ids=["frequencies=10:100:10"]
-)
-def test_lagrange_against_abins_low_frequencies(
-    frequencies, lagrange_abins_plus_rf_abins_resolution_function
-):
-    _test_lagrange_against_abins(
-        frequencies, lagrange_abins_plus_rf_abins_resolution_function
-    )
-
-
-def _test_lagrange_against_abins(
+def test_lagrange_against_abins(
     frequencies, lagrange_abins_plus_rf_abins_resolution_function
 ):
     abins, rf = lagrange_abins_plus_rf_abins_resolution_function
