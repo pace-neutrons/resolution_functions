@@ -79,14 +79,14 @@ def _test_against_abins(abins, rf_2d, setting, matrix):
         with pytest.raises(NoTransmissionError):
             rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy, chopper_frequency=chopper_frequency
 )
-            return
+        return
 
     if np.any(np.isnan(expected)):
         # If chopper/energy settings block transmission, width via AbINS is NaN.
         # This library should raise NoTransmissionError instead.
         with pytest.raises(NoTransmissionError):
             rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy, chopper_frequency=chopper_frequency)
-            return
+        return
 
     rf = rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy,
                                        chopper_frequency=chopper_frequency)
