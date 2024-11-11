@@ -1,4 +1,5 @@
 import itertools
+import warnings
 
 import numpy as np
 from numpy.linalg.linalg import LinAlgError
@@ -70,28 +71,23 @@ def _test_against_abins(abins, rf_2d, setting, matrix):
     abins._pychop_instrument.chopper_system.setFrequency(chopper_frequency)
     abins._pychop_instrument.frequency = chopper_frequency
 
-    try:
-        abins._polyfits = {}
-        expected = abins.calculate_sigma(frequencies * MEV_TO_WAVENUMBER) * WAVENUMBER_TO_MEV
-    except LinAlgError:
-        # On Windows we get this error instead of passing NaN
-        # Make sure this library agrees it is a no-transmission situation.
-        with pytest.raises(NoTransmissionError):
-            rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy, chopper_frequency=chopper_frequency
-)
-        return
+    abins._polyfits = {}
 
-    if np.any(np.isnan(expected)):
-        # If chopper/energy settings block transmission, width via AbINS is NaN.
-        # This library should raise NoTransmissionError instead.
-        with pytest.raises(NoTransmissionError):
-            rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy, chopper_frequency=chopper_frequency)
-        return
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", message="PyChop: tchop\(\): No transmission.*")
+        try:
+            expected = abins.calculate_sigma(frequencies * MEV_TO_WAVENUMBER) * WAVENUMBER_TO_MEV
+
+        except Warning:
+            # Make sure this library agrees it is a no-transmission situation.
+            with pytest.raises(NoTransmissionError):
+                rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy, chopper_frequency=chopper_frequency
+)
+            return
 
     rf = rf_2d.get_resolution_function('PyChop_fit', chopper_package=setting, e_init=energy,
                                        chopper_frequency=chopper_frequency)
     actual = rf(frequencies)
-
     assert_allclose(actual, expected, rtol=1e-5)
 
 
