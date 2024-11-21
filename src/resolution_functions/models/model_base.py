@@ -36,6 +36,9 @@ class InstrumentModel(ABC):
     def __call__(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def __str__(self):
+        return f'{type(self).__name__}(citation="{self.citation}")'
+
     @property
     def citation(self) -> str:
         return self._citation
