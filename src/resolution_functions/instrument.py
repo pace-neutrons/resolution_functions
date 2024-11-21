@@ -251,6 +251,9 @@ class Instrument:
     dict[str, dict[str, Union[float, int, str, list[float]]]]]]]]
     default_model: str
 
+    def __str__(self):
+        return f'Instrument(name={self.name}, version={self.version})'
+
     @classmethod
     def available_instruments(cls) -> list[str]:
         """
