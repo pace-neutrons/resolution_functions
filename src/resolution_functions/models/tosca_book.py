@@ -40,6 +40,7 @@ class ToscaBookModel(InstrumentModel):
     REDUCED_PLANCK_SQUARED = 4.18019
 
     def __init__(self, model_data: ToscaBookModelData, **_):
+        super().__init__(model_data)
         da = model_data.average_secondary_flight_path * np.sin(np.deg2rad(model_data.average_bragg_angle_graphite))
 
         self.time_dependent_term_factor = model_data.water_moderator_constant ** 2 * self.REDUCED_PLANCK_SQUARED

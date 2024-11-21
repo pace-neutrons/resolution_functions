@@ -29,10 +29,13 @@ class InstrumentModel(ABC):
 
     data_class: ClassVar[type[ModelData]]
 
-    @abstractmethod
-    def __init__(self, _: ModelData, **__):
-        pass
+    def __init__(self, model_data: ModelData, **_):
+        self._citation = model_data.citation
 
     @abstractmethod
     def __call__(self, *args, **kwargs):
         raise NotImplementedError()
+
+    @property
+    def citation(self) -> str:
+        return self._citation

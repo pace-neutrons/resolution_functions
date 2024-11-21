@@ -24,6 +24,7 @@ class PolynomialModel1D(InstrumentModel):
     data_class: ClassVar[type[PolynomialModelData]] = PolynomialModelData
 
     def __init__(self, model_data: PolynomialModelData, **_):
+        super().__init__(model_data)
         self.polynomial = Polynomial(model_data.fit)
 
     def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
@@ -46,6 +47,7 @@ class DiscontinuousPolynomialModel1D(InstrumentModel):
     data_class: ClassVar[type[DiscontinuousPolynomialModelData]] = DiscontinuousPolynomialModelData
 
     def __init__(self, model_data: DiscontinuousPolynomialModelData, **_):
+        super().__init__(model_data)
 
         self.polynomial = Polynomial(model_data.fit)
 

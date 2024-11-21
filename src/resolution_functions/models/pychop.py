@@ -127,6 +127,8 @@ class PyChopModel(InstrumentModel, ABC):
                  e_init: Optional[float] = None,
                  fitting_order: Optional[int] = 4,
                  **_):
+        super().__init__(model_data)
+
         if e_init is None:
             e_init = model_data.default_e_init
 

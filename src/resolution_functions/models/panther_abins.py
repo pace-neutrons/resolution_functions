@@ -26,6 +26,8 @@ class PantherAbINSModel(InstrumentModel):
     data_class = PantherAbINSModelData
 
     def __init__(self, model_data: PantherAbINSModelData, e_init: float, **_):
+        super().__init__(model_data)
+
         self.e_init = e_init
         self.abs = Polynomial(model_data.abs)
         self.ei_dependence = Polynomial(model_data.ei_dependence)(e_init)
