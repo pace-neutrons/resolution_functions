@@ -30,25 +30,23 @@ class FreqRange(Enum):
     HIGH = auto()
 
 @pytest.mark.parametrize(
-    "frequencies_range",
+    "frequencies, label",
     [
         pytest.param(
-            (np.arange(100, 1000, 50), FreqRange.HIGH),
+            np.arange(100, 1000, 50), FreqRange.HIGH,
             id="high frequencies: 100:1000:50",
         ),
         pytest.param(
-            (np.arange(10, 100, 10), FreqRange.LOW), id="low frequencies: 10:100:10"
+            np.arange(10, 100, 10), FreqRange.LOW, id="low frequencies: 10:100:10"
         ),
     ],
 )
 def test_lagrange_against_abins(
-    frequencies_range, lagrange_abins_plus_rf_abins_resolution_function
+        frequencies, label, lagrange_abins_plus_rf_abins_resolution_function
 ):
     abins, rf = lagrange_abins_plus_rf_abins_resolution_function
 
-    frequencies, _range = frequencies_range
-
-    if abins.get_setting() == "Cu(220) (Lagrange)" and _range == FreqRange.LOW:
+    if abins.get_setting() == "Cu(220) (Lagrange)" and label == FreqRange.LOW:
         pytest.xfail(reason="LAGRANGE low frequencies to be fixed in Abins")
 
     actual = rf(frequencies)
