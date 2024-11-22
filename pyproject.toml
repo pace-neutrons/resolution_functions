@@ -1,5 +1,6 @@
 [build-system]
 requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = 'resolutions_functions'
@@ -27,7 +28,9 @@ dev = [
 ]
 test = [
     "pytest >= 8.3.2",
-    "mantid >= 6.10.0"
+    "mantid >= 6.10.0",
+    "pychop @ git+https://github.com/mducle/pychop.git",
+    "more_itertools >= 10.5.0",
 ]
 
 [project.urls]
