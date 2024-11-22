@@ -121,34 +121,62 @@ class PyChopModel(InstrumentModel, ABC):
 
     data_class = PyChopModelData
 
-    def __init__(self,
-                 model_data: PyChopModelData,
-                 chopper_frequency: list[int],
-                 e_init: Optional[float] = None,
-                 fitting_order: Optional[int] = 4,
-                 **_):
+    def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
+        return self.polynomial(frequencies)
+
+    @property
+    @abstractmethod
+    def polynomial(self) -> Polynomial:
+        """
+        The polynomial fitted to the resolutions.
+
+        Returns
+        -------
+        polynomial
+            The polynomial modelling the resolution of an instrument at a particular value of
+            incident energy and chopper frequency.
+        """
+        pass
+
+    @staticmethod
+    def _validate_e_init(e_init: float | None, model_data: PyChopModelData) -> float:
+        """
+        Validates that the user-provided `e_init` is within the allowed range for this instrument.
+
+        Parameters
+        ----------
+        e_init
+            The user-provided incident energy. If None, the default value for this instrument is
+            used instead.
+        model_data
+            The data for a particular INS instrument.
+
+        Returns
+        -------
+        e_init
+            Valid incident energy.
+
+        Raises
+        ------
+        InvalidInputError
+            If the provided `e_init` is not within the range allowed for the instrument.
+        """
         if e_init is None:
             e_init = model_data.default_e_init
-
-        if not model_data.allowed_e_init[0] <= e_init <= model_data.allowed_e_init[1]:
+        elif not model_data.allowed_e_init[0] <= e_init <= model_data.allowed_e_init[1]:
             raise InvalidInputError(f'The provided incident energy ({e_init}) is not allowed; only values within the '
                                     f'range of {model_data.allowed_e_init} are possible.')
 
-        # TODO: chopper frequency may be a bit more complicated
-        fake_frequencies, resolution = self._precompute_resolution(model_data, e_init, chopper_frequency)
-        self.polynomial = Polynomial.fit(fake_frequencies, resolution, fitting_order)
-
-    def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
-        return self.polynomial(frequencies)
+        return e_init
 
     @classmethod
     def _precompute_resolution(cls,
                                model_data: PyChopModelData,
                                e_init: float,
-                               chopper_frequency: list[int]
+                               chopper_frequencies: list[int]
                                ) -> tuple[Float[np.ndarray, 'frequency'], Float[np.ndarray, 'resolution']]:
         fake_frequencies = np.linspace(0, e_init, 40, endpoint=False)
-        vsq_van = cls._precompute_van_var(model_data, e_init, chopper_frequency, fake_frequencies)
+        vsq_van = cls._precompute_van_var(model_data, e_init, chopper_frequencies, fake_frequencies)
         e_final = e_init - fake_frequencies
         resolution = (2 * E2V * np.sqrt(e_final ** 3 * vsq_van)) / model_data.d_sample_detector
 
@@ -158,15 +186,15 @@ class PyChopModel(InstrumentModel, ABC):
     def _precompute_van_var(cls,
                             model_data: PyChopModelData,
                             e_init: float,
-                            chopper_frequency: list[int],
+                            chopper_frequencies: list[int],
                             fake_frequencies: Float[np.ndarray, 'frequency'],
                             ) -> Float[np.ndarray, 'resolution']:
         tsq_jit = model_data.tjit ** 2
         x0, xa, xm = cls._get_distances(model_data.choppers)
         x1, x2 = model_data.d_chopper_sample, model_data.d_sample_detector
 
-        tsq_moderator = cls.get_moderator_width_squared(model_data.moderator, e_init)
-        tsq_chopper = cls.get_chopper_width_squared(model_data, e_init, chopper_frequency)
+        tsq_moderator = cls._get_moderator_width_squared(model_data.moderator, e_init)
+        tsq_chopper = cls._get_chopper_width_squared(model_data, e_init, chopper_frequencies)
 
         # For Disk chopper spectrometers, the opening times of the first chopper can be the effective moderator time
         if tsq_chopper[1] is not None:
@@ -177,7 +205,7 @@ class PyChopModel(InstrumentModel, ABC):
 
         tsq_chopper = tsq_chopper[0]
         tanthm = np.tan(np.deg2rad(model_data.theta))
-        omega = chopper_frequency[0] * 2 * np.pi
+        omega = chopper_frequencies[0] * 2 * np.pi
 
         vi = E2V * np.sqrt(e_init)
         vf = E2V * np.sqrt(e_init - fake_frequencies)
@@ -220,12 +248,13 @@ class PyChopModel(InstrumentModel, ABC):
             vsq_van += tsq_sample
 
         # return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture, tsq_detector, tsq_sample
+        # return vsq_van, tsq_moderator, tsq_chopper, tsq_jit, tsq_aperture
         return vsq_van
 
     @classmethod
-    def get_moderator_width_squared(cls,
-                                    moderator_data: Moderator,
-                                    e_init: float,):
+    def _get_moderator_width_squared(cls,
+                                     moderator_data: Moderator,
+                                     e_init: float, ):
         wavelengths = moderator_data['measured_wavelength']
         if wavelengths is not None:
             # TODO: Sort the data in the yaml file and remove sorting below
@@ -282,10 +311,10 @@ class PyChopModel(InstrumentModel, ABC):
 
     @classmethod
     @abstractmethod
-    def get_chopper_width_squared(cls,
-                                  model_data: PyChopModelData,
-                                  e_init: float,
-                                  chopper_frequency: list[int]) -> tuple[float, float | None]:
+    def _get_chopper_width_squared(cls,
+                                   model_data: PyChopModelData,
+                                   e_init: float,
+                                   chopper_frequency: list[int]) -> tuple[float, float | None]:
         raise NotImplementedError()
 
     @staticmethod
@@ -394,24 +423,30 @@ class PyChopModelFermi(PyChopModel):
     def __init__(self,
                  model_data: PyChopModelDataFermi,
                  e_init: Optional[float] = None,
-                 chopper_frequency: Optional[int] = None,  # TODO: int
-                 fitting_order: Optional[int] = 4,
+                 chopper_frequency: Optional[int] = None,
+                 fitting_order: int = 4,
                  **_):
         if chopper_frequency is None:
             chopper_frequency = model_data.default_chopper_frequency
-
-        if chopper_frequency not in range(*model_data.allowed_chopper_frequencies):
+        elif chopper_frequency not in range(*model_data.allowed_chopper_frequencies):
             raise InvalidInputError(f'The provided chopper frequency ({chopper_frequency}) is not allowed; only the '
                                     f'following frequencies are possible: '
                                     f'{list(range(*model_data.allowed_chopper_frequencies))}')
 
-        super().__init__(model_data, [chopper_frequency], e_init, fitting_order)
+        e_init = self._validate_e_init(e_init, model_data)
+
+        fake_frequencies, resolution = self._precompute_resolution(model_data, e_init, [chopper_frequency])
+        self._polynomial = Polynomial.fit(fake_frequencies, resolution, fitting_order)
+
+    @property
+    def polynomial(self):
+        return self._polynomial
 
     @classmethod
-    def get_chopper_width_squared(cls,
-                                  model_data: PyChopModelDataFermi,
-                                  e_init: float,
-                                  chopper_frequency: list[int]) -> tuple[float, None]:
+    def _get_chopper_width_squared(cls,
+                                   model_data: PyChopModelDataFermi,
+                                   e_init: float,
+                                   chopper_frequency: list[int]) -> tuple[float, None]:
         frequency = 2 * np.pi * chopper_frequency[0]
         gamm = (2.00 * model_data.radius ** 2 / model_data.pslit) * \
                abs(1.00 / model_data.rho - 2.00 * frequency / (437.392 * np.sqrt(e_init)))
@@ -429,28 +464,68 @@ class PyChopModelFermi(PyChopModel):
         return sigma * SIGMA2FWHMSQ, None
 
 
-class PyChopModelNonFermi(PyChopModel):
+class PyChopModelNonFermi(PyChopModel, ABC):
+    """
+    Abstract base class for PyChop models for instruments that do not have a Fermi chopper.
+
+    This class contains methods for calculating the chopper contribution to the resolution function
+    for all instruments that do not have a Fermi chopper, but it does not implement the abstract
+    methods of its superclasses. Therefore, any of its subclasses *must implement* the ``__init__``
+    method as well as the ``polynomial`` attribute.
+
+    For most subclasses, the actual content of the ``__init__`` method should be nearly identical to
+    that of the already existing subclasses; the only variable thing should be its signature.
+    Different instruments have different sets of choppers, and so different sets of chopper
+    frequencies have to be provided as a user input (mirroring the choice of the chopper frequencies
+    on the physical INS instrument). Each subclass should have a separate argument for each of the
+    user-tunable chopper frequencies, but then bundle them together to pass in to the
+    `_validate_chopper_frequency` method which has an implementation in this class.
+    """
     data_class = PyChopModelDataNonFermi
 
-    def __init__(self,
-                 model_data: PyChopModelDataNonFermi,
-                 e_init: Optional[float] = None,
-                 chopper_frequency: Optional[list[int]] = None,  # TODO: int
-                 fitting_order: Optional[int] = 4,
-                 **_):
-        if chopper_frequency is None:
-            chopper_frequency = model_data.default_chopper_frequency
+    @staticmethod
+    def _validate_chopper_frequency(chopper_frequencies: list[int | None],
+                                    model_data: PyChopModelDataNonFermi) -> list[int]:
+        """
+        Validates that the user-provided `chopper_frequencies` are among the allowed values for the instrument.
 
-        for frequency, allowed_chopper_frequencies in zip(chopper_frequency, model_data.allowed_chopper_frequencies):
-            if frequency not in range(*allowed_chopper_frequencies):
-                raise InvalidInputError(f'The provided chopper frequency ({frequency}) is not allowed; only the'
-                                        f' following frequencies are possible: '
-                                        f'{list(range(*allowed_chopper_frequencies))}')
+        Parameters
+        ----------
+        chopper_frequencies
+            A list of chopper frequencies corresponding to the choppers with tunable frequencies.
+            The list must have the same length and order as the
+            `PyChopModelDataNonFermi.allowed_chopper_frequencies` for that instrument. Each entry
+            which contains a ``None`` instead of a value will be replaced with the default value
+            for the corresponding chopper.
+        model_data
+            The data for a particular INS instrument.
 
-        super().__init__(model_data, chopper_frequency, e_init, fitting_order)
+        Returns
+        -------
+        chopper_frequencies
+            The valid chopper frequencies.
+
+        Raises
+        ------
+        InvalidInputError
+            If any of the provided `chopper_frequencies` is invalid.
+        """
+        for i, (frequency, allowed_chopper_frequencies) in (
+                enumerate(zip(chopper_frequencies, model_data.allowed_chopper_frequencies))):
+            if frequency is None:
+                chopper_frequencies[i] = model_data.default_chopper_frequency[i]
+            elif frequency not in range(*allowed_chopper_frequencies):
+                raise InvalidInputError(
+                    f'The provided chopper frequency ({frequency}) is not allowed; only the'
+                    f' following frequencies are possible: '
+                    f'{list(range(*allowed_chopper_frequencies))}')
+
+        return chopper_frequencies
 
     @staticmethod
-    def get_long_frequency(frequency: list[int], model_data: PyChopModelDataNonFermi):
+    def get_long_frequency(frequency: list[int],
+                           model_data: PyChopModelDataNonFermi
+                           ) -> Float[np.ndarray, 'chopper_frequencies']:
         frequency += model_data.default_chopper_frequency[len(frequency):]
         frequency_matrix = np.array(model_data.frequency_matrix)
 
@@ -458,9 +533,9 @@ class PyChopModelNonFermi(PyChopModel):
 
     @classmethod
     def _get_chop_times(cls,
-                      model_data: PyChopModelDataNonFermi,
-                      e_init: float,
-                      chopper_frequency: list[int]) -> list[list[np.ndarray]]:
+                        model_data: PyChopModelDataNonFermi,
+                        e_init: float,
+                        chopper_frequency: list[int]) -> list[list[Float[np.ndarray, 'times']]]:
         frequencies = cls.get_long_frequency(chopper_frequency, model_data)
         choppers = model_data.choppers
 
@@ -474,8 +549,8 @@ class PyChopModelNonFermi(PyChopModel):
         # if there's only one disk we prepend a dummy disk with full opening at zero distance
         # so that the distance calculations (which needs the difference between disk pos) works
         if len(choppers) == 1:
-            choppers = {
-                'prepended': {
+            choppers = [
+                {
                     'distance': 0,
                     'nslot': 1,
                     'slot_ang_pos': None,
@@ -484,14 +559,16 @@ class PyChopModelNonFermi(PyChopModel):
                     'radius': 500,
                     'num_disk': 1
                 },
-                **choppers
-            }
+                *list(choppers.values())
+            ]
             frequencies = np.array([model_data.source_frequency, frequencies[0]])
+        else:
+            choppers = list(choppers.values())
 
         chop_times = []
 
         # first we optimise on the main Ei
-        for i, (frequency, chopper) in enumerate(zip(frequencies, choppers.values())):
+        for frequency, chopper in zip([frequencies[0], frequencies[-1]], [choppers[0], choppers[-1]]):
             chopper: DiskChopper
             this_phase, phase_independence = chopper['default_phase'], chopper['is_phase_independent']
 
@@ -529,7 +606,7 @@ class PyChopModelNonFermi(PyChopModel):
                 next_win_t = uSec / model_data.source_frequency + (uSec / frequency)
 
                 while realTimeOp[0] < next_win_t:
-                    chop_times[i].append(deepcopy(realTimeOp))
+                    chop_times[-1].append(deepcopy(realTimeOp))
                     slt0 = islt % slot
                     slt1 = (islt + 1) % slot
                     angdiff = angles[slt1] - angles[slt0]
@@ -543,23 +620,117 @@ class PyChopModelNonFermi(PyChopModel):
                 realTimeOp -= next_win_t * np.ceil(realTimeOp[0] / next_win_t)
 
                 while realTimeOp[0] < (uSec / p_frames + next_win_t):
-                    chop_times[i].append(deepcopy(realTimeOp))
+                    chop_times[-1].append(deepcopy(realTimeOp))
                     realTimeOp += next_win_t
 
         return chop_times
 
     @classmethod
-    def get_chopper_width_squared(cls,
-                                  model_data: PyChopModelDataNonFermi,
-                                  e_init: float,
-                                  chopper_frequency: list[int]) -> tuple[float, float]:
+    def _get_chopper_width_squared(cls,
+                                   model_data: PyChopModelDataNonFermi,
+                                   e_init: float,
+                                   chopper_frequency: list[int]) -> tuple[float, float]:
         chop_times = cls._get_chop_times(model_data, e_init, chopper_frequency)
-        chop_times = [chop_times[0][0], chop_times[-1][0]]
 
-        wd0 = (chop_times[1][1] - chop_times[1][0]) / 2.0 / 1.0e6
-        wd1 = (chop_times[0][1] - chop_times[0][0]) / 2.0 / 1.0e6
+        wd0 = (chop_times[-1][0][1] - chop_times[-1][0][0]) * 0.5e-6
+        wd1 = (chop_times[0][0][1] - chop_times[0][0][0]) * 0.5e-6
 
         return wd0 ** 2, wd1 ** 2
+
+
+class PyChopModelCNCS(PyChopModelNonFermi):
+    """
+    A PyChop model for the CNCS instrument.
+
+    This model is identical to all other PyChop models for instruments without a Fermi chopper, but
+    the user-choice chopper frequencies have unique names compared to the other models.
+
+    Parameters
+    ----------
+    model_data
+        The data for the PyChopModel of the CNCS instrument.
+    e_init
+        The incident energy used in the INS experiment.
+    resolution_disk_frequency
+        The frequency of the resolution disk chopper (chopper 4)
+    fermi_frequency
+        The frequency of the Fermi chopper (chopper 1)
+    fitting_order
+        The order of the polynomial used for fitting against the resolution.
+
+    Attributes
+    ----------
+    polynomial
+    """
+    def __init__(self,
+                 model_data: PyChopModelDataNonFermi,
+                 e_init: Optional[float] = None,
+                 resolution_disk_frequency: Optional[int] = None,
+                 fermi_frequency: Optional[int] = None,
+                 fitting_order: int = 4,
+                 **_):
+        chopper_frequencies = [resolution_disk_frequency, fermi_frequency]
+        chopper_frequencies = self._validate_chopper_frequency(chopper_frequencies, model_data)
+
+        e_init = self._validate_e_init(e_init, model_data)
+
+        frequencies, resolution = self._precompute_resolution(model_data, e_init, chopper_frequencies)
+        self._polynomial = Polynomial.fit(frequencies, resolution, fitting_order)
+
+    @property
+    def polynomial(self):
+        return self._polynomial
+
+
+class PyChopModelLET(PyChopModelNonFermi):
+    """
+    A PyChop model for the LET instrument.
+
+    This model is identical to all other PyChop models for instruments without a Fermi chopper, but
+    the user-choice chopper frequencies have unique names compared to the other models.
+
+    The LET instrument, specifically, has a set-up with multiple choppers of variable frequency, but
+    where some of the choppers are set to a pre-determined fraction of the frequency of another
+    chopper. Further, this relationship changes depending on the ``chopper_package`` setting. The
+    `PyChopModelDataNonFermi.frequency_matrix` attribute describes this relationship, and the
+    `get_long_frequency` method can be used to compute the frequencies of all choppers.
+
+    Parameters
+    ----------
+    model_data
+        The data for the PyChopModel of the CNCS instrument.
+    e_init
+        The incident energy used in the INS experiment.
+    resolution_frequency
+        The frequency of the resolution chopper (i.e. the second resolution disk chopper, or chopper
+        5).
+    pulse_remover_frequency
+        The frequency of the pulse remover disk chopper (chopper 3).
+    fitting_order
+        The order of the polynomial used for fitting against the resolution.
+
+    Attributes
+    ----------
+    polynomial
+    """
+    def __init__(self,
+                 model_data: PyChopModelDataNonFermi,
+                 e_init: Optional[float] = None,
+                 resolution_frequency: Optional[int] = None,
+                 pulse_remover_frequency: Optional[int] = None,
+                 fitting_order: int = 4,
+                 **_):
+        chopper_frequencies = [resolution_frequency, pulse_remover_frequency]
+        chopper_frequencies = self._validate_chopper_frequency(chopper_frequencies, model_data)
+
+        e_init = self._validate_e_init(e_init, model_data)
+
+        frequencies, resolution = self._precompute_resolution(model_data, e_init, chopper_frequencies)
+        self._polynomial = Polynomial.fit(frequencies, resolution, fitting_order)
+
+    @property
+    def polynomial(self):
+        return self._polynomial
 
 
 def soft_hat(x, p):

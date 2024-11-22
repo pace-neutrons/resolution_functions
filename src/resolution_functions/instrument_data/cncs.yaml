@@ -6,7 +6,6 @@ version:
         choppers: &choppers
             Fermi:
                 distance: 6.413  # m
-                # Default compatibility arguments:
                 nslot: 2                  # Number of slots. If slot_ang_pos is specified can omit this entry
                 slot_ang_pos: null
                 slot_width: 20.            # Slot width in mm
@@ -121,7 +120,7 @@ version:
         default_model: 'PyChop_fit'
         models:
             PyChop_fit:
-                function: "pychop_fit_nonfermi"
+                function: "pychop_fit_cncs"
                 citation: ""
                 parameters:
                     <<: *constants
