@@ -136,6 +136,7 @@ INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
     'CNCS': ('cncs', None),
     'HYSPEC': ('hyspec', None),
     'Lagrange': ('lagrange', None),
+    'LET': ('let', None),
     'MAPS': ('maps', None),
     'MARI': ('mari', None),
     'MERLIN': ('merlin', None),
