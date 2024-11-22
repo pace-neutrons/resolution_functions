@@ -342,7 +342,7 @@ def test_chop_times(matrix, pychop_nonfermi_data):
 
     actual = PyChopModelNonFermi._get_chop_times(data, e_init, chopper_frequencies)
 
-    for aa, ee in zip(actual, expected):
+    for aa, ee in zip(actual, [expected[0], expected[-1]]):
         for a, e in zip(aa, ee):
             try:
                 assert_allclose(a, e, rtol=0, atol=1e-8)

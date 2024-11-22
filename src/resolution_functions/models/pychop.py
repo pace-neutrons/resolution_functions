@@ -535,7 +535,7 @@ class PyChopModelNonFermi(PyChopModel, ABC):
     def _get_chop_times(cls,
                         model_data: PyChopModelDataNonFermi,
                         e_init: float,
-                        chopper_frequency: list[int]) -> list[list[np.ndarray]]:
+                        chopper_frequency: list[int]) -> list[list[Float[np.ndarray, 'times']]]:
         frequencies = cls.get_long_frequency(chopper_frequency, model_data)
         choppers = model_data.choppers
 
@@ -549,8 +549,8 @@ class PyChopModelNonFermi(PyChopModel, ABC):
         # if there's only one disk we prepend a dummy disk with full opening at zero distance
         # so that the distance calculations (which needs the difference between disk pos) works
         if len(choppers) == 1:
-            choppers = {
-                'prepended': {
+            choppers = [
+                {
                     'distance': 0,
                     'nslot': 1,
                     'slot_ang_pos': None,
@@ -559,15 +559,17 @@ class PyChopModelNonFermi(PyChopModel, ABC):
                     'radius': 500,
                     'num_disk': 1
                 },
-                **choppers
-            }
+                *list(choppers.values())
+            ]
             frequencies = np.array([model_data.source_frequency, frequencies[0]])
+        else:
+            choppers = list(choppers.values())
 
         chop_times = []
 
         # first we optimise on the main Ei
         # TODO: Calculate only the first and last choppers (only those used upstream)
-        for i, (frequency, chopper) in enumerate(zip(frequencies, choppers.values())):
+        for frequency, chopper in zip([frequencies[0], frequencies[-1]], [choppers[0], choppers[-1]]):
             chopper: DiskChopper
             this_phase, phase_independence = chopper['default_phase'], chopper['is_phase_independent']
 
@@ -605,7 +607,7 @@ class PyChopModelNonFermi(PyChopModel, ABC):
                 next_win_t = uSec / model_data.source_frequency + (uSec / frequency)
 
                 while realTimeOp[0] < next_win_t:
-                    chop_times[i].append(deepcopy(realTimeOp))
+                    chop_times[-1].append(deepcopy(realTimeOp))
                     slt0 = islt % slot
                     slt1 = (islt + 1) % slot
                     angdiff = angles[slt1] - angles[slt0]
@@ -619,7 +621,7 @@ class PyChopModelNonFermi(PyChopModel, ABC):
                 realTimeOp -= next_win_t * np.ceil(realTimeOp[0] / next_win_t)
 
                 while realTimeOp[0] < (uSec / p_frames + next_win_t):
-                    chop_times[i].append(deepcopy(realTimeOp))
+                    chop_times[-1].append(deepcopy(realTimeOp))
                     realTimeOp += next_win_t
 
         return chop_times
