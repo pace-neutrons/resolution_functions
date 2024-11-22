@@ -126,11 +126,41 @@ class PyChopModel(InstrumentModel, ABC):
 
     @property
     @abstractmethod
-    def polynomial(self):
+    def polynomial(self) -> Polynomial:
+        """
+        The polynomial fitted to the resolutions.
+
+        Returns
+        -------
+        polynomial
+            The polynomial modelling the resolution of an instrument at a particular value of
+            incident energy and chopper frequency.
+        """
         pass
 
     @staticmethod
     def _validate_e_init(e_init: float | None, model_data: PyChopModelData) -> float:
+        """
+        Validates that the user-provided `e_init` is within the allowed range for this instrument.
+
+        Parameters
+        ----------
+        e_init
+            The user-provided incident energy. If None, the default value for this instrument is
+            used instead.
+        model_data
+            The data for a particular INS instrument.
+
+        Returns
+        -------
+        e_init
+            Valid incident energy.
+
+        Raises
+        ------
+        InvalidInputError
+            If the provided `e_init` is not within the range allowed for the instrument.
+        """
         if e_init is None:
             e_init = model_data.default_e_init
         elif not model_data.allowed_e_init[0] <= e_init <= model_data.allowed_e_init[1]:
@@ -435,11 +465,51 @@ class PyChopModelFermi(PyChopModel):
 
 
 class PyChopModelNonFermi(PyChopModel, ABC):
+    """
+    Abstract base class for PyChop models for instruments that do not have a Fermi chopper.
+
+    This class contains methods for calculating the chopper contribution to the resolution function
+    for all instruments that do not have a Fermi chopper, but it does not implement the abstract
+    methods of its superclasses. Therefore, any of its subclasses *must implement* the ``__init__``
+    method as well as the ``polynomial`` attribute.
+
+    For most subclasses, the actual content of the ``__init__`` method should be nearly identical to
+    that of the already existing subclasses; the only variable thing should be its signature.
+    Different instruments have different sets of choppers, and so different sets of chopper
+    frequencies have to be provided as a user input (mirroring the choice of the chopper frequencies
+    on the physical INS instrument). Each subclass should have a separate argument for each of the
+    user-tunable chopper frequencies, but then bundle them together to pass in to the
+    `_validate_chopper_frequency` method which has an implementation in this class.
+    """
     data_class = PyChopModelDataNonFermi
 
     @staticmethod
     def _validate_chopper_frequency(chopper_frequencies: list[int | None],
                                     model_data: PyChopModelDataNonFermi) -> list[int]:
+        """
+        Validates that the user-provided `chopper_frequencies` are among the allowed values for the instrument.
+
+        Parameters
+        ----------
+        chopper_frequencies
+            A list of chopper frequencies corresponding to the choppers with tunable frequencies.
+            The list must have the same length and order as the
+            `PyChopModelDataNonFermi.allowed_chopper_frequencies` for that instrument. Each entry
+            which contains a ``None`` instead of a value will be replaced with the default value
+            for the corresponding chopper.
+        model_data
+            The data for a particular INS instrument.
+
+        Returns
+        -------
+        chopper_frequencies
+            The valid chopper frequencies.
+
+        Raises
+        ------
+        InvalidInputError
+            If any of the provided `chopper_frequencies` is invalid.
+        """
         for i, (frequency, allowed_chopper_frequencies) in (
                 enumerate(zip(chopper_frequencies, model_data.allowed_chopper_frequencies))):
             if frequency is None:
@@ -449,12 +519,13 @@ class PyChopModelNonFermi(PyChopModel, ABC):
                     f'The provided chopper frequency ({frequency}) is not allowed; only the'
                     f' following frequencies are possible: '
                     f'{list(range(*allowed_chopper_frequencies))}')
-            print(frequency, allowed_chopper_frequencies)
 
         return chopper_frequencies
 
     @staticmethod
-    def get_long_frequency(frequency: list[int], model_data: PyChopModelDataNonFermi):
+    def get_long_frequency(frequency: list[int],
+                           model_data: PyChopModelDataNonFermi
+                           ) -> Float[np.ndarray, 'chopper_frequencies']:
         frequency += model_data.default_chopper_frequency[len(frequency):]
         frequency_matrix = np.array(model_data.frequency_matrix)
 
@@ -462,9 +533,9 @@ class PyChopModelNonFermi(PyChopModel, ABC):
 
     @classmethod
     def _get_chop_times(cls,
-                      model_data: PyChopModelDataNonFermi,
-                      e_init: float,
-                      chopper_frequency: list[int]) -> list[list[np.ndarray]]:
+                        model_data: PyChopModelDataNonFermi,
+                        e_init: float,
+                        chopper_frequency: list[int]) -> list[list[np.ndarray]]:
         frequencies = cls.get_long_frequency(chopper_frequency, model_data)
         choppers = model_data.choppers
 
@@ -567,6 +638,29 @@ class PyChopModelNonFermi(PyChopModel, ABC):
 
 
 class PyChopModelCNCS(PyChopModelNonFermi):
+    """
+    A PyChop model for the CNCS instrument.
+
+    This model is identical to all other PyChop models for instruments without a Fermi chopper, but
+    the user-choice chopper frequencies have unique names compared to the other models.
+
+    Parameters
+    ----------
+    model_data
+        The data for the PyChopModel of the CNCS instrument.
+    e_init
+        The incident energy used in the INS experiment.
+    resolution_disk_frequency
+        The frequency of the resolution disk chopper (chopper 4)
+    fermi_frequency
+        The frequency of the Fermi chopper (chopper 1)
+    fitting_order
+        The order of the polynomial used for fitting against the resolution.
+
+    Attributes
+    ----------
+    polynomial
+    """
     def __init__(self,
                  model_data: PyChopModelDataNonFermi,
                  e_init: Optional[float] = None,
@@ -588,6 +682,36 @@ class PyChopModelCNCS(PyChopModelNonFermi):
 
 
 class PyChopModelLET(PyChopModelNonFermi):
+    """
+    A PyChop model for the LET instrument.
+
+    This model is identical to all other PyChop models for instruments without a Fermi chopper, but
+    the user-choice chopper frequencies have unique names compared to the other models.
+
+    The LET instrument, specifically, has a set-up with multiple choppers of variable frequency, but
+    where some of the choppers are set to a pre-determined fraction of the frequency of another
+    chopper. Further, this relationship changes depending on the ``chopper_package`` setting. The
+    `PyChopModelDataNonFermi.frequency_matrix` attribute describes this relationship, and the
+    `get_long_frequency` method can be used to compute the frequencies of all choppers.
+
+    Parameters
+    ----------
+    model_data
+        The data for the PyChopModel of the CNCS instrument.
+    e_init
+        The incident energy used in the INS experiment.
+    resolution_frequency
+        The frequency of the resolution chopper (i.e. the second resolution disk chopper, or chopper
+        5).
+    pulse_remover_frequency
+        The frequency of the pulse remover disk chopper (chopper 3).
+    fitting_order
+        The order of the polynomial used for fitting against the resolution.
+
+    Attributes
+    ----------
+    polynomial
+    """
     def __init__(self,
                  model_data: PyChopModelDataNonFermi,
                  e_init: Optional[float] = None,
