@@ -1,3 +1,5 @@
+from enum import Enum, auto
+
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
@@ -23,22 +25,31 @@ def lagrange_abins_plus_rf_abins_resolution_function(lagrange_rf, request):
     rf = lagrange_rf.get_resolution_function('AbINS', monochromator=request.param)
     return abins, rf
 
+class FreqRange(Enum):
+    LOW = auto()
+    HIGH = auto()
 
 @pytest.mark.parametrize(
-    "frequencies",
+    "frequencies_range",
     [
-        pytest.param(np.arange(100, 1000, 50), id="high frequencies: 100:1000:50"),
         pytest.param(
-            np.arange(10, 100, 10),
-            id="low frequencies: 10:100:10",
-            marks=pytest.mark.xfail(reason="LAGRANGE low frequencies to be fixed in Abins"),
+            (np.arange(100, 1000, 50), FreqRange.HIGH),
+            id="high frequencies: 100:1000:50",
+        ),
+        pytest.param(
+            (np.arange(10, 100, 10), FreqRange.LOW), id="low frequencies: 10:100:10"
         ),
     ],
 )
 def test_lagrange_against_abins(
-    frequencies, lagrange_abins_plus_rf_abins_resolution_function
+    frequencies_range, lagrange_abins_plus_rf_abins_resolution_function
 ):
     abins, rf = lagrange_abins_plus_rf_abins_resolution_function
+
+    frequencies, _range = frequencies_range
+
+    if abins.get_setting() == "Cu(220) (Lagrange)" and _range == FreqRange.LOW:
+        pytest.xfail(reason="LAGRANGE low frequencies to be fixed in Abins")
 
     actual = rf(frequencies)
     expected = abins.get_sigma(frequencies * MEV_TO_WAVENUMBER) * WAVENUMBER_TO_MEV
