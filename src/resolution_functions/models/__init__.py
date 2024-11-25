@@ -1,3 +1,14 @@
+"""
+Package containing the implementation of the various models.
+
+All classes within are exposed for reference only and should not be instantiated directly. For
+obtaining the resolution function of an instrument, please use the
+`Instrument.get_resolution_function` method.
+
+Advanced Use
+------------
+For work with custom models, see the `model_base` module, but do consider contributing any work.
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -22,3 +33,4 @@ MODELS: dict[str, type[InstrumentModel]] = {
     'pychop_fit_cncs': PyChopModelCNCS,
     'pychop_fit_let': PyChopModelLET,
 }
+"""A dictionary mapping the unique name of a model to the corresponding class."""
