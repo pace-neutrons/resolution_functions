@@ -1,4 +1,10 @@
-"""The AbINS model of the PANTHER instrument."""
+"""
+The AbINS model of the PANTHER instrument.
+
+All classes within are exposed for reference only and should not be instantiated directly. For
+obtaining the resolution function of an instrument, please use the
+`Instrument.get_resolution_function` method.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
