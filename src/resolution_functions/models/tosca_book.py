@@ -1,11 +1,11 @@
 """
-Model for the TOSCA instrument from the [INS book]_.
+Model for the TOSCA :term:`instrument` from the [INS-book]_.
 
-All classes here are exposed for reference only and should not be instantiated directly. For
-obtaining the resolution function of an instrument, please use the
-`Instrument.get_resolution_function` method.
+All classes within are exposed for reference only and should not be instantiated directly. For
+obtaining the :term:`resolution function` of an :term:`instrument`, please use the
+`resolution_functions.instrument.Instrument.get_resolution_function` method.
 
-.. [INS book] PCH Mitchell, SF Parker, AJ Ramirez-Cuesta and J Tomkinson, Vibrational Spectroscopy with Neutrons With Applications in Chemistry, Biology, Materials Science and Catalysis, World Scientific Publishing Co. Pte. Ltd., Singapore, 2005.
+.. [INS-book] PCH Mitchell, SF Parker, AJ Ramirez-Cuesta and J Tomkinson, Vibrational Spectroscopy with Neutrons With Applications in Chemistry, Biology, Materials Science and Catalysis, World Scientific Publishing Co. Pte. Ltd., Singapore, 2005.
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class ToscaBookModelData(ModelData):
     """
-    Data for the `ToscaBookModel` model.
+    Data for the `ToscaBookModel` :term:`model`.
 
     Parameters
     ----------
@@ -32,7 +32,7 @@ class ToscaBookModelData(ModelData):
     citation
         The citation for a particular model.
     primary_flight_path
-        Distance between the moderator and the sample in meters (m).
+        Distance between the :term:`moderator` and the :term:`sample` in meters (m).
     primary_flight_path_uncertainty
         The uncertainty associated with the `primary_flight_path`, in meters (m).
     water_moderator_constant
@@ -40,23 +40,23 @@ class ToscaBookModelData(ModelData):
     time_channel_uncertainty
         Time channel uncertainty in microseconds (us).
     sample_thickness
-        Thickness of the sample in meters (m).
+        Thickness of the :term:`sample` in meters (m).
     graphite_thickness
         Thickness of the graphite analyser in meters (m).
     detector_thickness
-        Thickness of the detector in meters (m).
+        Thickness of the :term:`detector` in meters (m).
     sample_width
-        Width of the sample in meters (m).
+        Width of the :term:`sample` in meters (m).
     detector_width
-        Width of the detector in meters (m).
+        Width of the :term:`detector` in meters (m).
     crystal_plane_spacing
-        Distance between the layers of atoms making up the detector, in meters (m).
+        Distance between the layers of atoms making up the :term:`detector`, in meters (m).
     angles
-        Angle between the sample and the analyser, in degrees.
+        Angle between the :term:`sample` and the analyser, in degrees.
     average_secondary_flight_path
-        Average length of the path from the sample to the detector in meters (m).
+        Average length of the path from the :term:`sample` to the :term:`detector` in meters (m).
     average_final_energy
-        Average energy of the neutrons hitting the detector in meV.
+        Average energy of the neutrons hitting the :term:`detector` in meV.
     average_bragg_angle_graphite
         Average Bragg angle of the graphite analyser, in degrees.
     change_average_bragg_angle_graphite
@@ -69,7 +69,7 @@ class ToscaBookModelData(ModelData):
     citation
         The citation for the model. Please use this to look up more details and cite the model.
     primary_flight_path
-        Distance between the moderator and the sample in meters (m).
+        Distance between the :term:`moderator` and the :term:`sample` in meters (m).
     primary_flight_path_uncertainty
         The uncertainty associated with the `primary_flight_path`, in meters (m).
     water_moderator_constant
@@ -77,23 +77,23 @@ class ToscaBookModelData(ModelData):
     time_channel_uncertainty
         Time channel uncertainty in microseconds (us).
     sample_thickness
-        Thickness of the sample in meters (m).
+        Thickness of the :term:`sample` in meters (m).
     graphite_thickness
         Thickness of the graphite analyser in meters (m).
     detector_thickness
-        Thickness of the detector in meters (m).
+        Thickness of the :term:`detector` in meters (m).
     sample_width
-        Width of the sample in meters (m).
+        Width of the :term:`sample` in meters (m).
     detector_width
-        Width of the detector in meters (m).
+        Width of the :term:`detector` in meters (m).
     crystal_plane_spacing
-        Distance between the layers of atoms making up the detector, in meters (m).
+        Distance between the layers of atoms making up the :term:`detector`, in meters (m).
     angles
-        Angle between the sample and the analyser, in degrees.
+        Angle between the :term:`sample` and the analyser, in degrees.
     average_secondary_flight_path
-        Average length of the path from the sample to the detector in meters (m).
+        Average length of the path from the :term:`sample` to the :term:`detector` in meters (m).
     average_final_energy
-        Average energy of the neutrons hitting the detector in meV.
+        Average energy of the neutrons hitting the :term:`detector` in meV.
     average_bragg_angle_graphite
         Average Bragg angle of the graphite analyser, in degrees.
     change_average_bragg_angle_graphite
@@ -120,11 +120,11 @@ class ToscaBookModelData(ModelData):
 
 class ToscaBookModel(InstrumentModel):
     """
-    Model for the TOSCA instrument from the [INS book]_.
+    Model for the TOSCA :term:`instrument` from the [INS book]_.
 
-    Models the resolution as a function of energy transfer (frequencies) only, with the output model
-    being a Gaussian. This is done by taking into account the contributions from the various parts
-    of the instrument (for more information, please see the reference).
+    Models the :term:`resolution` as a function of energy transfer (frequencies) only, with the
+    output model being a Gaussian. This is done by taking into account the contributions from the
+    various parts of the :term:`instrument` (for more information, please see the reference).
 
     Parameters
     ----------

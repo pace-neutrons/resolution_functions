@@ -1,6 +1,6 @@
 """
-The main entry-point to the library - contains the `Instrument` class used for managing all data ond
-computing resolution functions.
+The main entry-point to the library - contains the `Instrument` class used for managing all data and
+computing :term:`resolution functions<resolution function>`.
 """
 from __future__ import annotations
 
@@ -36,13 +36,13 @@ INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
 
 
 class InvalidInstrumentError(Exception):
-    """An Exception representing an invalid user input for the instrument name."""
+    """An Exception representing an invalid user input for the :term:`instrument` name."""
     pass
 
 
 class InvalidModelError(Exception):
     """
-    An Exception representing an invalid user input for the model of an instrument.
+    An Exception representing an invalid user input for the :term:`model` of an :term:`instrument`.
 
     This class does not support an arbitrary message; instead the message is constructed in here
     from the provided information.
@@ -64,7 +64,8 @@ class InvalidModelError(Exception):
 
 class InvalidSettingError(Exception):
     """
-    An Exception representing an invalid user input for the setting of a model of an instrument.
+    An Exception representing an invalid user input for the :term:`setting` of a :term:`model` of 
+    an :term:`instrument`.
 
     This class does not support an arbitrary message; instead the message is constructed in here
     from the provided information.
@@ -87,20 +88,22 @@ class InvalidSettingError(Exception):
 
 
 class InvalidVersionError(Exception):
-    """An Exception representing an invalid user input for the version of an instrument."""
+    """An Exception representing an invalid user input for the :term:`version`                                                                         of an instrument."""
     pass
 
 
 @dataclasses.dataclass(init=True, repr=True, frozen=True, slots=True)
 class Instrument:
     """
-    Instrument is a representation of a physical INS instrument, containing all its associated data.
+    Instrument is a representation of a physical :term:`INS` :term:`instrument`, containing all its
+    associated data.
 
-    To be precise, it holds all information about one version of an instrument (for more about
-    instrument versions, see ...), which makes it the centrepiece of this library; the data is
-    necessary for computing the resolution functions.
+    To be precise, it holds all information about one :term:`version` of an :term:`instrument` (for
+    more about :term:`instrument` versions, see ...), which makes it the centrepiece of this
+    library; the data is necessary for computing the
+    :term:`resolution functions<resolution function>`.
 
-    However, this information is static and curated by the library, which is why Instrument is a
+    However, this information is static and curated by the library, which is why `Instrument` is a
     frozen data class. It should never be instantiated directly; instead the `from_default`
     constructor should be used. Similarly, it should not be inspected directly; a variety of methods
     and properties are provided for querying relevant information.
@@ -145,7 +148,7 @@ class Instrument:
     @classmethod
     def available_instruments(cls) -> list[str]:
         """
-        Lists all INS instruments currently available.
+        Lists all :term:`INS` :term:`instruments<instrument>` currently available.
 
         Returns
         -------
@@ -183,7 +186,8 @@ class Instrument:
     @classmethod
     def available_versions(cls, instrument_name: str) -> tuple[list[str], str]:
         """
-        Lists the names of all versions available for an INS instrument, as well as the default version.
+        Lists the names of all :term:`versions<version>` available for an :term:`INS`
+        :term:`instrument`, as well as the default :term:`version`.
 
         Parameters
         ----------
@@ -276,10 +280,12 @@ class Instrument:
     @classmethod
     def from_default(cls, name: str, version: Optional[str] = None) -> Instrument:
         """
-        Instantiates an `Instrument` class with the data of the `name` INS instrument and its `version`.
+        Instantiates an `Instrument` class with the data of the `name` :term:`INS`
+        :term:`instrument` and its `version`.
 
-        This is the primary, recommended way of instantiating the Instrument class. It loads the
-        instrument data as curated in this library for a particular version of an INS instrument.
+        This is the primary, recommended way of instantiating the `Instrument` class. It loads the
+        instrument data as curated in this library for a particular :term:`version` of an
+        :term:`INS` :term:`instrument`.
 
         Parameters
         ----------
@@ -357,8 +363,8 @@ class Instrument:
         """
         Retrieves the physical parameters associated with the specified `model_name`.
 
-        This method can be used for inspecting the parameters of a particular model, but cannot be
-        used to modify them. It returns a subclass of the `ModelData` class corresponding to the
+        This method can be used for inspecting the parameters of a particular :term:`model`, but
+        cannot be used to modify them. It returns a subclass of the `ModelData` class corresponding to the
         particular model. Another use for this method is to inspect the default values for the
         model's parameters, as well as any restrictions that they might have, via the
         `ModelData.restrictions` and `ModelData.defaults` attributes.
@@ -368,7 +374,7 @@ class Instrument:
         model_name
             The name of the model whose parameters to retrieve. If not provided, the parameters of
             the default_model will be retrieved.
-        kwargs
+        **kwargs
             Keyword arguments can be passed in to choose an option for each of settings specific to
             the `model_name`. If not provided, default values are used.
 
@@ -437,25 +443,28 @@ class Instrument:
 
     def get_resolution_function(self, model_name: Optional[str] = None, **kwargs) -> InstrumentModel:
         """
-        Generates a resolution function, as modelled by the `model_name` model, for a set of parameters.
+        Generates a :term:`resolution function`, as modelled by the `model_name` :term:`model`, for
+        a set of parameters.
 
         This method is the main use case of the `Instrument` class. It generates a callable object
-        that, when called, returns the resolution of the instrument at an energy value(s).
+        that, when called, returns the :term:`resolution` of the :term:`instrument` at an energy
+        value(s).
 
-        However, while a simple, common interface is provided, different models (and sometimes the
-        same model for different instruments!) require different settings to be chosen and different
-        parameters to be provided. All of these have to be passed in as keyword arguments (though
-        sensible defaults are provided). These keyword arguments correspond to physical user choices
-        made when running an INS experiment on the corresponding instrument. For example, direct
-        instruments have a tunable incident energy, so their models usually require an ``e_init``
-        parameter. For more information about a model, please see its corresponding documentation,
+        However, while a simple, common interface is provided, different :term:`models<model>` (and
+        sometimes the same :term:`model` for different :term:`instruments!<instrument>`) require
+        different :term:`settings<setting>` to be chosen and different parameters to be provided.
+        All of these have to be passed in as keyword arguments (though sensible defaults are
+        provided). These keyword arguments correspond to physical user choices made when running an
+        INS experiment on the corresponding :term:`instrument`. For example, direct instruments
+        have a tunable incident energy, so their models usually require an ``e_init`` parameter.
+        For more information about a model, please see its corresponding documentation,
         or for programmatic querying, please see "How to programmatically query model".
 
         Parameters
         ----------
         model_name
             The name of the model to instantiate. If not provided, the `default_model` is used.
-        kwargs
+        **kwargs
             Keyword arguments specifying the various settings and parameters of the `model_name` model
 
         Returns
@@ -467,13 +476,16 @@ class Instrument:
         ------
         InvalidModelError
             If the provided `model_name` is not available for this version of this instrument.
+        InvalidInputError
+            If the model has restrictions on its inputs and these have been violated. The
+            restrictions can be checked by using the `get_model_data` method and then viewing the
+            ``restrictions`` attribute of the returned object.
+        Exception
+            Other model-specific exceptions may be raised.
 
         Warnings
         --------
-        Other custom, model-specific errors may be raised, e.g. the PyChop model can raise the
-        ``NoTransmissionError``. Default Python errors are likely to be bugs.
-
-        *Importantly*, if there are any mistakes in the model-specific parameters passed in as
+        If there are any mistakes in the model-specific parameters passed in as
         keyword arguments, they will be silently ignored and the default values for the missing
         parameters will be used.
 
@@ -502,13 +514,14 @@ class Instrument:
 
     def get_model_signature(self, model_name: Optional[str] = None) -> Signature:
         """
-        Constructs a call signature for the `get_resolution_function` method with a specific model.
+        Constructs a call signature for the `get_resolution_function` method with a specific
+        :term:`model`.
 
         This method provides a programmatic way of inspecting the call signature of the
-        `get_resolution_function` method required when calling it for the `model_name` model. This
-        is useful because its default signature uses the ``**kwargs`` construct to provide a
-        unified interface, but in fact different models require different sets of parameters that
-        have to be passed in through the keyword arguments.
+        `get_resolution_function` method required when calling it for the `model_name`
+        :term:`model`. This is useful because its default signature uses the ``**kwargs`` construct
+        to provide a unified interface, but in fact different :term:`models<model>` require
+        different sets of parameters that have to be passed in through the keyword arguments.
 
         There are other methods and properties that can be used to inspect some of the options, but
         this method retrieves all the information and returns it as an `inspect.Signature` object
@@ -594,7 +607,8 @@ class Instrument:
     @property
     def available_models(self) -> list[str]:
         """
-        A list of all models available for this version of this instrument.
+        A list of all :term:`models<model>` available for this :term:`version` of this
+        :term:`instrument`.
 
         Returns
         -------
@@ -606,9 +620,11 @@ class Instrument:
     @property
     def available_models_and_settings(self) -> dict[str, list[str]]:
         """
-        A dictionary mapping each available model to the user settings available for that model.
+        A dictionary mapping each available :term:`model` to the user :term:`settings<setting>`
+        available for that :term:`model`.
 
-        All models available for this version of this instrument, and all their settings are listed.
+        All :term:`models<model>` available for this :term:`version` of this :term:`instrument`,
+        and all their :term:`settings<setting>` are listed.
 
         Returns
         -------
@@ -620,10 +636,12 @@ class Instrument:
     @property
     def all_available_models_options(self) -> dict[str, dict[str, list[str]]]:
         """
-        A dictionary mapping each available model, to the user settings and its options.
+        A dictionary mapping each available :term:`model`, to the user :term:`settings<setting>`
+        and its :term:`options<option>`.
 
-        All models available for this version of this instrument, all the settings of each of the
-        models, and all the options for each of the settings, are listed.
+        All :term:`models<model>` available for this :term:`version` of this :term:`instrument`, all
+        the :term:`settings<setting>` of each of the :term:`models<model>`, and all the
+        :term:`options<option>` for each of the :term:`settings<setting>`, are listed.
 
         Returns
         -------
@@ -635,7 +653,7 @@ class Instrument:
 
     def possible_settings_for_model(self, model_name: str) -> list[str]:
         """
-        Returns all the settings that the `model_name` model supports.
+        Returns all the :term:`settings<setting>` that the `model_name` :term:`model` supports.
 
         Parameters
         ----------
@@ -661,7 +679,8 @@ class Instrument:
 
     def possible_options_for_model(self, model_name: str) -> dict[str, list[str]]:
         """
-        Returns a dictionary mapping all the settings of the `model_name` model to their options.
+        Returns a dictionary mapping all the :term:`settings<setting>` of the `model_name`
+        :term:`model` to their :term:`options<option>`.
 
         Parameters
         ----------
@@ -687,7 +706,8 @@ class Instrument:
 
     def possible_options_for_model_and_setting(self, model_name: str, setting: str) -> list[str]:
         """
-        Lists all the options that can be chosen for a given `setting` of the `model_name` model.
+        Lists each :term:`option` that can be chosen for a given :term:`setting` of the `model_name`
+        :term:`model`.
 
         Parameters
         ----------
@@ -744,7 +764,8 @@ class Instrument:
 
     def default_option_for_setting(self, model_name: str, setting: str) -> str:
         """
-        Returns the default option for the `setting` setting of the `model_name` model of this instrument.
+        Returns the default :term:`option` for the `setting` :term:`setting` of the `model_name`
+        :term:`model` of this :term:`instrument`.
 
         Parameters
         ----------

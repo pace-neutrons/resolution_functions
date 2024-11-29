@@ -1,16 +1,18 @@
 """
-The [PyChop]_ model, a 1D model for direct-geometry 2D instruments.
+The [PyChop]_ :term:`model`, a 1D :term:`model` for direct-geometry 2D
+:term:`instruments<instrument>`.
 
-[PyChop]_, originating from [Mantid]_ as a single model, is here organised as a collection of
-models. These can be split into two types: the `PyChopModelFermi` model, used for all instruments
-with a Fermi chopper (which is the sole determinant of the chopper contribution to the resolution),
-and models such as `PyChopModelLET` and `PyChopModelCNCS`, which are models of instruments without
-a Fermi chopper, in which the first and last choppers determine the chopper contribution to the
-resolution.
+[PyChop]_, originating from [Mantid]_ as a single :term:`model`, is here organised as a collection
+of models. These can be split into two types: the `PyChopModelFermi` :term:`model`, used for all
+:term:`instruments<instrument>` with a :term:`Fermi chopper` (which is the sole determinant of the
+:term:`chopper` contribution to the :term:`resolution`), and models such as `PyChopModelLET` and
+`PyChopModelCNCS`, which are models of instruments without a :term:`Fermi chopper`, in which the
+first and last :term:`choppers<chopper>` determine the :term:`chopper` contribution to the
+:term:`resolution`.
 
-All classes here are exposed for reference only and should not be instantiated directly. For
-obtaining the resolution function of an instrument, please use the
-`Instrument.get_resolution_function` method.
+All classes within are exposed for reference only and should not be instantiated directly. For
+obtaining the :term:`resolution function` of an :term:`instrument`, please use the
+`resolution_functions.instrument.Instrument.get_resolution_function` method.
 
 .. [PyChop] https://github.com/mducle/pychop/tree/main
 .. [Mantid] https://mantidproject.org/
@@ -48,7 +50,7 @@ SIGMA2FWHMSQ = SIGMA2FWHM**2
 @dataclass(init=True, repr=True, frozen=True, slots=True)
 class PyChopModelData(ModelData):
     """
-    Base class for PyChop model data.
+    Base class for PyChop :term:`model` data.
 
     Corresponds to the abstract base class `PyChopModel` and so should not be used directly.
     Concrete implementations of the PyChop model should have their own model data subclasses of this
@@ -139,7 +141,7 @@ class PyChopModelData(ModelData):
 @dataclass(init=True, repr=True, frozen=True, slots=True)
 class PyChopModelDataFermi(PyChopModelData):
     """
-    Data for the `PyChopModelFermi` model.
+    Data for the `PyChopModelFermi` :term:`model`.
 
     Parameters
     ----------
@@ -148,43 +150,43 @@ class PyChopModelDataFermi(PyChopModelData):
     citation
         The citation for a particular model.
     d_chopper_sample
-        Distance from the final chopper to sample in meters (m).
+        Distance from the final :term:`chopper` to :term:`sample` in meters (m).
     d_sample_detector
-        Distance from sample to detector in meters (m).
+        Distance from :term:`sample` to :term:`detector` in meters (m).
     aperture_width
-        Width of aperture at moderator face in meters (m)
+        Width of aperture at :term:`moderator` face in meters (m)
     theta
-        The angle that the beamline makes with the moderator face in degrees.
+        The angle that the beamline makes with the :term:`moderator` face in degrees.
     default_e_init
         The default value for the initial energy (``e_init``) in meV.
     allowed_e_init
         The limits (lower and upper bound) for the allowed initial energies (``e_init``). This
-        should correspond to the physical limitations of the INS instrument.
+        should correspond to the physical limitations of the INS :term:`instrument`.
     frequency_matrix
         A matrix mapping the relationship between the user-provided parameter ``chopper_frequency``
-        to the frequency of each chopper in the instrument.
+        to the frequency of each :term:`chopper` in the :term:`instrument`.
     choppers
-        Data for each chopper in the instrument. See `FermiChopper` and `DiskChopper` for more info.
+        Data for each :term:`chopper` in the :term:`instrument`. See `FermiChopper` and `DiskChopper` for more info.
     moderator
-        Data for the moderator. See `Moderator` for more info.
+        Data for the :term:`moderator`. See `Moderator` for more info.
     detector
-        Data for the detector. See `Detector` for more info.
+        Data for the :term:`detector`. See `Detector` for more info.
     sample
-        Data for the sample. See `Sample` for more info.
+        Data for the :term:`sample`. See `Sample` for more info.
     tjit
         The jitter time in microseconds (us).
     default_chopper_frequency
-        The default value for the Fermi chopper frequency (``chopper_frequency``) in Hz.
+        The default value for the :term:`Fermi chopper` frequency (``chopper_frequency``) in Hz.
     allowed_chopper_frequencies
-        The allowed values for the Fermi chopper frequency (``chopper_frequency``) in Hz.
+        The allowed values for the :term:`Fermi chopper` frequency (``chopper_frequency``) in Hz.
         `allowed_chopper_frequencies` defines the (start, stop, step), which is converted into a
         list at runtime.
     pslit
         Width of the neutron-transparent slit in meters (m).
     radius
-        Radius of the chopper package in meters (m).
+        Radius of the :term:`chopper` package in meters (m).
     rho
-        Curvature of the chopper package in meters (m).
+        Curvature of the :term:`chopper` package in meters (m).
 
     Attributes
     ----------
@@ -193,43 +195,43 @@ class PyChopModelDataFermi(PyChopModelData):
     citation
         The citation for the model. Please use this to look up more details and cite the model.
     d_chopper_sample
-        Distance from the final chopper to sample in meters (m).
+        Distance from the final :term:`chopper` to :term:`sample` in meters (m).
     d_sample_detector
-        Distance from sample to detector in meters (m).
+        Distance from :term:`sample` to :term:`detector` in meters (m).
     aperture_width
-        Width of aperture at moderator face in meters (m)
+        Width of aperture at :term:`moderator` face in meters (m)
     theta
-        The angle that the beamline makes with the moderator face in degrees.
+        The angle that the beamline makes with the :term:`moderator` face in degrees.
     default_e_init
         The default value for the initial energy (``e_init``) in meV.
     allowed_e_init
         The limits (lower and upper bound) for the allowed initial energies (``e_init``). This
-        should correspond to the physical limitations of the INS instrument.
+        should correspond to the physical limitations of the INS :term:`instrument`.
     frequency_matrix
         A matrix mapping the relationship between the user-provided parameter ``chopper_frequency``
-        to the frequency of each chopper in the instrument.
+        to the frequency of each :term:`chopper` in the :term:`instrument`.
     choppers
-        Data for each chopper in the instrument. See `FermiChopper` and `DiskChopper` for more info.
+        Data for each :term:`chopper` in the :term:`instrument`. See `FermiChopper` and `DiskChopper` for more info.
     moderator
-        Data for the moderator. See `Moderator` for more info.
+        Data for the :term:`moderator`. See `Moderator` for more info.
     detector
-        Data for the detector. See `Detector` for more info.
+        Data for the :term:`detector`. See `Detector` for more info.
     sample
-        Data for the sample. See `Sample` for more info.
+        Data for the :term:`sample`. See `Sample` for more info.
     tjit
         The jitter time in microseconds (us).
     default_chopper_frequency
-        The default value for the Fermi chopper frequency (``chopper_frequency``) in Hz.
+        The default value for the :term:`Fermi chopper` frequency (``chopper_frequency``) in Hz.
     allowed_chopper_frequencies
-        The allowed values for the Fermi chopper frequency (``chopper_frequency``) in Hz.
+        The allowed values for the :term:`Fermi chopper` frequency (``chopper_frequency``) in Hz.
         `allowed_chopper_frequencies` defines the (start, stop, step), which is converted into a
         list at runtime.
     pslit
         Width of the neutron-transparent slit in meters (m).
     radius
-        Radius of the chopper package in meters (m).
+        Radius of the :term:`chopper` package in meters (m).
     rho
-        Curvature of the chopper package in meters (m).
+        Curvature of the :term:`chopper` package in meters (m).
     restrictions
     defaults
     """
@@ -251,7 +253,7 @@ class PyChopModelDataFermi(PyChopModelData):
 @dataclass(init=True, repr=True, frozen=True, slots=True)
 class PyChopModelDataNonFermi(PyChopModelData):
     """
-    Data for the PyChop models that do not have a Fermi chopper:
+    Data for the PyChop :term:`models<model>` that do not have a :term:`Fermi chopper` :
 
     - `PyChopModelCNCS`
     - `PyChopModelLET`
@@ -263,41 +265,44 @@ class PyChopModelDataNonFermi(PyChopModelData):
     citation
         The citation for a particular model.
     d_chopper_sample
-        Distance from the final chopper to sample in meters (m).
+        Distance from the final :term:`chopper` to :term:`sample` in meters (m).
     d_sample_detector
-        Distance from sample to detector in meters (m).
+        Distance from :term:`sample` to :term:`detector` in meters (m).
     aperture_width
-        Width of aperture at moderator face in meters (m)
+        Width of aperture at :term:`moderator` face in meters (m)
     theta
-        The angle that the beamline makes with the moderator face in degrees.
+        The angle that the beamline makes with the :term:`moderator` face in degrees.
     default_e_init
         The default value for the initial energy (``e_init``) in meV.
     allowed_e_init
         The limits (lower and upper bound) for the allowed initial energies (``e_init``). This
-        should correspond to the physical limitations of the INS instrument.
+        should correspond to the physical limitations of the INS :term:`instrument`.
     frequency_matrix
-        A matrix mapping the relationship between all user-provided chopper frequency parameters
-        (i.e. the choppers with user control) to the frequency of each chopper in the instrument.
+        A matrix mapping the relationship between all user-provided :term:`chopper` frequency
+        parameters (i.e. the choppers with user control) to the frequency of each :term:`chopper` in
+        the :term:`instrument`.
     choppers
-        Data for each chopper in the instrument. See `DiskChopper` for more info.
+        Data for each :term:`chopper` in the :term:`instrument`. See `DiskChopper` for more info.
     moderator
-        Data for the moderator. See `Moderator` for more info.
+        Data for the :term:`moderator`. See `Moderator` for more info.
     detector
-        Data for the detector. See `Detector` for more info.
+        Data for the :term:`detector`. See `Detector` for more info.
     sample
-        Data for the sample. See `Sample` for more info.
+        Data for the :term:`sample`. See `Sample` for more info.
     tjit
         The jitter time in microseconds (us).
     default_chopper_frequency
-        The default value for the chopper frequency of each user-controlled chopper in Hz.
+        The default value for the :term:`chopper` frequency of each user-controlled :term:`chopper`
+        in Hz.
     allowed_chopper_frequencies
-        The allowed values for the chopper frequency of each user-controlled chopper, in Hz. Each
-        value defines the (start, stop, step), which is converted into a list at runtime.
+        The allowed values for the :term:`chopper` frequency of each user-controlled
+        :term:`chopper`, in Hz. Each value defines the (start, stop, step), which is converted into
+        a list at runtime.
     constant_frequencies
-        The frequency of each chopper in Hz, with those run at a constant frequency having
+        The frequency of each :term:`chopper` in Hz, with those run at a constant frequency having
         non-zero values.
     source_frequency
-        The frequency of the neutron source in Hz.
+        The frequency of the neutron :term:`source` in Hz.
     n_frame
         Number of frames to calculate time-distance diagram for.
 
@@ -308,41 +313,44 @@ class PyChopModelDataNonFermi(PyChopModelData):
     citation
         The citation for the model. Please use this to look up more details and cite the model.
     d_chopper_sample
-        Distance from the final chopper to sample in meters (m).
+        Distance from the final :term:`chopper` to :term:`sample` in meters (m).
     d_sample_detector
-        Distance from sample to detector in meters (m).
+        Distance from :term:`sample` to :term:`detector` in meters (m).
     aperture_width
-        Width of aperture at moderator face in meters (m)
+        Width of aperture at :term:`moderator` face in meters (m)
     theta
-        The angle that the beamline makes with the moderator face in degrees.
+        The angle that the beamline makes with the :term:`moderator` face in degrees.
     default_e_init
         The default value for the initial energy (``e_init``) in meV.
     allowed_e_init
         The limits (lower and upper bound) for the allowed initial energies (``e_init``). This
-        should correspond to the physical limitations of the INS instrument.
+        should correspond to the physical limitations of the INS :term:`instrument`.
     frequency_matrix
-        A matrix mapping the relationship between all user-provided chopper frequency parameters
-        (i.e. the choppers with user control) to the frequency of each chopper in the instrument.
+        A matrix mapping the relationship between all user-provided :term:`chopper` frequency
+        parameters (i.e. the choppers with user control) to the frequency of each :term:`chopper` in
+        the :term:`instrument`.
     choppers
-        Data for each chopper in the instrument. See `DiskChopper` for more info.
+        Data for each :term:`chopper` in the :term:`instrument`. See `DiskChopper` for more info.
     moderator
-        Data for the moderator. See `Moderator` for more info.
+        Data for the :term:`moderator`. See `Moderator` for more info.
     detector
-        Data for the detector. See `Detector` for more info.
+        Data for the :term:`detector`. See `Detector` for more info.
     sample
-        Data for the sample. See `Sample` for more info.
+        Data for the :term:`sample`. See `Sample` for more info.
     tjit
         The jitter time in microseconds (us).
     default_chopper_frequency
-        The default value for the chopper frequency of each user-controlled chopper in Hz.
+        The default value for the :term:`chopper` frequency of each user-controlled :term:`chopper`
+        in Hz.
     allowed_chopper_frequencies
-        The allowed values for the chopper frequency of each user-controlled chopper, in Hz. Each
-        value defines the (start, stop, step), which is converted into a list at runtime.
+        The allowed values for the :term:`chopper` frequency of each user-controlled
+        :term:`chopper`, in Hz. Each value defines the (start, stop, step), which is converted into
+        a list at runtime.
     constant_frequencies
-        The frequency of each chopper in Hz, with those run at a constant frequency having
+        The frequency of each :term:`chopper` in Hz, with those run at a constant frequency having
         non-zero values.
     source_frequency
-        The frequency of the neutron source in Hz.
+        The frequency of the neutron :term:`source` in Hz.
     n_frame
         Number of frames to calculate time-distance diagram for.
     restrictions
@@ -365,14 +373,14 @@ class PyChopModelDataNonFermi(PyChopModelData):
 
 class FermiChopper(TypedDict):
     """
-    Data for a Fermi chopper.
+    Data for a :term:`Fermi chopper`.
 
     Attributes
     ----------
     distance
-        Distance from moderator to this Fermi chopper in meters (m).
+        Distance from :term:`moderator` to this :term:`Fermi chopper` in meters (m).
     aperture_distance
-        Distance from aperture (moderator face) to this Fermi chopper in meters (m).
+        Distance from aperture (:term:`moderator` face) to this :term:`Fermi chopper` in meters (m).
     """
     distance: float
     aperture_distance: float
@@ -380,31 +388,31 @@ class FermiChopper(TypedDict):
 
 class DiskChopper(TypedDict):
     """
-    Data for a disk chopper.
+    Data for a :term:`disk chopper`.
 
     Attributes
     ----------
     distance
-        Distance from moderator to this disk chopper in meters (m).
+        Distance from :term:`moderator` to this :term:`disk chopper` in meters (m).
     nslot
-        Number of slots in the chopper.
+        Number of slots in the :term:`chopper`.
     slot_width
         Width of all slots (assumed to be equal) in millimeters (mm).
     slot_ang_pos
-        Angular position of each slot in the chopper, in degrees. Must be monotonically increasing.
-        If None, equal spacing is assumed.
+        Angular position of each slot in the :term:`chopper`, in degrees. Must be monotonically
+        increasing. If None, equal spacing is assumed.
     guide_width
-        Width of the guide after the chopper in millimeters (mm).
+        Width of the guide after the :term:`chopper` in millimeters (mm).
     radius
         Disk radius in millimeters (mm)?
     num_disk
-        Number of disks making up this disk chopper.
+        Number of disks making up this :term:`disk chopper`.
     is_phase_independent
         Whether this disk is supposed to be phased independently.
     default_phase
-        Default phase for this disk chopper. If an ``int`` is provided, it is assumed to be time in
-        microseconds (us), and if a ``str`` is provided, it is assumed to be a slot index for the
-        desired rep to go through.
+        Default phase for this :term:`disk chopper`. If an ``int`` is provided, it is assumed to be
+        time in microseconds (us), and if a ``str`` is provided, it is assumed to be a slot index
+        for the desired rep to go through.
     """
     distance: float
     nslot: int
@@ -419,7 +427,7 @@ class DiskChopper(TypedDict):
 
 class Sample(TypedDict):
     """
-    Data for the sample.
+    Data for the :term:`sample`.
 
     Attributes
     ----------
@@ -443,7 +451,7 @@ class Sample(TypedDict):
     
 class Detector(TypedDict):
     """
-    Data for the detector.
+    Data for the :term:`detector`.
 
     Attributes
     ----------
@@ -461,7 +469,7 @@ class Detector(TypedDict):
 
 class Moderator(TypedDict):
     """
-    Data for the moderator.
+    Data for the :term:`moderator`.
 
     Attributes
     ----------
@@ -1058,13 +1066,14 @@ class PyChopModel(InstrumentModel, ABC):
 
 class PyChopModelFermi(PyChopModel):
     """
-    PyChop model of 2D direct-geometry INS instruments that use a Fermi chopper.
+    PyChop :term:`model` of 2D direct-geometry INS :term:`instruments<instrument>` that use a
+    :term:`Fermi chopper`.
 
-    Models the resolution as a function of energy transfer (frequencies) only, with the output model
-    being a Gaussian. This is done by computing the contribution of each part of the instrument to
-    the resolution function. However, this model calculates the resolution on a coarse grid, and
-    then fits a polynomial to the results - the resolution at the user-provided ``frequencies`` is
-    obtained by evaluating the polynomial.
+    Models the :term:`resolution` as a function of energy transfer (frequencies) only, with the
+    output :term:`model` being a Gaussian. This is done by computing the contribution of each part
+    of the :term:`instrument` to the :term:`resolution function`. However, this model calculates the
+    :term:`resolution` on a coarse grid, and then fits a polynomial to the results - the
+    :term:`resolution` at the user-provided ``frequencies`` is obtained by evaluating the polynomial.
 
     Parameters
     ----------
@@ -1413,10 +1422,11 @@ class PyChopModelNonFermi(PyChopModel, ABC):
 
 class PyChopModelCNCS(PyChopModelNonFermi):
     """
-    A PyChop model for the CNCS instrument.
+    A PyChop :term:`model` for the CNCS :term:`instrument`.
 
-    This model is identical to all other PyChop models for instruments without a Fermi chopper, but
-    the user-choice chopper frequencies have unique names compared to the other models.
+    This :term:`model` is identical to all other PyChop models for instruments without a
+    :term:`Fermi chopper`, but the user-choice :term:`chopper` frequencies have unique names
+    compared to the other models.
 
     Parameters
     ----------
@@ -1480,10 +1490,11 @@ class PyChopModelCNCS(PyChopModelNonFermi):
 
 class PyChopModelLET(PyChopModelNonFermi):
     """
-    A PyChop model for the LET instrument.
+    A PyChop :term:`model` for the LET :term:`instrument`.
 
-    This model is identical to all other PyChop models for instruments without a Fermi chopper, but
-    the user-choice chopper frequencies have unique names compared to the other models.
+    This :term:`model` is identical to all other PyChop models for instruments without a
+    :term:`Fermi chopper`, but the user-choice :term:`chopper` frequencies have unique names
+    compared to the other models.
 
     The LET instrument, specifically, has a set-up with multiple choppers of variable frequency, but
     where some of the choppers are set to a pre-determined fraction of the frequency of another

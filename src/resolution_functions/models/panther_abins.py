@@ -1,9 +1,9 @@
 """
-The AbINS model of the PANTHER instrument.
+The AbINS :term:`model` of the PANTHER :term:`instrument`.
 
 All classes within are exposed for reference only and should not be instantiated directly. For
-obtaining the resolution function of an instrument, please use the
-`Instrument.get_resolution_function` method.
+obtaining the :term:`resolution function` of an :term:`instrument`, please use the
+`resolution_functions.instrument.Instrument.get_resolution_function` method.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class PantherAbINSModelData(ModelData):
     """
-    Data for the `PantherAbINSModel` model.
+    Data for the `PantherAbINSModel` :term:`model`.
 
     Parameters
     ----------
@@ -65,18 +65,18 @@ class PantherAbINSModelData(ModelData):
 
 class PantherAbINSModel(InstrumentModel):
     """
-    Model for the PANTHER instrument originating from the AbINS software.
+    Model for the PANTHER :term:`instrument` originating from the AbINS software.
 
-    Models the resolution as a function of energy transfer (frequencies) only, with the output model
-    being a Gaussian. This is done by fitting three power-series polynomials (see
+    Models the :term:`resolution` as a function of energy transfer (frequencies) only, with the
+    output model being a Gaussian. This is done by fitting three power-series polynomials (see
     `numpy.polynomial.polynomial.Polynomial`) to the resolution curve, where the result of the sum
     of the polynomials is the width (sigma) of the Gaussian. Each polynomial can be of any degree
     ane is given via the `PolynomialModelData`.
 
-    The resolution is modelled as::
+    The :term:`resolution` is modelled as::
 
-        resolution = Polynomial(model_data.abs)(frequencies) + \
-                     Polynomial(model_data.ei_dependence)(e_init) + \
+        resolution = Polynomial(model_data.abs)(frequencies) +
+                     Polynomial(model_data.ei_dependence)(e_init) +
                      Polynomial(model_data.ei_energy_product)(e_init * frequencies)
 
     where ``e_init`` is the initial energy, ``frequencies`` is the energy transfer, and

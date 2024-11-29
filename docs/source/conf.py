@@ -19,7 +19,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.autosummary',
+    # 'sphinx.ext.autosummary',
     'myst_parser',
     # 'sphinx_autodoc_typehints',
 ]
@@ -48,3 +48,9 @@ html_static_path = ['_static']
 # napoleon_include_init_with_doc = False
 # napoleon_include_special_with_doc = True
 # napoleon_attr_annotations = True
+
+numpydoc_xref_param_type = True
+
+# The reST default role (used for this markup: `text`) to use for all
+# documents.
+default_role = "obj"

@@ -1,11 +1,11 @@
 """
-Model for TOSCA-like instruments from the [VISION paper]_.
+Model for TOSCA-like :term:`instruments<instrument>` from the [VISION-paper]_.
 
-All classes here are exposed for reference only and should not be instantiated directly. For
-obtaining the resolution function of an instrument, please use the
-`Instrument.get_resolution_function` method.
+All classes within are exposed for reference only and should not be instantiated directly. For
+obtaining the :term:`resolution function` of an :term:`instrument`, please use the
+`resolution_functions.instrument.Instrument.get_resolution_function` method.
 
-.. [VISION paper] https://doi.org/10.1016/j.nima.2009.03.204
+.. [VISION-paper] https://doi.org/10.1016/j.nima.2009.03.204
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class VisionPaperModelData(ModelData):
     """
-    Data for the `VisionPaperModel` model.
+    Data for the `VisionPaperModel` :term:`model`.
 
     Parameters
     ----------
@@ -32,23 +32,23 @@ class VisionPaperModelData(ModelData):
     citation
         The citation for a particular model.
     primary_flight_path
-        Distance between the moderator and the sample in meters (m).
+        Distance between the :term:`moderator` and the :term:`sample` in meters (m).
     primary_flight_path_uncertainty
         The uncertainty associated with the `primary_flight_path`, in meters (m).
     sample_thickness
-        Thickness of the sample in meters (m).
+        Thickness of the :term:`sample` in meters (m).
     detector_thickness
-        Thickness of the detector in meters (m).
+        Thickness of the :term:`detector` in meters (m).
     crystal_plane_spacing
-        Distance between the layers of atoms making up the detector, in meters (m).
+        Distance between the layers of atoms making up the :term:`detector`, in meters (m).
     d_r
-        Uncertainty associated with the detector offset, in meters (m).
+        Uncertainty associated with the :term:`detector` offset, in meters (m).
     d_t
-        Uncertainty associated with the source pulse shape, in ? (?).
+        Uncertainty associated with the :term:`source` pulse shape, in ? (?).
     angles
-        Angle between the sample and the analyser, in degrees.
+        Angle between the :term:`sample` and the analyser, in degrees.
     distance_sample_analyzer
-        Distance between the sample and the analyser, in meters (m).
+        Distance between the :term:`sample` and the analyser, in meters (m).
     average_bragg_angle_graphite
         Average Bragg angle of the graphite analyser, in degrees.
 
@@ -59,23 +59,23 @@ class VisionPaperModelData(ModelData):
     citation
         The citation for the model. Please use this to look up more details and cite the model.
     primary_flight_path
-        Distance between the moderator and the sample in meters (m).
+        Distance between the :term:`moderator` and the :term:`sample` in meters (m).
     primary_flight_path_uncertainty
         The uncertainty associated with the `primary_flight_path`, in meters (m).
     sample_thickness
-        Thickness of the sample in meters (m).
+        Thickness of the :term:`sample` in meters (m).
     detector_thickness
-        Thickness of the detector in meters (m).
+        Thickness of the :term:`detector` in meters (m).
     crystal_plane_spacing
-        Distance between the layers of atoms making up the detector, in meters (m).
+        Distance between the layers of atoms making up the :term:`detector`, in meters (m).
     d_r
-        Uncertainty associated with the detector offset, in meters (m).
+        Uncertainty associated with the :term:`detector` offset, in meters (m).
     d_t
-        Uncertainty associated with the source pulse shape, in ? (?).
+        Uncertainty associated with the :term:`source` pulse shape, in ? (?).
     angles
-        Angle between the sample and the analyser, in degrees.
+        Angle between the :term:`sample` and the analyser, in degrees.
     distance_sample_analyzer
-        Distance between the sample and the analyser, in meters (m).
+        Distance between the :term:`sample` and the analyser, in meters (m).
     average_bragg_angle_graphite
         Average Bragg angle of the graphite analyser, in degrees.
     restrictions
@@ -95,11 +95,12 @@ class VisionPaperModelData(ModelData):
 
 class VisionPaperModel(InstrumentModel):
     """
-    Model for TOSCA-like instruments from the [VISION paper]_.
+    Model for TOSCA-like :term:`instruments<instrument>` from the [VISION paper]_.
 
-    Models the resolution as a function of energy transfer (frequencies) only, with the output model
-    being an Ikeda-Carpenter distribution. This is done by taking into account the contributions
-    from the various parts of the instrument (for more information, please see the reference).
+    Models the :term:`resolution` as a function of energy transfer (frequencies) only, with the
+    output model being an Ikeda-Carpenter distribution. This is done by taking into account the
+    contributions from the various parts of the :term:`instrument` (for more information, please see
+    the reference).
 
     Parameters
     ----------

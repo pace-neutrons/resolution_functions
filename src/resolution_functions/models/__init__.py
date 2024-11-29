@@ -1,9 +1,9 @@
 """
-Package containing the implementation of the various models.
+Package containing the implementation of the various :term:`models<model>`.
 
 All classes within are exposed for reference only and should not be instantiated directly. For
-obtaining the resolution function of an instrument, please use the
-`Instrument.get_resolution_function` method.
+obtaining the :term:`resolution function` of an :term:`instrument`, please use the
+`resolution_functions.instrument.Instrument.get_resolution_function` method.
 
 Advanced Use
 ------------

@@ -2,8 +2,8 @@
 Collection of models based off polynomials.
 
 All classes within are exposed for reference only and should not be instantiated directly. For
-obtaining the resolution function of an instrument, please use the
-`Instrument.get_resolution_function` method.
+obtaining the :term:`resolution function` of an :term:`instrument`, please use the
+`resolution_functions.instrument.Instrument.get_resolution_function` method.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class PolynomialModelData(ModelData):
     """
-    Data for the `PolynomialModel1D` model.
+    Data for the `PolynomialModel1D` :term:`model`.
 
     Parameters
     ----------
@@ -50,11 +50,11 @@ class PolynomialModelData(ModelData):
 
 class PolynomialModel1D(InstrumentModel):
     """
-    Model using a 1D polynomial to model an instrument.
+    Model using a 1D polynomial to model an :term:`instrument`.
 
-    Models the resolution as a function of energy transfer (frequencies) only, with the output model
-    being a Gaussian. This is done by fitting a single power-series polynomial (see
-    `numpy.polynomial.polynomial.Polynomial`) to the resolution curve, where the result of the
+    Models the :term:`resolution` as a function of energy transfer (frequencies) only, with the
+    output :term:`model` being a Gaussian. This is done by fitting a single power-series polynomial
+    (see `numpy.polynomial.polynomial.Polynomial`) to the resolution curve, where the result of the
     polynomial is the width (sigma) of the Gaussian. The polynomial can be of any degree and is
     given via the `PolynomialModelData`.
 
@@ -106,7 +106,7 @@ class PolynomialModel1D(InstrumentModel):
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
 class DiscontinuousPolynomialModelData(ModelData):
     """
-    Data for the `DiscontinuousPolynomialModel1D`.
+    Data for the `DiscontinuousPolynomialModel1D` :term:`model`.
 
     Parameters
     ----------
@@ -162,12 +162,12 @@ class DiscontinuousPolynomialModelData(ModelData):
 
 class DiscontinuousPolynomialModel1D(InstrumentModel):
     """
-    Model using a 1D polynomial to model an instrument, but with values above and below certain
-    energy transfer set to constant values.
+    Model using a 1D polynomial to model an :term:`instrument`, but with values above and below
+    certain energy transfer set to constant values.
 
-    Models the resolution as a function of energy transfer (frequencies) only, with the output model
-    being a Gaussian. This is done by fitting a single power-series polynomial (see
-    `numpy.polynomial.polynomial.Polynomial`) to the resolution curve, where the result of the
+    Models the :term:`resolution` as a function of energy transfer (frequencies) only, with the
+    output :term:`model` being a Gaussian. This is done by fitting a single power-series polynomial
+    (see `numpy.polynomial.polynomial.Polynomial`) to the resolution curve, where the result of the
     polynomial is the width (sigma) of the Gaussian. The polynomial can be of any degree and is
     given via the `PolynomialModelData`. However, all ``sigma`` values below
     `DiscontinuousPolynomialModelData.low_energy_cutoff` are set to the value of
