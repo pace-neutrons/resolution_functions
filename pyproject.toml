@@ -32,6 +32,11 @@ test = [
     "pychop @ git+https://github.com/mducle/pychop.git",
     "more_itertools >= 10.5.0",
 ]
+docs = [
+    "sphinx >= 8.1.30",
+    "sphinxcontrib-napoleon >= 0.7",
+    "myst-parser >= 4.0.0",
+]
 
 [project.urls]
 Repository = "https://github.com/RastislavTuranyi/resolution_functions"
