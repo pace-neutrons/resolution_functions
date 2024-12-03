@@ -13,8 +13,8 @@ literature. The main purposes are:
 
 ## Quick Start
 
-The package can be installed with pip (see Installation). To start, import the main object and get 
-the instrument of your choice:
+The package can be installed with pip (see Installation). To start, import the main `Instrument` 
+class and get the instrument object of your choice:
 
 ```
 >>> from resolution_functions import Instrument
@@ -29,13 +29,13 @@ which model you want to use, as well as any model-specific parameters.
 
 ```
 >>> # The available models for a given instrument can be queried:
->>> tosca.availabl_models
+>>> tosca.available_models
 ['AbINS', 'book', 'vision']
 >>> # There are multiple ways of querying the model-specific parameters, but the most comprehensive is
 >>> tosca.get_model_signature('book')
 <Signature (model_name: Optional[str] = 'book', *, detector_bank: Literal['Backward', 'Forward'] = 'Backward', _)>
 >>> # Now we can get the resolution function
->>> book = tsoca.get_resolution_function('book', detector_bank='Forward')
+>>> book = tosca.get_resolution_function('book', detector_bank='Forward')
 >>> book
 <resolution_functions.models.tosca_book.ToscaBookModel object at 0x000000000>
 >>> book(100)
@@ -50,13 +50,13 @@ array([0.81802604, 1.34222267, 1.88255039])
 This package can be installed using pip, though it is not yet on PyPI, so it has to be installed directly from GitHub:
 
 ```
-pip install git+https://github.com/RastislavTuranyi/resolution_functions.git
+pip install git+https://github.com/pace-neutrons/resolution_functions.git
 ```
 
-or from local:
+or from a local copy:
 
 ```
-git clone https://github.com/RastislavTuranyi/resolution_functions.git
+git clone https://github.com/pace-neutrons/resolution_functions.git
 pip install resolution_functions
 ```
 

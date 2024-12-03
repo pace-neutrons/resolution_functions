@@ -1,5 +1,5 @@
 """
-Module containing the abstract base classes for all instrument models.
+Abstract base classes for all instrument models.
 
 The classes defined within provide a common interface that all models must follow. A model consists
 of two objects:
@@ -9,7 +9,8 @@ of two objects:
 
 Any new models must implement a subclass of each of these base classes (see their individual
 documentation for details about how to use them). Additionally, the model must be added to the
-`models.MODELS` mapping (found in ``models/__init__.py``) or they won't be found.
+`models.MODELS` mapping (found in ``models/__init__.py``) or they won't be found from the
+`Instrument` class.
 """
 from __future__ import annotations
 
@@ -27,7 +28,6 @@ class InvalidInputError(Exception):
     incident energy (``e_init``) provided to a model of a direct instrument is outside the the range
     available to that instrument.
     """
-    pass
 
 
 @dataclass(init=True, repr=True, frozen=True, slots=True, kw_only=True)
