@@ -25,43 +25,6 @@ class ToscaBookModelData(ModelData):
     """
     Data for the `ToscaBookModel` :term:`model`.
 
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for `PantherAbINSModel`.
-    citation
-        The citation for a particular model.
-    primary_flight_path
-        Distance between the :term:`moderator` and the :term:`sample` in meters (m).
-    primary_flight_path_uncertainty
-        The uncertainty associated with the `primary_flight_path`, in meters (m).
-    water_moderator_constant
-        Moderator constant, in the units of $\hbar^2$.
-    time_channel_uncertainty
-        Time channel uncertainty in microseconds (us).
-    sample_thickness
-        Thickness of the :term:`sample` in meters (m).
-    graphite_thickness
-        Thickness of the graphite analyser in meters (m).
-    detector_thickness
-        Thickness of the :term:`detector` in meters (m).
-    sample_width
-        Width of the :term:`sample` in meters (m).
-    detector_width
-        Width of the :term:`detector` in meters (m).
-    crystal_plane_spacing
-        Distance between the layers of atoms making up the :term:`detector`, in meters (m).
-    angles
-        Angle between the :term:`sample` and the analyser, in degrees.
-    average_secondary_flight_path
-        Average length of the path from the :term:`sample` to the :term:`detector` in meters (m).
-    average_final_energy
-        Average energy of the neutrons hitting the :term:`detector` in meV.
-    average_bragg_angle_graphite
-        Average Bragg angle of the graphite analyser, in degrees.
-    change_average_bragg_angle_graphite
-        Uncertainty associated with `average_bragg_angle_graphite`.
-
     Attributes
     ----------
     function

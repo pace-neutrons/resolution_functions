@@ -24,16 +24,6 @@ class PolynomialModelData(ModelData):
     """
     Data for the `PolynomialModel1D` :term:`model`.
 
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for `PolynomialModel1D`.
-    citation
-        The citation for a particular model.
-    fit
-        Polynomial coefficients in order of increasing degree, i.e. ``a, b, c`` for
-        ``a + bx + cx^2``. Any number of coefficients is allowed.
-
     Attributes
     ----------
     function
@@ -107,28 +97,6 @@ class PolynomialModel1D(InstrumentModel):
 class DiscontinuousPolynomialModelData(ModelData):
     """
     Data for the `DiscontinuousPolynomialModel1D` :term:`model`.
-
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for `DiscontinuousPolynomialModel1D`.
-    citation
-        The citation for a particular model.
-    fit
-        Polynomial coefficients in order of increasing degree, i.e. ``a, b, c`` for
-        ``a + bx + cx^2``. Any number of coefficients is allowed.
-    low_energy_cutoff
-        The lower bound (in meV) for the energy transfer (frequencies), below which the ``sigma``
-        values are set to the value of `low_energy_resolution`.
-    low_energy_resolution
-        The value (in meV) to which ``sigma`` is set when the energy transfer is lower than
-        `low_energy_cutoff`.
-    high_energy_cutoff
-        The upper bound (in meV) for the energy transfer (frequencies), above which the ``sigma``
-        values are set to the value of `high_energy_resolution`.
-    high_energy_resolution
-        The value (in meV) to which ``sigma`` is set when the energy transfer is higher than
-        `high_energy_cutoff`.
 
     Attributes
     ----------

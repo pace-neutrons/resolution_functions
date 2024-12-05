@@ -25,33 +25,6 @@ class VisionPaperModelData(ModelData):
     """
     Data for the `VisionPaperModel` :term:`model`.
 
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for `PantherAbINSModel`.
-    citation
-        The citation for a particular model.
-    primary_flight_path
-        Distance between the :term:`moderator` and the :term:`sample` in meters (m).
-    primary_flight_path_uncertainty
-        The uncertainty associated with the `primary_flight_path`, in meters (m).
-    sample_thickness
-        Thickness of the :term:`sample` in meters (m).
-    detector_thickness
-        Thickness of the :term:`detector` in meters (m).
-    crystal_plane_spacing
-        Distance between the layers of atoms making up the :term:`detector`, in meters (m).
-    d_r
-        Uncertainty associated with the :term:`detector` offset, in meters (m).
-    d_t
-        Uncertainty associated with the :term:`source` pulse shape, in ? (?).
-    angles
-        Angle between the :term:`sample` and the analyser, in degrees.
-    distance_sample_analyzer
-        Distance between the :term:`sample` and the analyser, in meters (m).
-    average_bragg_angle_graphite
-        Average Bragg angle of the graphite analyser, in degrees.
-
     Attributes
     ----------
     function

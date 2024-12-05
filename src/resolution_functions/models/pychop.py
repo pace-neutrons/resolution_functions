@@ -56,39 +56,6 @@ class PyChopModelData(ModelData):
     Concrete implementations of the PyChop model should have their own model data subclasses of this
     class.
 
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for `PantherAbINSModel`.
-    citation
-        The citation for a particular model.
-    d_chopper_sample
-        Distance from the final chopper to sample in meters (m).
-    d_sample_detector
-        Distance from sample to detector in meters (m).
-    aperture_width
-        Width of aperture at moderator face in meters (m)
-    theta
-        The angle that the beamline makes with the moderator face in degrees.
-    default_e_init
-        The default value for the initial energy (``e_init``) in meV.
-    allowed_e_init
-        The limits (lower and upper bound) for the allowed initial energies (``e_init``). This
-        should correspond to the physical limitations of the INS instrument.
-    frequency_matrix
-        A matrix mapping the relationship between the user-provided parameter ``chopper_frequency``
-        or its equivalent (depending on model) to the frequency of each chopper in the instrument.
-    choppers
-        Data for each chopper in the instrument. See `FermiChopper` and `DiskChopper` for more info.
-    moderator
-        Data for the moderator. See `Moderator` for more info.
-    detector
-        Data for the detector. See `Detector` for more info.
-    sample
-        Data for the sample. See `Sample` for more info.
-    tjit
-        The jitter time in microseconds (us).
-
     Attributes
     ----------
     function
@@ -142,51 +109,6 @@ class PyChopModelData(ModelData):
 class PyChopModelDataFermi(PyChopModelData):
     """
     Data for the `PyChopModelFermi` :term:`model`.
-
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for `PantherAbINSModel`.
-    citation
-        The citation for a particular model.
-    d_chopper_sample
-        Distance from the final :term:`chopper` to :term:`sample` in meters (m).
-    d_sample_detector
-        Distance from :term:`sample` to :term:`detector` in meters (m).
-    aperture_width
-        Width of aperture at :term:`moderator` face in meters (m)
-    theta
-        The angle that the beamline makes with the :term:`moderator` face in degrees.
-    default_e_init
-        The default value for the initial energy (``e_init``) in meV.
-    allowed_e_init
-        The limits (lower and upper bound) for the allowed initial energies (``e_init``). This
-        should correspond to the physical limitations of the INS :term:`instrument`.
-    frequency_matrix
-        A matrix mapping the relationship between the user-provided parameter ``chopper_frequency``
-        to the frequency of each :term:`chopper` in the :term:`instrument`.
-    choppers
-        Data for each :term:`chopper` in the :term:`instrument`. See `FermiChopper` and `DiskChopper` for more info.
-    moderator
-        Data for the :term:`moderator`. See `Moderator` for more info.
-    detector
-        Data for the :term:`detector`. See `Detector` for more info.
-    sample
-        Data for the :term:`sample`. See `Sample` for more info.
-    tjit
-        The jitter time in microseconds (us).
-    default_chopper_frequency
-        The default value for the :term:`Fermi chopper` frequency (``chopper_frequency``) in Hz.
-    allowed_chopper_frequencies
-        The allowed values for the :term:`Fermi chopper` frequency (``chopper_frequency``) in Hz.
-        `allowed_chopper_frequencies` defines the (start, stop, step), which is converted into a
-        list at runtime.
-    pslit
-        Width of the neutron-transparent slit in meters (m).
-    radius
-        Radius of the :term:`chopper` package in meters (m).
-    rho
-        Curvature of the :term:`chopper` package in meters (m).
 
     Attributes
     ----------
@@ -257,54 +179,6 @@ class PyChopModelDataNonFermi(PyChopModelData):
 
     - `PyChopModelCNCS`
     - `PyChopModelLET`
-
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for `PantherAbINSModel`.
-    citation
-        The citation for a particular model.
-    d_chopper_sample
-        Distance from the final :term:`chopper` to :term:`sample` in meters (m).
-    d_sample_detector
-        Distance from :term:`sample` to :term:`detector` in meters (m).
-    aperture_width
-        Width of aperture at :term:`moderator` face in meters (m)
-    theta
-        The angle that the beamline makes with the :term:`moderator` face in degrees.
-    default_e_init
-        The default value for the initial energy (``e_init``) in meV.
-    allowed_e_init
-        The limits (lower and upper bound) for the allowed initial energies (``e_init``). This
-        should correspond to the physical limitations of the INS :term:`instrument`.
-    frequency_matrix
-        A matrix mapping the relationship between all user-provided :term:`chopper` frequency
-        parameters (i.e. the choppers with user control) to the frequency of each :term:`chopper` in
-        the :term:`instrument`.
-    choppers
-        Data for each :term:`chopper` in the :term:`instrument`. See `DiskChopper` for more info.
-    moderator
-        Data for the :term:`moderator`. See `Moderator` for more info.
-    detector
-        Data for the :term:`detector`. See `Detector` for more info.
-    sample
-        Data for the :term:`sample`. See `Sample` for more info.
-    tjit
-        The jitter time in microseconds (us).
-    default_chopper_frequency
-        The default value for the :term:`chopper` frequency of each user-controlled :term:`chopper`
-        in Hz.
-    allowed_chopper_frequencies
-        The allowed values for the :term:`chopper` frequency of each user-controlled
-        :term:`chopper`, in Hz. Each value defines the (start, stop, step), which is converted into
-        a list at runtime.
-    constant_frequencies
-        The frequency of each :term:`chopper` in Hz, with those run at a constant frequency having
-        non-zero values.
-    source_frequency
-        The frequency of the neutron :term:`source` in Hz.
-    n_frame
-        Number of frames to calculate time-distance diagram for.
 
     Attributes
     ----------

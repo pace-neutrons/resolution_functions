@@ -24,24 +24,6 @@ class PantherAbINSModelData(ModelData):
     """
     Data for the `PantherAbINSModel` :term:`model`.
 
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for `PantherAbINSModel`.
-    citation
-        The citation for a particular model.
-    abs
-        Polynomial coefficients for the energy transfer (frequencies) polynomial, in order of
-        increasing degree, i.e. ``a, b, c`` for ``a + bx + cx^2``. Any number of coefficients is
-        allowed.
-    ei_dependence
-        Polynomial coefficients for the initial energy polynomial, in order of increasing degree,
-        i.e. ``a, b, c`` for ``a + bx + cx^2``. Any number of coefficients is allowed.
-    ei_energy_product
-        Polynomial coefficients for the product of initial energy and energy transfer (frequencies)
-        polynomial, in order of increasing degree, i.e. ``a, b, c`` for ``a + bx + cx^2``. Any
-        number of coefficients is allowed.
-
     Attributes
     ----------
     function

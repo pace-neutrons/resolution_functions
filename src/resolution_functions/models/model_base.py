@@ -64,13 +64,6 @@ class ModelData(ABC):
     but one that is only valid for models that do not have restrictions or defaults. Any subclasses
     should overwrite these as appropriate for the model.
 
-    Parameters
-    ----------
-    function
-        The name of the function, i.e. the alias for the corresponding `InstrumentModel`.
-    citation
-        The citation for a particular model.
-
     Attributes
     ----------
     function
