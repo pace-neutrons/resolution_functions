@@ -131,7 +131,7 @@ class Instrument:
         The version of the INS instrument represented by this instance.
     default_model
         The name of the model for this version of this INS instrument that is used by default.
-    instrument_versions
+    available_versions
     available_models
     available_models_and_settings
     all_available_models_options
