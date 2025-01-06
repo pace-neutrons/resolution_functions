@@ -18,3 +18,4 @@ resolution_functions
    glossary
    theory
    api
+   instruments

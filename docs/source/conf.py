@@ -3,6 +3,17 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+import sys
+
+PATH = os.path.dirname(os.path.abspath(__file__))
+
+sys.path.append(os.path.join(PATH, '_ext'))
+
+from generate_instrument_docs import main
+main()
+del main
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -21,7 +32,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     # 'sphinx.ext.autosummary',
     'myst_parser',
-    # 'sphinx_autodoc_typehints',
+    'inline_reference',
+    'sphinx_parsed_codeblock',
 ]
 
 templates_path = ['_templates']
