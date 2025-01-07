@@ -31,7 +31,6 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     # 'sphinx.ext.autosummary',
-    'myst_parser',
     'inline_reference',
     'sphinx_parsed_codeblock',
 ]
