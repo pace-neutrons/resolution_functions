@@ -64,7 +64,7 @@ Neutron terminology
 .. glossary::
 
     source
-        A device that produces neutrons used for neutron experiments. In practice, this is usually
+        A device that produces neutrons used for neutron experiments. In practice, this is
         either a nuclear reactor or spallation source (a particle accelerator).
 
     target
@@ -75,9 +75,8 @@ Neutron terminology
         A material used to slow down the neutrons produced by the collision with the :term:`target`.
 
     beam
-        A collection of neutrons. In nuclear reactor :term:`sources<source>`, this is usually a
-        continuous beam (somewhat similar to a laser beam), while in spallation
-        :term:`sources<source>` this is usually a pulse (a short burst).
+        A collection of neutrons. Nuclear reactors produce continuous beams and spallation sources
+        produce short pulses; these may be further manipulated with moderators and choppers.
 
     chopper
         A rotating mechanical device designed to block the neutron :term:`beam` for some fraction of
@@ -96,8 +95,7 @@ Neutron terminology
     sample
         The material being studied by the neutron experiment. Unless specified otherwise, in this
         library the term "sample" combines two things: the :term:`sample environment` and the sample
-        itself. The latter is the stuff that the user brings to be studied, in :term:`INS` usually
-        a single crystal or a powder.
+        under study itself.
 
     sample environment
         A device used to enclose the :term:`sample`, usually an aluminium "can". May consist of
