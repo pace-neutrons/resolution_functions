@@ -104,9 +104,9 @@ Neutron terminology
         exposed to the neutron :term:`beam` and therefore shouldn't affect the :term:`resolution`.
 
     detector
-        A device used used to detect the presence of a neutron. These are placed in an array such
-        that the the neutrons that hit the :term:`sample`, hit the detectors, registering where and
-        when the neutron hit the detector.
+        A device used used to detect the presence of a neutron. These are placed at various
+        positions around the :term:`sample` to determine the energies and momenta of the neutrons
+        scattered from the sample under investigation.
 
 
 .. _abbreviations:
