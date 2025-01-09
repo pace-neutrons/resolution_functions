@@ -46,9 +46,9 @@ version:
                 Fermi:
                     distance: 10.143  # m
                     aperture_distance: 8.27  # m
-        settings: &maps_settings
+        configurations: &maps_configurations
             chopper_package:
-                default_setting: 'A'
+                default_option: 'A'
                 A:
                     pslit: 1.087e-3  # m
                     radius: 49.0e-3  # m
@@ -71,7 +71,7 @@ version:
                 citation: ""
                 parameters:
                     <<: *maps_constants
-                settings: *maps_settings
+                configurations: *maps_configurations
 #            PyChop_tau:
 #                function: "2d_tau"
 #                parameters:

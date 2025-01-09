@@ -80,33 +80,33 @@ class ModelData(ABC):
     @property
     def restrictions(self) -> dict[str, list[int | float]]:
         """
-        The restrictions that the corresponding model places on each user-input argument.
+        The restrictions that the corresponding :term:`model` places on each :term:`setting`.
 
-        This is provided via a dictionary where the keys are the name of the user-input argument,
-        and the values are the restriction for that argument. The restrictions can be the upper or
-        lower bounds, or even a list of allowed values. If an invalid input is passed in, a
+        This is provided via a dictionary where the keys are the name of the :term:`setting`,
+        and the values are the restriction for that :term:`setting`. The restrictions can be the
+        upper or lower bounds, or even a list of allowed values. If an invalid input is passed in, a
         `InvalidInputError` will be raised.
 
         Returns
         -------
         restrictions
-            A mapping of user argument name to the corresponding restriction.
+            A mapping of :term:`setting` to its corresponding restriction.
         """
         return {}
 
     @property
     def defaults(self) -> dict[str, Any]:
         """
-        The defaults for each user-input argument for the corresponding model.
+        The defaults for each :term:`setting` for the corresponding :term:`model`.
 
-        This is provided as a dictionary where the keys are the name of the user-input argument,
-        and the values are the default for that argument. The default will be used when a particular
-        argument is not passed in.
+        This is provided as a dictionary where the keys are the name of the :term:`setting`,
+        and the values are the default for that :term:`setting`. The default will be used when a
+        particular :term:`setting` is not passed in to the :term:`model`
 
         Returns
         -------
         defaults
-            A mapping to user argument name to the corresponding default value.
+            A mapping of :term:`settings<setting>` to their corresponding default values.
         """
         return {}
 

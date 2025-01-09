@@ -12,8 +12,9 @@ Instrument(name='TOSCA', version='TOSCA', models=['AbINS', 'book', 'vision'])
 To get the :term:`resolution function`, a couple choices might be necessary:
 
 1. Choose the :term:`model` for our instrument.
-2. Select one of the :term:`options<option>` for each :term:`setting` of the
-   chosen model.
+2. Select one of the :term:`options<option>` for each :term:`configuration` of
+   the chosen model.
+3. Provide any other :term:`settings<setting>` that the model requires.
 
 If we don't know what the possibilities are for the chosen instrument, the
 information can be found either in the :doc:`documentation<instruments>` or
@@ -30,8 +31,8 @@ via the
 method:
 
 >>> book = tosca.get_resolution_function('book', detector_bank='Forward')
->>> book
-<resolution_functions.models.tosca_book.ToscaBookModel object at 0x000000000>
+>>> print(book)
+ToscaBookModel(citation="")
 
 .. note::
 

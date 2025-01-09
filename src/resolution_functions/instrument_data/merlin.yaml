@@ -44,9 +44,9 @@ version:
                 Fermi:
                     distance: 9.995  # m
                     aperture_distance: 7.19  # m
-        settings: &settings
+        configurations: &configurations
             chopper_package:
-                default_setting: 'G'
+                default_option: 'G'
                 G:
                     pslit: 0.2e-3  # m
                     radius: 5.0e-3  # m
@@ -66,4 +66,4 @@ version:
                 citation: ""
                 parameters:
                     <<: *constants
-                settings: *settings
+                configurations: *configurations

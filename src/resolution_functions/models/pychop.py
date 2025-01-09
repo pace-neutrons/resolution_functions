@@ -1299,7 +1299,7 @@ class PyChopModelCNCS(PyChopModelNonFermi):
     A PyChop :term:`model` for the CNCS :term:`instrument`.
 
     This :term:`model` is identical to all other PyChop models for instruments without a
-    :term:`Fermi chopper`, but the user-choice :term:`chopper` frequencies have unique names
+    :term:`Fermi chopper`, but the :term:`setting` ":term:`chopper` frequencies" have unique names
     compared to the other models.
 
     Parameters
@@ -1367,14 +1367,15 @@ class PyChopModelLET(PyChopModelNonFermi):
     A PyChop :term:`model` for the LET :term:`instrument`.
 
     This :term:`model` is identical to all other PyChop models for instruments without a
-    :term:`Fermi chopper`, but the user-choice :term:`chopper` frequencies have unique names
+    :term:`Fermi chopper`, but the :term:`setting` ":term:`chopper` frequencies" have unique names
     compared to the other models.
 
     The LET instrument, specifically, has a set-up with multiple choppers of variable frequency, but
     where some of the choppers are set to a pre-determined fraction of the frequency of another
-    chopper. Further, this relationship changes depending on the ``chopper_package`` setting. The
-    `PyChopModelDataNonFermi.frequency_matrix` attribute describes this relationship, and the
-    `get_long_frequency` method can be used to compute the frequencies of all choppers.
+    chopper. Further, this relationship changes depending on the ``chopper_package``
+    :term:`configuration`. The `PyChopModelDataNonFermi.frequency_matrix` attribute describes this
+    relationship, and the `get_long_frequency` method can be used to compute the frequencies of all
+    choppers.
 
     Parameters
     ----------

@@ -44,9 +44,9 @@ version:
                 Fermi:
                     distance: 10.05  # m
                     aperture_distance: 7.19  # m
-        settings: &mari_settings
+        configurations: &mari_configurations
             chopper_package:
-                default_setting: 'A'
+                default_option: 'A'
                 A:
                     pslit: 0.760e-3  # m
                     radius: 49.0e-3  # m
@@ -70,7 +70,7 @@ version:
                     radius: 10.0e-3          # Chopper package radius (mm)
                     rho: 0.8            # Chopper package curvature (mm)
                     tjit: 0.0             # Jitter time (us)
-                    allowed_e_init: [ 0, 181 ]   # Limits on ei for this chopper (setting Ei outside this will give error)
+                    allowed_e_init: [ 0, 181 ]   # Limits on ei for this chopper (configuration Ei outside this will give error)
                 R:
                     pslit: 1.143e-3          # Neutron transparent slit width (mm)
                     radius: 49.0e-3          # Chopper package radius (mm)
@@ -90,4 +90,4 @@ version:
                 citation: ""
                 parameters:
                     <<: *mari_constants
-                settings: *mari_settings
+                configurations: *mari_configurations

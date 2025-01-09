@@ -63,7 +63,7 @@ INSTRUMENTS_FERMI = [
     [('SEQUOIA', 'SEQUOIA')],
 ]
 
-INSTRUMENT_SETTINGS_FERMI = [
+INSTRUMENT_CONFIGURATIONS_FERMI = [
     ['SEQ-100-2.0-AST', 'SEQ-700-3.5-AST', 'ARCS-100-1.5-AST', 'ARCS-700-1.5-AST',
      'ARCS-700-0.5-AST', 'ARCS-100-1.5-SMI', 'ARCS-700-1.5-SMI'],
     ['OnlyOne'],
@@ -76,8 +76,8 @@ INSTRUMENT_SETTINGS_FERMI = [
 
 INSTRUMENT_MATRIX_FERMI = list(
         itertools.chain.from_iterable(
-            itertools.product(instr, settings)
-                  for instr, settings in zip(INSTRUMENTS_FERMI, INSTRUMENT_SETTINGS_FERMI)
+            itertools.product(instr, configurations)
+                  for instr, configurations in zip(INSTRUMENTS_FERMI, INSTRUMENT_CONFIGURATIONS_FERMI)
         )
 )
 
@@ -85,22 +85,22 @@ INSTRUMENTS_NONFERMI = [
     [('CNCS', 'CNCS')],
     [('LET', 'LET')],
 ]
-INSTRUMENT_SETTINGS_NONFERMI = [
+INSTRUMENT_CONFIGURATIONS_NONFERMI = [
     ['High Flux', 'Intermediate', 'High Resolution'],
     ['High Flux', 'Intermediate', 'High Resolution'],
 ]
 INSTRUMENT_MATRIX_NONFERMI = list(
         itertools.chain.from_iterable(
-            itertools.product(instr, settings)
-                  for instr, settings in zip(INSTRUMENTS_NONFERMI, INSTRUMENT_SETTINGS_NONFERMI)
+            itertools.product(instr, configurations)
+                  for instr, configurations in zip(INSTRUMENTS_NONFERMI, INSTRUMENT_CONFIGURATIONS_NONFERMI)
         )
 )
 
 
 def instrument_id(matrix_row: tuple[tuple[str, str], str]) -> str:
-    """Get test id NAME_SETTING from input row ((NAME, NAME), SETTING)"""
-    (instrument, _), setting = matrix_row
-    return f"{instrument}_{setting}"
+    """Get test id NAME_configuration from input row ((NAME, NAME), configuration)"""
+    (instrument, _), configuration = matrix_row
+    return f"{instrument}_{configuration}"
 
 # id formatter for E_i input
 format_ei = "ei={}".format
@@ -112,21 +112,21 @@ def get_fake_frequencies(e_init: float) -> Float[np.ndarray]:
 
 @pytest.fixture(scope="module", params=INSTRUMENT_MATRIX_FERMI, ids=instrument_id)
 def pychop_fermi_data(request) -> tuple[PyChopModelDataFermi, PyChopInstrument]:
-    (name, version), setting = request.param
+    (name, version), configuration = request.param
     maps = Instrument.from_default(name, version)
-    rf = maps.get_model_data('PyChop_fit', chopper_package=setting)
+    rf = maps.get_model_data('PyChop_fit', chopper_package=configuration)
 
-    pc = PyChopInstrument(name, chopper=setting)
+    pc = PyChopInstrument(name, chopper=configuration)
     return rf, pc
 
 
 @pytest.fixture(scope="module", params=INSTRUMENT_MATRIX_NONFERMI, ids=instrument_id)
 def pychop_nonfermi_data(request) -> tuple[PyChopModelDataNonFermi, PyChopInstrument]:
-    (name, version), setting = request.param
+    (name, version), configuration = request.param
     maps = Instrument.from_default(name, version)
-    rf = maps.get_model_data('PyChop_fit', chopper_package=setting)
+    rf = maps.get_model_data('PyChop_fit', chopper_package=configuration)
 
-    pc = PyChopInstrument(name, chopper=setting)
+    pc = PyChopInstrument(name, chopper=configuration)
     return rf, pc
 
 
@@ -135,7 +135,7 @@ def mari_data():
     maps = Instrument.from_default('MARI', 'MARI')
     rf = maps.get_model_data('PyChop_fit')
 
-    pc = PyChopInstrument('MARI', chopper=maps.default_option_for_setting('PyChop_fit', 'chopper_package'))
+    pc = PyChopInstrument('MARI', chopper=maps.default_option_for_configuration('PyChop_fit', 'chopper_package'))
     return rf, pc
 
 
