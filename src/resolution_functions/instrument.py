@@ -432,7 +432,7 @@ class Instrument:
         for setting_name, options in available_configurations.items():
             kwarg = kwargs.pop(setting_name, None)
             if kwarg is None:
-                kwarg = options['default_setting']
+                kwarg = options['default_option']
 
             settings.append(options[kwarg])
 
@@ -578,12 +578,12 @@ class Instrument:
                                     annotation=Optional[str])
         }
 
-        for setting_name, options in self._models[model_name]['settings'].items():
+        for configuration_name, options in self._models[model_name]['configurations'].items():
             option_names = self._get_options(options)
-            params[setting_name] = Parameter(setting_name,
-                                             Parameter.KEYWORD_ONLY,
-                                             default=options['default_setting'],
-                                             annotation=Literal[tuple(option_names)])
+            params[configuration_name] = Parameter(configuration_name,
+                                                   Parameter.KEYWORD_ONLY,
+                                                   default=options['default_option'],
+                                                   annotation=Literal[tuple(option_names)])
 
         for key, value in signature.parameters.items():
             if key == 'model_data':
@@ -618,7 +618,7 @@ class Instrument:
         return list(self._models.keys())
 
     @property
-    def available_models_and_settings(self) -> dict[str, list[str]]:
+    def available_models_and_configurations(self) -> dict[str, list[str]]:
         """
         A dictionary mapping each available :term:`model` to the user :term:`settings<setting>`
         available for that :term:`model`.
@@ -631,7 +631,8 @@ class Instrument:
         models_and_settings
             All models and all their settings.
         """
-        return {model_name: list(model['settings'].keys()) for model_name, model in self._models.items()}
+        return {model_name: list(model['configurations'].keys())
+                for model_name, model in self._models.items()}
 
     @property
     def all_available_models_options(self) -> dict[str, dict[str, list[str]]]:
@@ -648,10 +649,11 @@ class Instrument:
         everything
             All models, all their settings, and all their options.
         """
-        return {model_name: {setting: self._get_options(value) for setting, value in list(model['settings'].items())}
+        return {model_name: {config: self._get_options(value)
+                             for config, value in list(model['configurations'].items())}
                 for model_name, model in self._models.items()}
 
-    def possible_settings_for_model(self, model_name: str) -> list[str]:
+    def possible_configurations_for_model(self, model_name: str) -> list[str]:
         """
         Returns all the :term:`settings<setting>` that the `model_name` :term:`model` supports.
 
@@ -675,7 +677,7 @@ class Instrument:
         except KeyError:
             raise InvalidModelError(model_name, self)
 
-        return list(model['settings'].keys())
+        return list(model['configurations'].keys())
 
     def possible_options_for_model(self, model_name: str) -> dict[str, list[str]]:
         """
@@ -702,9 +704,12 @@ class Instrument:
         except KeyError:
             raise InvalidModelError(model_name, self)
 
-        return {setting: self._get_options(value) for setting, value in model['settings'].items()}
+        return {config: self._get_options(value)
+                for config, value in model['configurations'].items()}
 
-    def possible_options_for_model_and_setting(self, model_name: str, setting: str) -> list[str]:
+    def possible_options_for_model_and_configuration(self,
+                                                     model_name: str,
+                                                     configuration: str) -> list[str]:
         """
         Lists each :term:`option` that can be chosen for a given :term:`setting` of the `model_name`
         :term:`model`.
@@ -733,17 +738,17 @@ class Instrument:
         except KeyError:
             raise InvalidModelError(model_name, self)
 
-        settings = model['settings']
+        configurations = model['configurations']
 
         try:
-            settings = settings[setting]
+            configurations = configurations[configuration]
         except KeyError:
-            raise InvalidSettingError(setting, model_name, self)
+            raise InvalidSettingError(configuration, model_name, self)
 
-        return self._get_options(settings)
+        return self._get_options(configurations)
 
     @staticmethod
-    def _get_options(setting: dict[str, Union[str, dict]]) -> list[str]:
+    def _get_options(configuration: dict[str, Union[str, dict]]) -> list[str]:
         """
         Retrieves all the possible options from ``self._models[model_name]['settings'][setting]``.
 
@@ -760,9 +765,9 @@ class Instrument:
         options
             A list of options as found in the provided `setting` dictionary.
         """
-        return [value for value in setting.keys() if value != 'default_setting']
+        return [value for value in configuration.keys() if value != 'default_option']
 
-    def default_option_for_setting(self, model_name: str, setting: str) -> str:
+    def default_option_for_configuration(self, model_name: str, configuration: str) -> str:
         """
         Returns the default :term:`option` for the `setting` :term:`setting` of the `model_name`
         :term:`model` of this :term:`instrument`.
@@ -791,11 +796,11 @@ class Instrument:
         except KeyError:
             raise InvalidModelError(model_name, self)
 
-        settings = model['settings']
+        configurations = model['configurations']
 
         try:
-            settings = settings[setting]
+            configurations = configurations[configuration]
         except KeyError:
-            raise InvalidSettingError(setting, model_name, self)
+            raise InvalidSettingError(configuration, model_name, self)
 
-        return settings['default_setting']
+        return configurations['default_option']
