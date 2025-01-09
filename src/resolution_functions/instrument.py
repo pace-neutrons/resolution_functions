@@ -426,10 +426,10 @@ class Instrument:
         except KeyError:
             raise InvalidModelError(model_name, self)
 
-        available_settings = model['settings']
+        available_configurations = model['configurations']
 
         settings = []
-        for setting_name, options in available_settings.items():
+        for setting_name, options in available_configurations.items():
             kwarg = kwargs.pop(setting_name, None)
             if kwarg is None:
                 kwarg = options['default_setting']

@@ -71,9 +71,9 @@ version:
                 Fermi:
                     distance: 37.17  # m
                     aperture_distance: 37.0  # m
-        settings: &settings
+        configurations: &configurations
             chopper_package:
-                default_setting: 'OnlyOne'
+                default_option: 'OnlyOne'
                 OnlyOne:
                     pslit: 0.6e-3  # m
                     radius: 5.0e-3  # m
@@ -86,4 +86,4 @@ version:
                 citation: ""
                 parameters:
                     <<: *constants
-                settings: *settings
+                configurations: *configurations

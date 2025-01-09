@@ -17,9 +17,9 @@ version:
             sample_width: 0.02  # m
             detector_width: 0.012  # m
             crystal_plane_spacing: 3.348e-10  # m
-        settings: &tfxa_settings
+        configurations: &tfxa_configurations
             detector_bank:
-                default_setting: "Backward"
+                default_option: "Backward"
                 Backward:
                     angles: [ 134.98885653282196 ]
                     average_secondary_flight_path: 0.671  # m
@@ -31,7 +31,7 @@ version:
                 function: "tosca_book"
                 citation: ""
                 parameters: *tfxa_constants
-                settings: *tfxa_settings
+                configurations: *tfxa_configurations
     TOSCA1:
         constants: &tosca1_constants
             final_neutron_energy: 32.0  # Final energy on the crystal analyser in cm-1
@@ -47,9 +47,9 @@ version:
             sample_width: 0.02  # m
             detector_width: 0.012  # m
             crystal_plane_spacing: 3.348e-10  # m
-        settings: &tosca1_settings
+        configurations: &tosca1_configurations
             detector_bank:
-                default_setting: "Backward"
+                default_option: "Backward"
                 Backward:
                     angles: [ 134.98885653282196 ]
                     average_secondary_flight_path: 0.7456  # m
@@ -62,7 +62,7 @@ version:
                 function: "tosca_book"
                 citation: ""
                 parameters: *tosca1_constants
-                settings: *tosca1_settings
+                configurations: *tosca1_configurations
     TOSCA:
         constants: &tosca_constants
             primary_flight_path: 17.  # m
@@ -70,13 +70,13 @@ version:
             sample_thickness: 0.002  # m
             detector_thickness: 0.0025  # m
             crystal_plane_spacing: 3.348e-10  # m
-        settings:
-            detector_bank: &tosca_settings
-                default_setting: "Backward"
-                Backward: &tosca_settings_backward
+        configurations:
+            detector_bank: &tosca_configurations
+                default_option: "Backward"
+                Backward: &tosca_configurations_backward
                     angles: [ 134.98885653282196 ]
                     average_bragg_angle_graphite: 47.73  # deg
-                Forward: &tosca_settings_forward
+                Forward: &tosca_configurations_forward
                     angles: [ 45.0 ]
                     average_bragg_angle_graphite: 47.45  # deg
 #            All detectors:
@@ -92,7 +92,7 @@ version:
                 #original_parameters: [2.5, 0.005, 0.0000001] wavenumber
                 parameters:
                     fit: [ 0.3099604960830007, 0.005, 8.065543937349209e-07 ]  # meV
-                settings: {}
+                configurations: {}
             book:
                 function: "tosca_book"
                 citation: ""
@@ -103,16 +103,16 @@ version:
                     graphite_thickness: 0.002  # m
                     sample_width: 0.04  # m ???????????? where is it used?
                     detector_width: 0.12  # m
-                settings:
+                configurations:
                     detector_bank:
-                        <<: *tosca_settings
+                        <<: *tosca_configurations
                         Backward:
-                            <<: *tosca_settings_backward
+                            <<: *tosca_configurations_backward
                             average_final_energy: 3.32  # meV
                             average_secondary_flight_path: 0.6279  # m
                             change_average_bragg_angle_graphite: 17.439366410966983
                         Forward:
-                            <<: *tosca_settings_forward
+                            <<: *tosca_configurations_forward
                             average_final_energy: 3.35  # meV
                             average_secondary_flight_path: 0.6279  # m
                             change_average_bragg_angle_graphite: 17.59374274222979
@@ -123,13 +123,13 @@ version:
                     <<: *tosca_constants
                     d_r: 12.9e-6
                     d_t: null
-                settings:
+                configurations:
                     detector_bank:
-                        <<: *tosca_settings
+                        <<: *tosca_configurations
                         Backward:
-                            <<: *tosca_settings_backward
+                            <<: *tosca_configurations_backward
                             distance_sample_analyzer: 0.23231778281139834  # m  0.5 * average_secondary_flight_path * np.sin(average_bragg_angle_graphite)
                         Forward:
-                            <<: *tosca_settings_forward
+                            <<: *tosca_configurations_forward
                             # TODO: Recompute below once average_secondary_flight_path for Forward has been recomputed
                             distance_sample_analyzer: 0.2312830382624369  # m (as above)

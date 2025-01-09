@@ -93,9 +93,9 @@ version:
                 width: 1.e-2  # Width (m)
                 height: 6.e-2  # Height (m)
                 gamma: 0.0  # Angle of x-axis to ki (degrees)
-        settings: &settings
+        configurations: &configurations
             chopper_package:
-                default_setting: 'High Flux'
+                default_option: 'High Flux'
                 High Flux:
                     choppers:
                         <<: *choppers
@@ -121,4 +121,4 @@ version:
                 citation: ""
                 parameters:
                     <<: *constants
-                settings: *settings
+                configurations: *configurations
