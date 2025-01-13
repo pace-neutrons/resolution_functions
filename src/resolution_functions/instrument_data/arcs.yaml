@@ -76,7 +76,7 @@ version:
         models:
             PyChop_fit:
                 function: "pychop_fit_fermi"
-                citation: [""]
+                citation: ["Jiao Y.Y. Lin et. al., Phys. B, Volume 562, 2019, Pages 26-30, https://doi.org/10.1016/j.physb.2018.11.027"]
                 parameters:
                     <<: *constants
                 settings: *settings
