@@ -30,8 +30,8 @@ via the
 method:
 
 >>> book = tosca.get_resolution_function('book', detector_bank='Forward')
->>> book
-<resolution_functions.models.tosca_book.ToscaBookModel object at 0x000000000>
+>>> print(book)
+ToscaBookModel(citation=[''])
 
 .. note::
 

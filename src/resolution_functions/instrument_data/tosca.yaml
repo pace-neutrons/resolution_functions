@@ -29,7 +29,7 @@ version:
         models:
             book:
                 function: "tosca_book"
-                citation: ""
+                citation: [""]
                 parameters: *tfxa_constants
                 settings: *tfxa_settings
     TOSCA1:
@@ -60,7 +60,7 @@ version:
         models:
             book:
                 function: "tosca_book"
-                citation: ""
+                citation: [""]
                 parameters: *tosca1_constants
                 settings: *tosca1_settings
     TOSCA:
@@ -88,14 +88,14 @@ version:
                 # sigma = tosca_a * omega * omega + tosca_b * omega + tosca_c
                 # where sigma is width of Gaussian function
                 function: "polynomial_1d"
-                citation: ""
+                citation: [""]
                 #original_parameters: [2.5, 0.005, 0.0000001] wavenumber
                 parameters:
                     fit: [ 0.3099604960830007, 0.005, 8.065543937349209e-07 ]  # meV
                 settings: {}
             book:
                 function: "tosca_book"
-                citation: ""
+                citation: [""]
                 parameters:
                     <<: *tosca_constants
                     water_moderator_constant: 44  # us
@@ -118,7 +118,7 @@ version:
                             change_average_bragg_angle_graphite: 17.59374274222979
             vision:
                 function: "vision_paper"
-                citation: "https://doi.org/10.1016/j.nima.2009.03.204"
+                citation: ["https://doi.org/10.1016/j.nima.2009.03.204"]
                 parameters:
                     <<: *tosca_constants
                     d_r: 12.9e-6

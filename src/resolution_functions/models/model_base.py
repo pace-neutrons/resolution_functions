@@ -75,7 +75,7 @@ class ModelData(ABC):
     defaults
     """
     function: str
-    citation: str
+    citation: list[str]
 
     @property
     def restrictions(self) -> dict[str, list[int | float]]:
@@ -174,10 +174,10 @@ class InstrumentModel(ABC):
         raise NotImplementedError()
 
     def __str__(self) -> str:
-        return f'{type(self).__name__}(citation="{self.citation}")'
+        return f'{type(self).__name__}(citation={self.citation})'
 
     @property
-    def citation(self) -> str:
+    def citation(self) -> list[str]:
         """
         The citation for this model. Please use this to look up more details and cite the model.
 
