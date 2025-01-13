@@ -22,7 +22,7 @@ programmatically:
 >>> tosca.available_models
 ['AbINS', 'book', 'vision']
 >>> tosca.get_model_signature('book')
-<Signature (model_name: Optional[str] = 'book', *, detector_bank: Literal['Backward', 'Forward'] = 'Backward', _)>
+<Signature (model_name: Optional[str] = 'book', *, detector_bank: Literal['Backward', 'Forward'] = 'Backward', _) -> resolution_functions.models.tosca_book.ToscaBookModel>
 
 With this, it is possible to make the choices and obtain the resolution function
 via the

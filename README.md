@@ -33,7 +33,7 @@ which model you want to use, as well as any model-specific parameters.
 ['AbINS', 'book', 'vision']
 >>> # There are multiple ways of querying the model-specific parameters, but the most comprehensive is
 >>> tosca.get_model_signature('book')
-<Signature (model_name: Optional[str] = 'book', *, detector_bank: Literal['Backward', 'Forward'] = 'Backward', _)>
+<Signature (model_name: Optional[str] = 'book', *, detector_bank: Literal['Backward', 'Forward'] = 'Backward', _) -> resolution_functions.models.tosca_book.ToscaBookModel>
 >>> # Now we can get the resolution function
 >>> book = tosca.get_resolution_function('book', detector_bank='Forward')
 >>> book
