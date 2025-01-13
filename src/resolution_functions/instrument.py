@@ -602,7 +602,7 @@ class Instrument:
 
             params[key] = value.replace(**args, kind=Parameter.KEYWORD_ONLY)
 
-        return Signature(parameters=list(params.values()))
+        return Signature(parameters=list(params.values()), return_annotation=model_class)
 
     @property
     def available_models(self) -> list[str]:
