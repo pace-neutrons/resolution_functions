@@ -118,7 +118,7 @@ version:
                             change_average_bragg_angle_graphite: 17.59374274222979
             vision:
                 function: "vision_paper"
-                citation: ["https://doi.org/10.1016/j.nima.2009.03.204"]
+                citation: ["P. A. Seeger, L. L. Daemen, and J. Z. Larese, Nucl. Instrum. Methods Phys. Res., Sect. A, 2009, 604, 3, 719-728. https://doi.org/10.1016/j.nima.2009.03.204"]
                 parameters:
                     <<: *tosca_constants
                     d_r: 12.9e-6
