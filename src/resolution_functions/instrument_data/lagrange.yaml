@@ -30,6 +30,6 @@ version:
         models:
             AbINS:
                 function: "discontinuous_polynomial"
-                citation: ""
+                citation: [""]
                 parameters: {}
                 settings: *lagrange_settings

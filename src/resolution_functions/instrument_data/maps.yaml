@@ -68,7 +68,7 @@ version:
         models:
             PyChop_fit:
                 function: "pychop_fit_fermi"
-                citation: ""
+                citation: [""]
                 parameters:
                     <<: *maps_constants
                 settings: *maps_settings
