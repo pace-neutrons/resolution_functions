@@ -29,7 +29,7 @@ version:
         models:
             book:
                 function: "tosca_book"
-                citation: [""]
+                citation: ["PCH Mitchell, SF Parker, AJ Ramirez-Cuesta, and J Tomkinson, Vibrational Spectroscopy with Neutrons, World Scientific, Singapore, 2005. ISBN 981-256-013-0"]
                 parameters: *tfxa_constants
                 settings: *tfxa_settings
     TOSCA1:
@@ -60,7 +60,7 @@ version:
         models:
             book:
                 function: "tosca_book"
-                citation: [""]
+                citation: ["PCH Mitchell, SF Parker, AJ Ramirez-Cuesta, and J Tomkinson, Vibrational Spectroscopy with Neutrons, World Scientific, Singapore, 2005. ISBN 981-256-013-0"]
                 parameters: *tosca1_constants
                 settings: *tosca1_settings
     TOSCA:
@@ -95,7 +95,7 @@ version:
                 settings: {}
             book:
                 function: "tosca_book"
-                citation: [""]
+                citation: ["PCH Mitchell, SF Parker, AJ Ramirez-Cuesta, and J Tomkinson, Vibrational Spectroscopy with Neutrons, World Scientific, Singapore, 2005. ISBN 981-256-013-0"]
                 parameters:
                     <<: *tosca_constants
                     water_moderator_constant: 44  # us
