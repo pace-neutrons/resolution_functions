@@ -667,8 +667,8 @@ class Instrument:
         models_and_configurations
             All models and all their configurations.
         """
-        return {model_name: list(model['configurations'].keys())
-                for model_name, model in self._models.items()}
+        return {model_name: list(self._resolve_model(model_name)['configurations'].keys())
+                for model_name in self._models.keys()}
 
     @property
     def all_available_models_options(self) -> dict[str, dict[str, list[str]]]:
@@ -686,8 +686,8 @@ class Instrument:
             All models, all their configurations, and all their options.
         """
         return {model_name: {config: self._get_options(value)
-                             for config, value in list(model['configurations'].items())}
-                for model_name, model in self._models.items()}
+                for config, value in list(self._resolve_model(model_name)['configurations'].items())}
+                for model_name in self._models.keys()}
 
     def possible_configurations_for_model(self, model_name: str) -> list[str]:
         """
