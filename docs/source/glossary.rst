@@ -53,7 +53,7 @@ Most relevant terms
 
     setting
         A user-chosen experimental parameter that affects the :term:`resolution`. In practice, this
-        can be the incident energy and the chopper frequencies, depending on the :term:`instrument.
+        can be the incident energy and the chopper frequencies, depending on the :term:`instrument`.
         In the context of this library, a :term:`setting` is an argument specifically required by a
         :term:`model`.
 
