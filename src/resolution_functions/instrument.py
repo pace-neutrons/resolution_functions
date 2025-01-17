@@ -428,10 +428,7 @@ class Instrument:
         if model_name is None:
             model_name = self.default_model
 
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
+        model = self._resolve_model(model_name)
 
         available_configurations = model['configurations']
 
@@ -448,6 +445,33 @@ class Instrument:
                                        citation=model['citation'],
                                        **ChainMap(*configurations, model['parameters']))
         return model, model_name
+
+    def _resolve_model(self, model_name: str) -> dict:
+        """
+        Returns the data for the `model_name` model, taking into account aliases.
+
+        Parameters
+        ----------
+        model_name
+            The name of the model whose data to retrieve.
+
+        Returns
+        -------
+        model_data
+            The dictionary with the model's data.
+        """
+        try:
+            model = self._models[model_name]
+        except KeyError:
+            raise InvalidModelError(model_name, self)
+
+        if isinstance(model, str):
+            try:
+                model = self._models[model]
+            except KeyError:
+                raise InvalidModelError(model, self)
+
+        return model
 
     def get_resolution_function(self, model_name: Optional[str] = None, **kwargs) -> InstrumentModel:
         """
@@ -590,7 +614,7 @@ class Instrument:
                                     annotation=Optional[str])
         }
 
-        for configuration_name, options in self._models[model_name]['configurations'].items():
+        for configuration_name, options in model_data['configurations'].items():
             option_names = self._get_options(options)
             params[configuration_name] = Parameter(configuration_name,
                                                    Parameter.KEYWORD_ONLY,
@@ -685,12 +709,7 @@ class Instrument:
         InvalidModelError
             If the provided `model_name` is not supported for this version of this instrument.
         """
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
-
-        return list(model['configurations'].keys())
+        return list(self._resolve_model(model_name)['configurations'].keys())
 
     def possible_options_for_model(self, model_name: str) -> dict[str, list[str]]:
         """
@@ -713,10 +732,7 @@ class Instrument:
         InvalidModelError
             If the provided `model_name` is not supported for this version of this instrument.
         """
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
+        model = self._resolve_model(model_name)
 
         return {config: self._get_options(value)
                 for config, value in model['configurations'].items()}
@@ -748,12 +764,7 @@ class Instrument:
             If the provided `configuration` is not supported for the `model_name` model of this
             instrument.
         """
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
-
-        configurations = model['configurations']
+        configurations = self._resolve_model(model_name)['configurations']
 
         try:
             configurations = configurations[configuration]
@@ -809,12 +820,7 @@ class Instrument:
             If the provided `configuration` is not supported for the `model_name` model of this
             instrument.
         """
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
-
-        configurations = model['configurations']
+        configurations = self._resolve_model(model_name)['configurations']
 
         try:
             configurations = configurations[configuration]
