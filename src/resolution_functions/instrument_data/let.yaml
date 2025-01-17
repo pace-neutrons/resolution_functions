@@ -74,9 +74,9 @@ version:
                 parameters: [0.535, 49.28, -3.143]      # Parameters for time profile
             detector: null
             sample: null
-        settings: &settings
+        configurations: &configurations
             chopper_package:
-                default_setting: 'High Flux'
+                default_option: 'High Flux'
                 High Flux:
                     frequency_matrix:
                       [ [ 0, 0.5 ],                  #   f1: The frequency of the resolution chopper (Disk 5)
@@ -120,4 +120,4 @@ version:
                 citation: [""]
                 parameters:
                     <<: *constants
-                settings: *settings
+                configurations: *configurations

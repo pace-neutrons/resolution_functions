@@ -53,7 +53,7 @@ class PantherAbINSModel(InstrumentModel):
     output model being a Gaussian. This is done by fitting three power-series polynomials (see
     `numpy.polynomial.polynomial.Polynomial`) to the resolution curve, where the result of the sum
     of the polynomials is the width (sigma) of the Gaussian. Each polynomial can be of any degree
-    ane is given via the `resolution_functions.models.polynomial.PolynomialModelData`.
+    and is given via the `resolution_functions.models.polynomial.PolynomialModelData`.
 
     The :term:`resolution` is modelled as::
 
@@ -69,7 +69,7 @@ class PantherAbINSModel(InstrumentModel):
     model_data
         The data associated with the model for a given version of a given instrument.
     e_init
-        The initial energy in meV.
+        The incident energy in meV.
 
     Attributes
     ----------

@@ -34,9 +34,9 @@ version:
                 Fermi:
                     distance: 11.61  # m
                     aperture_distance: 9.342  # m
-        settings: &settings
+        configurations: &configurations
             chopper_package:
-                default_setting: 'ARCS-100-1.5-AST'
+                default_option: 'ARCS-100-1.5-AST'
                 SEQ-100-2.0-AST:
                     pslit: 2.03e-3  # m
                     radius: 50.0e-3  # m
@@ -79,4 +79,4 @@ version:
                 citation: [""]
                 parameters:
                     <<: *constants
-                settings: *settings
+                configurations: *configurations

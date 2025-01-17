@@ -98,32 +98,32 @@ def generate_rst(data):
 
             model_data['sphinx_link'] = link
 
-            if not model_data['settings']:
-                out += 'Settings: NONE\n\n'
+            if not model_data['configurations']:
+                out += 'Configurations: NONE\n\n'
                 continue
             else:
-                out += 'Settings:\n\n'
+                out += 'Configurations:\n\n'
 
-            for setting_name, setting_data in model_data['settings'].items():
-                setting_link = f'{version_name}-{model_name}-{setting_name}-data'
-                out += f'* :iref:ref:`{setting_name}<{setting_link}>`\n\n'
+            for config_name, config_data in model_data['configurations'].items():
+                config_link = f'{version_name}-{model_name}-{config_name}-data'
+                out += f'* :iref:ref:`{config_name}<{config_link}>`\n\n'
 
-                default_setting = setting_data['default_setting']
-                for option_name in setting_data.keys():
-                    link = f'{version_name}-{model_name}-{setting_name}-{option_name}-data'
+                default_option = config_data['default_option']
+                for option_name in config_data.keys():
+                    link = f'{version_name}-{model_name}-{config_name}-{option_name}-data'
 
-                    if option_name == 'default_setting':
+                    if option_name == 'default_option':
                         continue
                     else:
                         out += f'  * :iref:ref:`{option_name}<{link}>`'
-                        setting_data[option_name]['sphinx_link'] = link
+                        config_data[option_name]['sphinx_link'] = link
 
-                        if option_name == default_setting:
+                        if option_name == default_option:
                             out +=  ' (default)\n'
                         else:
                             out += '\n'
 
-                setting_data['sphinx_link'] = setting_link
+                config_data['sphinx_link'] = config_link
 
                 out += '\n'
 
@@ -169,7 +169,7 @@ def generate_data_section(data_with_links: dict, target_role: str = ':iref:targe
             out += ' ' * 16 + f'{target_role}`{model_name}<{link}>`:\n'
 
             for key, value in model_data.items():
-                if key in ['parameters', 'settings', 'sphinx_link']:
+                if key in ['parameters', 'configurations', 'sphinx_link']:
                     continue
 
                 out += ' ' * 20 + f'{key}: {format_value(value)}\n'
@@ -178,21 +178,21 @@ def generate_data_section(data_with_links: dict, target_role: str = ':iref:targe
 
             out += add_parameters(model_data['parameters'], 24)
 
-            out += ' ' * 20 + f'settings:'
+            out += ' ' * 20 + f'configurations:'
 
-            if not model_data['settings']:
+            if not model_data['configurations']:
                 out += ' {}\n'
                 continue
 
             out += '\n'
 
-            for setting_name, setting_data in model_data['settings'].items():
-                link = setting_data['sphinx_link']
-                out += ' ' * 24 + f'{target_role}`{setting_name}<{link}>`:\n'
-                out += ' ' * 28 + f'default_setting: "{setting_data["default_setting"]}"\n'
+            for config_name, config_data in model_data['configurations'].items():
+                link = config_data['sphinx_link']
+                out += ' ' * 24 + f'{target_role}`{config_name}<{link}>`:\n'
+                out += ' ' * 28 + f'default_option: "{config_data["default_option"]}"\n'
 
-                for option_name, option_data in setting_data.items():
-                    if option_name in ['sphinx_link', 'default_setting']:
+                for option_name, option_data in config_data.items():
+                    if option_name in ['sphinx_link', 'default_option']:
                         continue
 
                     link = option_data['sphinx_link']
