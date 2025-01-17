@@ -16,7 +16,7 @@ version:
         models:
             vision:
                 function: "vision_paper"
-                citation: "https://doi.org/10.1016/j.nima.2009.03.204"
+                citation: ["https://doi.org/10.1016/j.nima.2009.03.204"]
                 parameters:
                     <<: *vision_constants
                     d_r: 11.6e-6

@@ -84,7 +84,7 @@ version:
         models:
             PyChop_fit:
                 function: "pychop_fit_fermi"
-                citation: ""
+                citation: [""]
                 parameters:
                     <<: *constants
                 configurations: *configurations

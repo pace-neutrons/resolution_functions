@@ -117,7 +117,7 @@ version:
         models:
             PyChop_fit:
                 function: "pychop_fit_let"
-                citation: ""
+                citation: [""]
                 parameters:
                     <<: *constants
                 configurations: *configurations

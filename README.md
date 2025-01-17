@@ -18,7 +18,7 @@ class and get the instrument object of your choice:
 
 ```
 >>> from resolution_functions import Instrument
->>> tosca = Instrument('TOSCA')
+>>> tosca = Instrument.from_default('TOSCA')
 >>> tosca
 Instrument(name='TOSCA', version='TOSCA', models=['AbINS', 'book', 'vision'])
 ```
@@ -33,11 +33,11 @@ which model you want to use, as well as any model-specific parameters.
 ['AbINS', 'book', 'vision']
 >>> # There are multiple ways of querying the model-specific parameters, but the most comprehensive is
 >>> tosca.get_model_signature('book')
-<Signature (model_name: Optional[str] = 'book', *, detector_bank: Literal['Backward', 'Forward'] = 'Backward', _)>
+<Signature (model_name: Optional[str] = 'book', *, detector_bank: Literal['Backward', 'Forward'] = 'Backward', _) -> resolution_functions.models.tosca_book.ToscaBookModel>
 >>> # Now we can get the resolution function
 >>> book = tosca.get_resolution_function('book', detector_bank='Forward')
->>> book
-<resolution_functions.models.tosca_book.ToscaBookModel object at 0x000000000>
+>>> print(book)
+ToscaBookModel(citation=[''])
 >>> book(100)
 0.81802604002035
 >>> import numpy as np

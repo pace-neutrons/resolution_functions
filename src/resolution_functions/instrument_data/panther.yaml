@@ -14,6 +14,7 @@ version:
                 # sigma = polyval(abs_meV, ɛ) + polyval(ei_dependence, E_i) + polyval(ei_energy_product, E_i × ɛ)
                 # (Here a quartic polynomial in ɛ, plus quadratic on Ei and cubic on ɛ×Ei)
                 function: "panther_abins_polynomial"
+                citation: [""]
                 citation: ""
                 configurations: {}
                 parameters:

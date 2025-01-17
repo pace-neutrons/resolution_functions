@@ -567,7 +567,7 @@ class Instrument:
         >>> maps = Instrument.from_default('MAPS')
         >>> sig = maps.get_model_signature()
         >>> sig
-        <Signature (model_name: Optional[str] = 'PyChop_fit', *, chopper_package: Literal['A', 'B', 'S'] = 'A', e_init: Annotated[ForwardRef('Optional[float]'), 'restriction=[0, 2000]'] = 500, chopper_frequency: Annotated[ForwardRef('Optional[int]'), 'restriction=[50, 601, 50]'] = 400, fitting_order: 'Optional[int]' = 4, _)>
+        <Signature (model_name: Optional[str] = 'PyChop_fit', *, chopper_package: Literal['A', 'B', 'S'] = 'A', e_init: Annotated[ForwardRef('Optional[float]'), 'restriction=[0, 2000]'] = 500, chopper_frequency: Annotated[ForwardRef('Optional[int]'), 'restriction=[50, 601, 50]'] = 400, fitting_order: 'int' = 4, _) -> resolution_functions.models.pychop.PyChopModelFermi>
         >>> sig.parameters['e_init']
         <Parameter "e_init: Annotated[ForwardRef('Optional[float]'), 'restriction=[0, 2000]'] = 500">
         >>> sig.parameters['e_init'].kind
@@ -614,7 +614,7 @@ class Instrument:
 
             params[key] = value.replace(**args, kind=Parameter.KEYWORD_ONLY)
 
-        return Signature(parameters=list(params.values()))
+        return Signature(parameters=list(params.values()), return_annotation=model_class)
 
     @property
     def available_models(self) -> list[str]:
