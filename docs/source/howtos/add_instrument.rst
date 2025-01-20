@@ -48,6 +48,8 @@ How to register an instrument with ResINS
 
 ??????????????????
 
+.. _howto-instrument-dict:
+
 How to add an instrument without creating a yaml file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
