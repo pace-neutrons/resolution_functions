@@ -643,8 +643,26 @@ class Instrument:
     @property
     def available_models(self) -> list[str]:
         """
+        A list of :term:`models<model>` available for this :term:`version` of this
+        :term:`instrument`.
+
+        Only includes the recommended version of each model - does not list all versions of all
+        models.
+
+        Returns
+        -------
+        available_models
+            A list of available models.
+        """
+        return [name for name, value in self._models.items() if isinstance(value, str)]
+
+    @property
+    def all_available_models(self) -> list[str]:
+        """
         A list of all :term:`models<model>` available for this :term:`version` of this
         :term:`instrument`.
+
+        Includes both all the versions of all models and
 
         Returns
         -------
@@ -652,6 +670,22 @@ class Instrument:
             A list of all available models.
         """
         return list(self._models.keys())
+
+    @property
+    def available_unique_models(self) -> list[str]:
+        """
+        A list of all unique :term:`models<model>` available for this :term:`version` of this
+        :term:`instrument`.
+
+        Only includes the versioned models, i.e. lists all versions of all models, but does not list
+        the recommended models.
+
+        Returns
+        -------
+        available_models
+            A list of all available unique models.
+        """
+        return [name for name, value in self._models.items() if not isinstance(value, str)]
 
     @property
     def available_models_and_configurations(self) -> dict[str, list[str]]:
