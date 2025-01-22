@@ -157,7 +157,7 @@ class Instrument:
         instrument_list
             A list of names of INS instruments supported by this library.
         """
-        return list(INSTRUMENT_MAP.keys())
+        return list(INSTRUMENT_MAP)
 
     @classmethod
     def _available_versions(cls, path: str) -> tuple[list[str], str]:
@@ -183,7 +183,7 @@ class Instrument:
         with open(path, 'r') as f:
             data = yaml.safe_load(f)
 
-        return list(data['version'].keys()), data['default_version']
+        return list(data['version']), data['default_version']
 
     @classmethod
     def available_versions(cls, instrument_name: str) -> tuple[list[str], str]:
@@ -268,7 +268,7 @@ class Instrument:
         try:
             version_data = version_data[version]
         except KeyError:
-            versions = list(version_data.keys())
+            versions = list(version_data)
             raise InvalidVersionError(f'"{version}" is not a valid version name. Only the following'
                                       f' versions are supported for this instrument: {versions}')
 
@@ -357,7 +357,7 @@ class Instrument:
         except KeyError:
             raise InvalidInstrumentError(
                 f'"{instrument_name}" is not a valid instrument name. Only the following instruments are '
-                f'supported: {list(INSTRUMENT_MAP.keys())}')
+                f'supported: {list(INSTRUMENT_MAP)}')
 
         return os.path.join(INSTRUMENT_DATA_PATH, file_name + '.yaml'), implied_version
 
@@ -671,7 +671,7 @@ class Instrument:
         available_models
             A list of all available models.
         """
-        return list(self._models.keys())
+        return list(self._models)
 
     @property
     def available_unique_models(self) -> list[str]:
@@ -813,7 +813,7 @@ class Instrument:
         InvalidModelError
             If the provided `model_name` is not supported for this version of this instrument.
         """
-        return list(self._resolve_model(model_name)['configurations'].keys())
+        return list(self._resolve_model(model_name)['configurations'])
 
     def possible_options_for_model(self, model_name: str) -> dict[str, list[str]]:
         """
@@ -897,7 +897,7 @@ class Instrument:
         options
             A list of options as found in the provided `configuration` dictionary.
         """
-        return [value for value in configuration.keys() if value != 'default_option']
+        return [value for value in configuration if value != 'default_option']
 
     def default_option_for_configuration(self, model_name: str, configuration: str) -> str:
         """
