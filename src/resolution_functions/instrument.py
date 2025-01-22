@@ -703,7 +703,7 @@ class Instrument:
             A string containing the nicely formatted table.
         """
         contents = [['MODEL', 'ALIAS FOR', 'CONFIGURATIONS']]
-        longest_name, longest_alias, longest_config = 5, 9, 14
+        longest_name, longest_alias, longest_config = map(len, contents[0])
 
         for model_name, model_data in self._models.items():
             length = len(model_name)
@@ -745,7 +745,7 @@ class Instrument:
             A string containing the nicely formatted table.
         """
         contents = [['MODEL', 'ALIAS FOR', 'CONFIGURATIONS', 'OPTIONS']]
-        longest_name, longest_alias, longest_config, longest_option = 5, 9, 14, 7
+        longest_name, longest_alias, longest_config, longest_option = map(len, contents[0])
 
         for model_name, model_data in self._models.items():
             length = len(model_name)
