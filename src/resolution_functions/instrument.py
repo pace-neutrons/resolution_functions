@@ -7,6 +7,8 @@ from __future__ import annotations
 from collections import ChainMap
 import dataclasses
 import os
+
+import numpy as np
 import yaml
 from typing import Optional, Union, TYPE_CHECKING
 
@@ -687,41 +689,109 @@ class Instrument:
         """
         return [name for name, value in self._models.items() if not isinstance(value, str)]
 
-    @property
-    def available_models_and_configurations(self) -> dict[str, list[str]]:
+    def format_available_models_and_configurations(self) -> str:
         """
-        A dictionary mapping each available :term:`model` to the user
-        :term:`configurations<configuration>` available for that :term:`model`.
+        Formats all available :term:`models<model>` and :term:`configurations<configuration>` into a
+        table.
 
-        All :term:`models<model>` available for this :term:`version` of this :term:`instrument`,
-        and all their :term:`configurations<configuration>` are listed.
+        The table shows each :term:`model` and either which other :term:`model` it is an alias for,
+        or all the :term:`configurations<configuration>` required by that :term:`model`.
 
         Returns
         -------
-        models_and_configurations
-            All models and all their configurations.
+        str
+            A string containing the nicely formatted table.
         """
-        return {model_name: list(self._resolve_model(model_name)['configurations'].keys())
-                for model_name in self._models.keys()}
+        contents = [['MODEL', 'ALIAS FOR', 'CONFIGURATIONS']]
+        longest_name, longest_alias, longest_config = 5, 9, 14
 
-    @property
-    def all_available_models_options(self) -> dict[str, dict[str, list[str]]]:
+        for model_name, model_data in self._models.items():
+            length = len(model_name)
+            if length > longest_name:
+                longest_name = length
+
+            if isinstance(model_data, str):
+                contents.append([model_name, model_data, None])
+
+                length = len(model_data)
+                if length > longest_alias:
+                    longest_alias = length
+            else:
+                for i, config_name in enumerate(model_data['configurations']):
+                    if i == 0:
+                        contents.append([model_name, None, config_name])
+                    else:
+                        contents.append([None, None, config_name])
+
+                    length = len(config_name)
+                    if length > longest_config:
+                        longest_config = length
+
+        return _format_table(contents, [longest_name, longest_alias, longest_config])
+
+    def format_available_models_options(self) -> str:
         """
-        A dictionary mapping each available :term:`model`, to the user
-        :term:`configurations<configuration>` and their :term:`options<option>`.
+        Formats all available :term:`models<model>`, :term:`configurations<configuration>`, and
+        :term:`options<option>` into a table.
 
-        All :term:`models<model>` available for this :term:`version` of this :term:`instrument`, all
-        the :term:`configurations<configuration>` of each of the :term:`models<model>`, and all the
-        :term:`options<option>` for each of the :term:`configurations<configuration>`, are listed.
+        The table shows each :term:`model` and either which other :term:`model` it is an alias for,
+        or all the :term:`configurations<configuration>` required by that :term:`model`. In the
+        latter case, all the :term:`options<option>` for each :term:`configuration` are also listed,
+        and the default option is indicated.
 
         Returns
         -------
-        everything
-            All models, all their configurations, and all their options.
+        str
+            A string containing the nicely formatted table.
         """
-        return {model_name: {config: self._get_options(value)
-                for config, value in list(self._resolve_model(model_name)['configurations'].items())}
-                for model_name in self._models.keys()}
+        contents = [['MODEL', 'ALIAS FOR', 'CONFIGURATIONS', 'OPTIONS']]
+        longest_name, longest_alias, longest_config, longest_option = 5, 9, 14, 7
+
+        for model_name, model_data in self._models.items():
+            length = len(model_name)
+            if length > longest_name:
+                longest_name = length
+
+            if isinstance(model_data, str):
+                contents.append([model_name, model_data, None, None])
+
+                length = len(model_data)
+                if length > longest_alias:
+                    longest_alias = length
+            else:
+                for i, (config_name, config_data) in enumerate(model_data['configurations'].items()):
+                    length = len(config_name)
+                    if length > longest_config:
+                        longest_config = length
+
+                    default = config_data['default_option']
+                    first_option = True
+                    for option_name in config_data:
+                        if option_name == 'default_option':
+                            continue
+
+                        if option_name == default:
+                            option = option_name + ' (default)'
+                        else:
+                            option = option_name
+
+                        length = len(option)
+                        if length > longest_option:
+                            longest_option = length
+
+                        if i == 0 and first_option:
+                            contents.append([model_name, None, config_name, option])
+                        elif first_option:
+                            contents.append([None, None, config_name, option])
+                        else:
+                            contents.append([None, None, None, option])
+
+                        first_option = False
+
+                    contents.append([None, None, None, None])
+                contents.pop(-1)
+
+        return _format_table(contents, [longest_name, longest_alias, longest_config, longest_option])
 
     def possible_configurations_for_model(self, model_name: str) -> list[str]:
         """
@@ -862,3 +932,50 @@ class Instrument:
             raise InvalidConfigurationError(configuration, model_name, self)
 
         return configurations['default_option']
+
+
+def _format_table(contents: list[list[str | None]],
+                  longest: list[int],
+                  padding: int = 4) -> str:
+    """
+    Formats `contents` into a table.
+
+    Parameters
+    ----------
+    contents
+        The data to be formatted into a table. Each entry in the list of lists will be turned into
+        a single cell. Strings are placed into cells (with `padding` applied) while `None` values
+        are turned into empty cells.
+    longest
+        The length of the longest entry in each column.
+    padding
+        Extra padding to apply to the entries. Default is 4.
+
+    Returns
+    -------
+    table_str
+        A string containing the table.
+    """
+    longest = np.array(longest) + padding
+    out = []
+    separator = '|' + '|'.join(['-' * (i + 1) for i in longest]) + '|'
+
+    for i, line in enumerate(contents):
+        new_line = '| '
+        for val, length in zip(line, longest):
+            if val is None:
+                new_line += ' ' * length + '| '
+            else:
+                new_line += val + ' ' * (length - len(val)) + '| '
+
+        if line[0] is not None:
+            if i == 1:
+                out.append(separator.replace('-', '='))
+            else:
+                out.append(separator)
+
+        out.append(new_line)
+
+    out.append(separator)
+
+    return '\n'.join(out)
