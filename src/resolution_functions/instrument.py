@@ -616,7 +616,7 @@ class Instrument:
                                     annotation=Optional[str])
         }
 
-        for configuration_name, options in model_data['configurations'].items():
+        for configuration_name, options in self._models[model_name]['configurations'].items():
             option_names = self._get_options(options)
             params[configuration_name] = Parameter(configuration_name,
                                                    Parameter.KEYWORD_ONLY,
