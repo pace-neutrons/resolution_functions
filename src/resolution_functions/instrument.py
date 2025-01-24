@@ -665,7 +665,8 @@ class Instrument:
         A list of all :term:`models<model>` available for this :term:`version` of this
         :term:`instrument`.
 
-        Includes both all the versions of all models and
+        Includes both all the versions of all models (see `Instrument.available_unique_models` and
+        the recommended versions (see `Instrument.available_models`).
 
         Returns
         -------
