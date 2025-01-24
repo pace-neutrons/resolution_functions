@@ -430,7 +430,7 @@ class Instrument:
         if model_name is None:
             model_name = self.default_model
 
-        model = self._resolve_model(model_name)
+        model, model_name = self._resolve_model(model_name)
 
         available_configurations = model['configurations']
 
@@ -448,7 +448,7 @@ class Instrument:
                                        **ChainMap(*configurations, model['parameters']))
         return model, model_name
 
-    def _resolve_model(self, model_name: str) -> dict:
+    def _resolve_model(self, model_name: str) -> tuple[dict, str]:
         """
         Returns the data for the `model_name` model, taking into account aliases.
 
@@ -468,12 +468,13 @@ class Instrument:
             raise InvalidModelError(model_name, self)
 
         if isinstance(model, str):
+            model_name = model
             try:
                 model = self._models[model]
             except KeyError:
                 raise InvalidModelError(model, self)
 
-        return model
+        return model, model_name
 
     def get_resolution_function(self, model_name: Optional[str] = None, **kwargs) -> InstrumentModel:
         """
@@ -813,7 +814,7 @@ class Instrument:
         InvalidModelError
             If the provided `model_name` is not supported for this version of this instrument.
         """
-        return list(self._resolve_model(model_name)['configurations'])
+        return list(self._resolve_model(model_name)[0]['configurations'])
 
     def possible_options_for_model(self, model_name: str) -> dict[str, list[str]]:
         """
@@ -836,7 +837,7 @@ class Instrument:
         InvalidModelError
             If the provided `model_name` is not supported for this version of this instrument.
         """
-        model = self._resolve_model(model_name)
+        model, _ = self._resolve_model(model_name)
 
         return {config: self._get_options(value)
                 for config, value in model['configurations'].items()}
@@ -868,7 +869,7 @@ class Instrument:
             If the provided `configuration` is not supported for the `model_name` model of this
             instrument.
         """
-        configurations = self._resolve_model(model_name)['configurations']
+        configurations = self._resolve_model(model_name)[0]['configurations']
 
         try:
             configurations = configurations[configuration]
@@ -924,7 +925,7 @@ class Instrument:
             If the provided `configuration` is not supported for the `model_name` model of this
             instrument.
         """
-        configurations = self._resolve_model(model_name)['configurations']
+        configurations = self._resolve_model(model_name)[0]['configurations']
 
         try:
             configurations = configurations[configuration]
