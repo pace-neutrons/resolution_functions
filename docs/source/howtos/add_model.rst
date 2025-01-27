@@ -113,13 +113,11 @@ not yet implemented in ResINS - is significantly more work than the case above,
 since Python code will have to be written. Though, before we start, some notes
 on the procedures for different outcomes:
 
-* If working for personal use, the new code can be placed wherever - it will
-  have to be registered with ResINS, but this is straightforward and will be
-  noted in the text below.
+* For personal use, the new code can be placed wherever - it will
+  have to be registered with ResINS as explained below.
 
-* If contributing to ResINS, please create a new file in
-  ``resolution_functions/src/resolution_functions/models`` where all the new
-  code will go.
+* If contributing to ResINS, please use a new file in
+  ``resolution_functions/src/resolution_functions/models``.
 
 
 .. _howto-model-dataclass:
@@ -192,7 +190,7 @@ combines the two before creating the data object (i.e. ``TestModelData``).
             return {'e_init': self.default_e_init}
 
         @property
-        def defaults(self) -> dict[str, Any]:
+        def restrictions(self) -> dict[str, Any]:
             return {'e_init': self.e_init_restrictions}
 
 
@@ -200,10 +198,10 @@ How to add a new model class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With the data class in place, it is possible to create the model, which is a
-class, specifically a subclass of
+subclass of
 :py:class:`resolution_functions.models.model_base.InstrumentModel` (see its
-documentation for detailed specification of how to subclass it). This class
-**must** specify three class variables:
+documentation for detailed specification of how to inherit from it). This
+**must** specify three class-level variables:
 
 * ``input`` - an integer specifying the number of arguments that the `
   `__call__`` method takes
@@ -222,22 +220,22 @@ documentation for detailed specification of how to subclass it). This class
         data_class = TestModelData
 
 
-Next, the ``__init__`` method should be defined:
+Next, the ``__init__`` method should be defined. The function signature:
 
-* It *must* take ``model_data`` (an instance of the data class above) as its
+* *Must* take ``model_data`` (an instance of the data class above) as its
   first argument.
-* It *may* take any number of other argument (usually representing
+* *May* take any number of other argument (usually representing
   :term:`settings<setting>`, but may be others).
-* It *must not* expect the independent variables (i.e. the variables that the
+* *Must not* expect the independent variables (i.e. the variables that the
   model is a function of such as energy transfer or momentum).
-* It *must* take ``**kwargs``.
+* *Must* take ``**kwargs``.
 
-In terms of what code it should contain:
+The body of ``__init__()``:
 
-* It *must* call ``super().__init__``
-* It *should* (if necessary) perform any validation of the arguments, e.g. that
+* *Must* call ``super().__init__``.
+* *Should* (if necessary) perform any validation of the arguments, e.g. that
   the ``e_init`` is within the allowed range etc.
-* It *should* perform as much of the calculation as possible without the
+* *Should* perform as much of the calculation as possible without the
   independent variables. These pre-computed, intermediate values should be
   stored as instance variables.
 
