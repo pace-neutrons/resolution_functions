@@ -103,4 +103,4 @@ will have to be correctly formatted according to the
 :doc:`spec<../dev/yaml_spec>` by adding a new entry to the ``version``
 dictionary with a unique (version) name and the correct data.
 
-There is no need to edit any code whatsoever.
+There is no need to edit any Python code.

@@ -289,7 +289,7 @@ Then, with the model code complete, all that remains is to register it with
 ResINS:
 
 * If the above code is outside the ResINS repo (i.e. for personal use),
-  somewhere in your scrip/program (before the model is intended to be used), a
+  somewhere in your program (before the model is intended to be used) a
   new key-value pair has to be inserted into
   :py:const:`resolution_functions.models.MODELS`:
 
