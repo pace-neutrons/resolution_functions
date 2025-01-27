@@ -91,12 +91,12 @@ it has to be added to
 create a new entry in the dictionary with the format::
 
     INSTRUMENT_MAP = {
-        'instrument_name': ('yaml_file_name', None)
+        'instrument_name': ('yaml_file_name.yaml', None)
     }
 
 where `instrument_name` is the official name of the instrument that you would
-like users to use when creating the instrument, and `yaml_file_name` is the
-name of the YAML file without the `.yaml` extension, e.g. `arcs`.
+like users to use when creating the instrument, and `yaml_file_name.yaml` is the
+name of the YAML file without the path, e.g. ``arcs.yaml``.
 
 .. note::
 
