@@ -710,11 +710,10 @@ class Instrument:
             if isinstance(model_data, str):
                 contents.append([model_name, model_data, ''])
             else:
-                for i, config_name in enumerate(model_data['configurations']):
-                    if i == 0:
-                        contents.append([model_name, '', config_name])
-                    else:
-                        contents.append(['', '', config_name])
+                tmp = [['', '', config_name]
+                       for config_name in model_data['configurations']]
+                tmp[0][0] = model_name
+                contents.extend(tmp)
 
         return _format_table(contents)
 
@@ -956,8 +955,8 @@ def _split_on_model(contents: np.ndarray) -> Iterator[list[list[str]]]:
     contents
         The 2D contents of the table.
 
-    Returns
-    -------
+    Yields
+    ------
     group
         A subset of the table, in which the first cell is occupied.
     """
