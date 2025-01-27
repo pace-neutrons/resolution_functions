@@ -10,7 +10,7 @@ import os
 
 import numpy as np
 import yaml
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Iterator, Iterable, Optional, Union, TYPE_CHECKING
 
 from .models import MODELS
 
@@ -465,7 +465,7 @@ class Instrument:
         try:
             model = self._models[model_name]
         except KeyError:
-            raise InvalidModelError(model_name, self)
+            raise InvalidModelError(model_name, self) from None
 
         if isinstance(model, str):
             model_name = model
@@ -705,31 +705,18 @@ class Instrument:
             A string containing the nicely formatted table.
         """
         contents = [['MODEL', 'ALIAS FOR', 'CONFIGURATIONS']]
-        longest_name, longest_alias, longest_config = map(len, contents[0])
 
         for model_name, model_data in self._models.items():
-            length = len(model_name)
-            if length > longest_name:
-                longest_name = length
-
             if isinstance(model_data, str):
-                contents.append([model_name, model_data, None])
-
-                length = len(model_data)
-                if length > longest_alias:
-                    longest_alias = length
+                contents.append([model_name, model_data, ''])
             else:
                 for i, config_name in enumerate(model_data['configurations']):
                     if i == 0:
-                        contents.append([model_name, None, config_name])
+                        contents.append([model_name, '', config_name])
                     else:
-                        contents.append([None, None, config_name])
+                        contents.append(['', '', config_name])
 
-                    length = len(config_name)
-                    if length > longest_config:
-                        longest_config = length
-
-        return _format_table(contents, [longest_name, longest_alias, longest_config])
+        return _format_table(contents)
 
     def format_available_models_options(self) -> str:
         """
@@ -747,25 +734,12 @@ class Instrument:
             A string containing the nicely formatted table.
         """
         contents = [['MODEL', 'ALIAS FOR', 'CONFIGURATIONS', 'OPTIONS']]
-        longest_name, longest_alias, longest_config, longest_option = map(len, contents[0])
 
         for model_name, model_data in self._models.items():
-            length = len(model_name)
-            if length > longest_name:
-                longest_name = length
-
             if isinstance(model_data, str):
-                contents.append([model_name, model_data, None, None])
-
-                length = len(model_data)
-                if length > longest_alias:
-                    longest_alias = length
+                contents.append([model_name, model_data, '', ''])
             else:
                 for i, (config_name, config_data) in enumerate(model_data['configurations'].items()):
-                    length = len(config_name)
-                    if length > longest_config:
-                        longest_config = length
-
                     default = config_data['default_option']
                     first_option = True
                     for option_name in config_data:
@@ -777,23 +751,19 @@ class Instrument:
                         else:
                             option = option_name
 
-                        length = len(option)
-                        if length > longest_option:
-                            longest_option = length
-
                         if i == 0 and first_option:
-                            contents.append([model_name, None, config_name, option])
+                            contents.append([model_name, '', config_name, option])
                         elif first_option:
-                            contents.append([None, None, config_name, option])
+                            contents.append(['', '', config_name, option])
                         else:
-                            contents.append([None, None, None, option])
+                            contents.append(['', '', '', option])
 
                         first_option = False
 
-                    contents.append([None, None, None, None])
+                    contents.append(['', '', '', ''])
                 contents.pop(-1)
 
-        return _format_table(contents, [longest_name, longest_alias, longest_config, longest_option])
+        return _format_table(contents)
 
     def possible_configurations_for_model(self, model_name: str) -> list[str]:
         """
@@ -936,9 +906,7 @@ class Instrument:
         return configurations['default_option']
 
 
-def _format_table(contents: list[list[str | None]],
-                  longest: list[int],
-                  padding: int = 4) -> str:
+def _format_table(contents: list[list[str]], padding: int = 4) -> str:
     """
     Formats `contents` into a table.
 
@@ -948,8 +916,6 @@ def _format_table(contents: list[list[str | None]],
         The data to be formatted into a table. Each entry in the list of lists will be turned into
         a single cell. Strings are placed into cells (with `padding` applied) while `None` values
         are turned into empty cells.
-    longest
-        The length of the longest entry in each column.
     padding
         Extra padding to apply to the entries. Default is 4.
 
@@ -958,26 +924,49 @@ def _format_table(contents: list[list[str | None]],
     table_str
         A string containing the table.
     """
-    longest = np.array(longest) + padding
-    out = []
-    separator = '|' + '|'.join(['-' * (i + 1) for i in longest]) + '|'
+    padding += 1
+    contents = np.array(contents)
+    longest = np.max(np.vectorize(len)(contents), axis=0)
 
-    for i, line in enumerate(contents):
-        new_line = '| '
-        for val, length in zip(line, longest):
-            if val is None:
-                new_line += ' ' * length + '| '
-            else:
-                new_line += val + ' ' * (length - len(val)) + '| '
+    sep_line = f"|{'|'.join('-' * (i + padding) for i in longest)}|"
+    header_sep_line = sep_line.replace("-", "=")
+    sep_nl = "\n" + sep_line + "\n"
 
-        if line[0] is not None:
-            if i == 1:
-                out.append(separator.replace('-', '='))
-            else:
-                out.append(separator)
+    # e.g. "|{:<10}|{:<10}|{:<12}|{:<16}|" for str.format()
+    data_line = "| " + "| ".join(f"{{:<{length + padding - 1}}}" for length in longest) + "|"
 
-        out.append(new_line)
+    it = _split_on_model(contents)
+    formatted = ('\n'.join(data_line.format(*row) for row in blk) for blk in it)
 
-    out.append(separator)
+    return f"""\
+{sep_line}
+{next(formatted)}
+{header_sep_line}
+{sep_nl.join(formatted)}
+{sep_line}
+    """
 
-    return '\n'.join(out)
+
+def _split_on_model(contents: np.ndarray) -> Iterator[list[list[str]]]:
+    """
+    Break the table lines into chunks where the first column is occupied
+
+    Parameters
+    ----------
+    contents
+        The 2D contents of the table.
+
+    Returns
+    -------
+    group
+        A subset of the table, in which the first cell is occupied.
+    """
+    group = [contents[0]]
+    for line in contents[1:]:
+        if line[0]:
+            yield group
+            group = [line]
+        else:
+            group.append(line)
+    if group:
+        yield group
