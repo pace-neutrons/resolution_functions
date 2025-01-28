@@ -116,7 +116,8 @@ version:
                             slot_width: 9.86
         default_model: 'PyChop_fit'
         models:
-            PyChop_fit:
+            PyChop_fit: "PyChop_fit_v1"
+            PyChop_fit_v1:
                 function: "pychop_fit_cncs"
                 citation: [""]
                 parameters:

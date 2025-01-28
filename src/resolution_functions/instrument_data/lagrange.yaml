@@ -28,7 +28,8 @@ version:
                     fit: [0.8]  # meV
         default_model: "AbINS"
         models:
-            AbINS:
+            AbINS: "AbINS_v1"
+            AbINS_v1:
                 function: "discontinuous_polynomial"
                 citation: [""]
                 parameters: {}

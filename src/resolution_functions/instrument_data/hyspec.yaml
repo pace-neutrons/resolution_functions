@@ -81,7 +81,8 @@ version:
                     tjit: 0.0
         default_model: 'PyChop_fit'
         models:
-            PyChop_fit:
+            PyChop_fit: "PyChop_fit_v1"
+            PyChop_fit_v1:
                 function: "pychop_fit_fermi"
                 citation: [""]
                 parameters:

@@ -9,13 +9,13 @@ version:
         configurations: {}
         default_model: "AbINS"
         models:
-            AbINS:
+            AbINS: "AbINS_v1"
+            AbINS_v1:
                 # Resolution function fitted to incident energy and energy transfer:
                 # sigma = polyval(abs_meV, ɛ) + polyval(ei_dependence, E_i) + polyval(ei_energy_product, E_i × ɛ)
                 # (Here a quartic polynomial in ɛ, plus quadratic on Ei and cubic on ɛ×Ei)
                 function: "panther_abins_polynomial"
                 citation: [""]
-                citation: ""
                 configurations: {}
                 parameters:
                     abs:

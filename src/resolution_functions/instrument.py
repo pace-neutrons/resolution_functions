@@ -7,8 +7,10 @@ from __future__ import annotations
 from collections import ChainMap
 import dataclasses
 import os
+
+import numpy as np
 import yaml
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Iterator, Iterable, Optional, Union, TYPE_CHECKING
 
 from .models import MODELS
 
@@ -155,7 +157,7 @@ class Instrument:
         instrument_list
             A list of names of INS instruments supported by this library.
         """
-        return list(INSTRUMENT_MAP.keys())
+        return list(INSTRUMENT_MAP)
 
     @classmethod
     def _available_versions(cls, path: str) -> tuple[list[str], str]:
@@ -181,7 +183,7 @@ class Instrument:
         with open(path, 'r') as f:
             data = yaml.safe_load(f)
 
-        return list(data['version'].keys()), data['default_version']
+        return list(data['version']), data['default_version']
 
     @classmethod
     def available_versions(cls, instrument_name: str) -> tuple[list[str], str]:
@@ -266,7 +268,7 @@ class Instrument:
         try:
             version_data = version_data[version]
         except KeyError:
-            versions = list(version_data.keys())
+            versions = list(version_data)
             raise InvalidVersionError(f'"{version}" is not a valid version name. Only the following'
                                       f' versions are supported for this instrument: {versions}')
 
@@ -355,7 +357,7 @@ class Instrument:
         except KeyError:
             raise InvalidInstrumentError(
                 f'"{instrument_name}" is not a valid instrument name. Only the following instruments are '
-                f'supported: {list(INSTRUMENT_MAP.keys())}')
+                f'supported: {list(INSTRUMENT_MAP)}')
 
         return os.path.join(INSTRUMENT_DATA_PATH, file_name + '.yaml'), implied_version
 
@@ -428,10 +430,7 @@ class Instrument:
         if model_name is None:
             model_name = self.default_model
 
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
+        model, model_name = self._resolve_model(model_name)
 
         available_configurations = model['configurations']
 
@@ -447,6 +446,34 @@ class Instrument:
         model = model_class.data_class(function=model['function'],
                                        citation=model['citation'],
                                        **ChainMap(*configurations, model['parameters']))
+        return model, model_name
+
+    def _resolve_model(self, model_name: str) -> tuple[dict, str]:
+        """
+        Returns the data for the `model_name` model, taking into account aliases.
+
+        Parameters
+        ----------
+        model_name
+            The name of the model whose data to retrieve.
+
+        Returns
+        -------
+        model_data
+            The dictionary with the model's data.
+        """
+        try:
+            model = self._models[model_name]
+        except KeyError:
+            raise InvalidModelError(model_name, self) from None
+
+        if isinstance(model, str):
+            model_name = model
+            try:
+                model = self._models[model]
+            except KeyError:
+                raise InvalidModelError(model, self)
+
         return model, model_name
 
     def get_resolution_function(self, model_name: Optional[str] = None, **kwargs) -> InstrumentModel:
@@ -619,51 +646,123 @@ class Instrument:
     @property
     def available_models(self) -> list[str]:
         """
+        A list of :term:`models<model>` available for this :term:`version` of this
+        :term:`instrument`.
+
+        Only includes the recommended version of each model - does not list all versions of all
+        models.
+
+        Returns
+        -------
+        available_models
+            A list of available models.
+        """
+        return [name for name, value in self._models.items() if isinstance(value, str)]
+
+    @property
+    def all_available_models(self) -> list[str]:
+        """
         A list of all :term:`models<model>` available for this :term:`version` of this
         :term:`instrument`.
+
+        Includes both all the versions of all models (see `Instrument.available_unique_models` and
+        the recommended versions (see `Instrument.available_models`).
 
         Returns
         -------
         available_models
             A list of all available models.
         """
-        return list(self._models.keys())
+        return list(self._models)
 
     @property
-    def available_models_and_configurations(self) -> dict[str, list[str]]:
+    def available_unique_models(self) -> list[str]:
         """
-        A dictionary mapping each available :term:`model` to the user
-        :term:`configurations<configuration>` available for that :term:`model`.
+        A list of all unique :term:`models<model>` available for this :term:`version` of this
+        :term:`instrument`.
 
-        All :term:`models<model>` available for this :term:`version` of this :term:`instrument`,
-        and all their :term:`configurations<configuration>` are listed.
+        Only includes the versioned models, i.e. lists all versions of all models, but does not list
+        the recommended models.
 
         Returns
         -------
-        models_and_configurations
-            All models and all their configurations.
+        available_models
+            A list of all available unique models.
         """
-        return {model_name: list(model['configurations'].keys())
-                for model_name, model in self._models.items()}
+        return [name for name, value in self._models.items() if not isinstance(value, str)]
 
-    @property
-    def all_available_models_options(self) -> dict[str, dict[str, list[str]]]:
+    def format_available_models_and_configurations(self) -> str:
         """
-        A dictionary mapping each available :term:`model`, to the user
-        :term:`configurations<configuration>` and their :term:`options<option>`.
+        Formats all available :term:`models<model>` and :term:`configurations<configuration>` into a
+        table.
 
-        All :term:`models<model>` available for this :term:`version` of this :term:`instrument`, all
-        the :term:`configurations<configuration>` of each of the :term:`models<model>`, and all the
-        :term:`options<option>` for each of the :term:`configurations<configuration>`, are listed.
+        The table shows each :term:`model` and either which other :term:`model` it is an alias for,
+        or all the :term:`configurations<configuration>` required by that :term:`model`.
 
         Returns
         -------
-        everything
-            All models, all their configurations, and all their options.
+        str
+            A string containing the nicely formatted table.
         """
-        return {model_name: {config: self._get_options(value)
-                             for config, value in list(model['configurations'].items())}
-                for model_name, model in self._models.items()}
+        contents = [['MODEL', 'ALIAS FOR', 'CONFIGURATIONS']]
+
+        for model_name, model_data in self._models.items():
+            if isinstance(model_data, str):
+                contents.append([model_name, model_data, ''])
+            else:
+                tmp = [['', '', config_name]
+                       for config_name in model_data['configurations']]
+                tmp[0][0] = model_name
+                contents.extend(tmp)
+
+        return _format_table(contents)
+
+    def format_available_models_options(self) -> str:
+        """
+        Formats all available :term:`models<model>`, :term:`configurations<configuration>`, and
+        :term:`options<option>` into a table.
+
+        The table shows each :term:`model` and either which other :term:`model` it is an alias for,
+        or all the :term:`configurations<configuration>` required by that :term:`model`. In the
+        latter case, all the :term:`options<option>` for each :term:`configuration` are also listed,
+        and the default option is indicated.
+
+        Returns
+        -------
+        str
+            A string containing the nicely formatted table.
+        """
+        contents = [['MODEL', 'ALIAS FOR', 'CONFIGURATIONS', 'OPTIONS']]
+
+        for model_name, model_data in self._models.items():
+            if isinstance(model_data, str):
+                contents.append([model_name, model_data, '', ''])
+            else:
+                for i, (config_name, config_data) in enumerate(model_data['configurations'].items()):
+                    default = config_data['default_option']
+                    first_option = True
+                    for option_name in config_data:
+                        if option_name == 'default_option':
+                            continue
+
+                        if option_name == default:
+                            option = option_name + ' (default)'
+                        else:
+                            option = option_name
+
+                        if i == 0 and first_option:
+                            contents.append([model_name, '', config_name, option])
+                        elif first_option:
+                            contents.append(['', '', config_name, option])
+                        else:
+                            contents.append(['', '', '', option])
+
+                        first_option = False
+
+                    contents.append(['', '', '', ''])
+                contents.pop(-1)
+
+        return _format_table(contents)
 
     def possible_configurations_for_model(self, model_name: str) -> list[str]:
         """
@@ -685,12 +784,7 @@ class Instrument:
         InvalidModelError
             If the provided `model_name` is not supported for this version of this instrument.
         """
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
-
-        return list(model['configurations'].keys())
+        return list(self._resolve_model(model_name)[0]['configurations'])
 
     def possible_options_for_model(self, model_name: str) -> dict[str, list[str]]:
         """
@@ -713,10 +807,7 @@ class Instrument:
         InvalidModelError
             If the provided `model_name` is not supported for this version of this instrument.
         """
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
+        model, _ = self._resolve_model(model_name)
 
         return {config: self._get_options(value)
                 for config, value in model['configurations'].items()}
@@ -748,12 +839,7 @@ class Instrument:
             If the provided `configuration` is not supported for the `model_name` model of this
             instrument.
         """
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
-
-        configurations = model['configurations']
+        configurations = self._resolve_model(model_name)[0]['configurations']
 
         try:
             configurations = configurations[configuration]
@@ -782,7 +868,7 @@ class Instrument:
         options
             A list of options as found in the provided `configuration` dictionary.
         """
-        return [value for value in configuration.keys() if value != 'default_option']
+        return [value for value in configuration if value != 'default_option']
 
     def default_option_for_configuration(self, model_name: str, configuration: str) -> str:
         """
@@ -809,12 +895,7 @@ class Instrument:
             If the provided `configuration` is not supported for the `model_name` model of this
             instrument.
         """
-        try:
-            model = self._models[model_name]
-        except KeyError:
-            raise InvalidModelError(model_name, self)
-
-        configurations = model['configurations']
+        configurations = self._resolve_model(model_name)[0]['configurations']
 
         try:
             configurations = configurations[configuration]
@@ -822,3 +903,69 @@ class Instrument:
             raise InvalidConfigurationError(configuration, model_name, self)
 
         return configurations['default_option']
+
+
+def _format_table(contents: list[list[str]], padding: int = 4) -> str:
+    """
+    Formats `contents` into a table.
+
+    Parameters
+    ----------
+    contents
+        The data to be formatted into a table. Each entry in the list of lists will be turned into
+        a single cell. Strings are placed into cells (with `padding` applied) while `None` values
+        are turned into empty cells.
+    padding
+        Extra padding to apply to the entries. Default is 4.
+
+    Returns
+    -------
+    table_str
+        A string containing the table.
+    """
+    padding += 1
+    contents = np.array(contents)
+    longest = np.max(np.vectorize(len)(contents), axis=0)
+
+    sep_line = f"|{'|'.join('-' * (i + padding) for i in longest)}|"
+    header_sep_line = sep_line.replace("-", "=")
+    sep_nl = "\n" + sep_line + "\n"
+
+    # e.g. "|{:<10}|{:<10}|{:<12}|{:<16}|" for str.format()
+    data_line = "| " + "| ".join(f"{{:<{length + padding - 1}}}" for length in longest) + "|"
+
+    it = _split_on_model(contents)
+    formatted = ('\n'.join(data_line.format(*row) for row in blk) for blk in it)
+
+    return f"""\
+{sep_line}
+{next(formatted)}
+{header_sep_line}
+{sep_nl.join(formatted)}
+{sep_line}
+    """
+
+
+def _split_on_model(contents: np.ndarray) -> Iterator[list[list[str]]]:
+    """
+    Break the table lines into chunks where the first column is occupied
+
+    Parameters
+    ----------
+    contents
+        The 2D contents of the table.
+
+    Yields
+    ------
+    group
+        A subset of the table, in which the first cell is occupied.
+    """
+    group = [contents[0]]
+    for line in contents[1:]:
+        if line[0]:
+            yield group
+            group = [line]
+        else:
+            group.append(line)
+    if group:
+        yield group
