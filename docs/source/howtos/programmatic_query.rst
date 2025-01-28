@@ -1,5 +1,5 @@
 How To Programmatically Find Data
-=================================
+*********************************
 
 While all the information and data stored by ResINS is available in the
 documentation *and* comes packaged together with the library via the YAML files
@@ -9,8 +9,20 @@ multiple methods for doing this:
 
 .. contents::
     :backlinks: entry
-    :depth: 2
+    :depth: 3
     :local:
+
+
+How To Find Data In Computer-compatible Format
+==============================================
+
+Most of the ways for finding data return computer-compatible output, i.e. Python
+objects, such as lists, dictionaries, or strings. That said, though, most of
+these are also still human-readable and are the only way of obtaining given
+information, but for some larger sets of data, additional methods have been
+provided that format the information into nice-looking tables (see
+:ref:`howto-query-human`).
+
 
 .. _how-to-instrument:
 
@@ -91,17 +103,39 @@ The default model can similarly be accessed via an attribute:
 >>> tosca.default_model
 'AbINS'
 
+Advanced
+^^^^^^^^
+
+The above property returns only the recommended (usually latest) version of each
+model. These "models" are actually aliases that each point to a versioned model
+that actually holds the data. These versioned models can be listed by using
+:py:meth:`~resolution_functions.instrument.Instrument.available_unique_models`:
+
+>>> tosca.available_unique_models
+['AbINS_v1', 'book_v1', 'vision_v1']
+
+Then, to round out the options, *all* models can be listed via
+:py:meth:`~resolution_functions.instrument.Instrument.all_available_models`:
+
+>>> tosca.all_available_models
+['AbINS', 'AbINS_v1', 'book', 'book_v1', 'vision', 'vision_v1']
+
+.. important::
+
+    Older versions of models often contain bugs and/or inaccuracies - use at own
+    risk.
+
+
 .. _how-to-config:
 
 How To Find the Configurations that Must be Chosen for a Model
 --------------------------------------------------------------
 
-If the model has been chosen
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If the desired model is known, either from prior knowledge or by browsing the
-:ref:`available models<how-to-model>`, the :term:`configurations<configuration>`
-can be retrieved using the
+To do this, the :term:`model` must already be known, either from prior knowledge
+or by browsing the :ref:`available models<how-to-model>`; without this decision
+made, the only option is use :ref:`howto-query-models-configs` which returns a
+table. Otherwise, the :term:`configurations<configuration>` can be retrieved
+using the
 :py:meth:`~resolution_functions.instrument.Instrument.possible_configurations_for_model`
 method:
 
@@ -112,24 +146,16 @@ method:
 >>> tosca.possible_configurations_for_model('book')
 ['detector_bank']
 
-If the model has NOT been chosen
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Without the model information, the only way is to list all the
-:term:`configurations<configuration>` for all the :term:`models<model>` via the
-:py:meth:`~resolution_functions.instrument.Instrument.available_models_and_configurations`
-property:
-
->>> from resolution_functions import Instrument
->>> tosca = Instrument.from_default('TOSCA', 'TOSCA')
->>> tosca.available_models_and_configurations
-{'AbINS': [], 'book': ['detector_bank'], 'vision': ['detector_bank']}
-
-which shows a mapping of model names to lists of their configurations.
-
+.. _howto-query-options:
 
 How To Find the Options Available for a Configuration
 -----------------------------------------------------
+
+Similarly, to obtain the :term:`options<option>` in a Python format, the
+:term:`model` must once again be known
+(:ref:`otherwise<owto-query-models-configs-options>` only a formatted table can
+be returned), though in this case there are multiple options:
 
 If the model and setting are known
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -157,20 +183,6 @@ method is provided:
 >>> tosca = Instrument.from_default('TOSCA', 'TOSCA')
 >>> tosca.possible_options_for_model('book')
 {'detector_bank': ['Backward', 'Forward']}
-
-If the model is not known
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If the model has not been chosen, all the :term:`options<option>` for all the
-:term:`configurations<configuration>` of all :term:`models<model>` have to be enumerated,
-which can be done using the
-:py:meth:`~resolution_functions.instrument.Instrument.all_available_models_options`
-property:
-
->>> from resolution_functions import Instrument
->>> tosca = Instrument.from_default('TOSCA', 'TOSCA')
->>> tosca.all_available_models_options
-{'AbINS': {}, 'book': {'detector_bank': ['Backward', 'Forward']}, 'vision': {'detector_bank': ['Backward', 'Forward']}}
 
 
 How To Find the Default Option for a Configuration
@@ -236,3 +248,77 @@ can be retrieved using the
 <class 'resolution_functions.models.pychop.PyChopModelDataFermi'>
 >>> model.restrictions
 {'e_init': [7, 2000], 'chopper_frequency': [50, 601, 50]}
+
+
+.. _howto-query-human:
+
+How To Find Data In Human-readable Format
+=========================================
+
+Unlike the cases above, in some cases it might be more desirable to obtain
+comprehensive information in an easily legible format. The following are provided
+for that purpose:
+
+.. _howto-query-models-configs:
+
+How To Find the Models and Their Configurations
+-----------------------------------------------
+
+All :term:`configurations<configuration>` for all the :term:`models<model>` can
+be displayed via the
+:py:meth:`~resolution_functions.instrument.Instrument.format_available_models_and_configurations`
+method:
+
+>>> from resolution_functions import Instrument
+>>> tosca = Instrument.from_default('TOSCA', 'TOSCA')
+>>> print(tosca.format_available_models_and_configurations())
+|--------------|--------------|-------------------|
+| MODEL        | ALIAS FOR    | CONFIGURATIONS    |
+|==============|==============|===================|
+| AbINS        | AbINS_v1     |                   |
+|--------------|--------------|-------------------|
+| AbINS_v1     |              |                   |
+|--------------|--------------|-------------------|
+| book         | book_v1      |                   |
+|--------------|--------------|-------------------|
+| book_v1      |              | detector_bank     |
+|--------------|--------------|-------------------|
+| vision       | vision_v1    |                   |
+|--------------|--------------|-------------------|
+| vision_v1    |              | detector_bank     |
+|--------------|--------------|-------------------|
+
+
+.. _howto-query-models-configs-options:
+
+How To Find the Models and Their Configurations and Their Options
+-----------------------------------------------------------------
+
+All the :term:`options<option>` for all the
+:term:`configurations<configuration>` of all :term:`models<model>` can be listed
+by the
+:py:meth:`~resolution_functions.instrument.Instrument.all_available_models_options`
+method:
+
+>>> from resolution_functions import Instrument
+>>> tosca = Instrument.from_default('TOSCA', 'TOSCA')
+>>> print(tosca.format_available_models_options())
+|--------------|--------------|-------------------|-----------------------|
+| MODEL        | ALIAS FOR    | CONFIGURATIONS    | OPTIONS               |
+|==============|==============|===================|=======================|
+| AbINS        | AbINS_v1     |                   |                       |
+|--------------|--------------|-------------------|-----------------------|
+| AbINS_v1     |              |                   |                       |
+|--------------|--------------|-------------------|-----------------------|
+| book         | book_v1      |                   |                       |
+|--------------|--------------|-------------------|-----------------------|
+| book         | book_v1      |                   |                       |
+|--------------|--------------|-------------------|-----------------------|
+| book_v1      |              | detector_bank     | Backward (default)    |
+|              |              |                   | Forward               |
+|--------------|--------------|-------------------|-----------------------|
+| vision       | vision_v1    |                   |                       |
+|--------------|--------------|-------------------|-----------------------|
+| vision_v1    |              | detector_bank     | Backward (default)    |
+|              |              |                   | Forward               |
+|--------------|--------------|-------------------|-----------------------|
