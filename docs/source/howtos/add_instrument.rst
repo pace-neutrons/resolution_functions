@@ -90,14 +90,28 @@ create a new entry in the dictionary with the format::
         'instrument_name': ('yaml_file_name.yaml', None)
     }
 
-where `instrument_name` is the official name of the instrument that you would
-like users to use when creating the instrument, and `yaml_file_name.yaml` is the
-name of the YAML file without the path, e.g. ``arcs.yaml``.
+where ``instrument_name`` is the official name of the instrument that you would
+like users to use when creating the instrument, and ``yaml_file_name.yaml`` is
+the name of the YAML file without the path, e.g. ``arcs.yaml``.
 
-.. note::
 
-    The `None` in the example above is used for creating an alias and represents
-    a version name for one of the versions in the `yaml_file_name.yaml` file.
-    For example, the TFXA instrument is an alias for the TFXA :term:`version` of
-    the TOSCA :term:`instrument` and is specified as
-    `'TFXA': ('tosca', 'TFXA')`.
+
+How To Add an Instrument Alias
+------------------------------
+
+ResINS provides a shorthand for accessing certain :term:`versions<version>` of
+certain :term:`instruments<instrument>` - for example, it is possible to create
+the TFXA :term:`instrument` even though TFXA is considered a :term:`version` of
+the TOSCA :term:`instrument` in reality (and so can also be accessed that way).
+This is done via the :py:data:`resolution_functions.instrument.INSTRUMENT_MAP`.
+To add a new alias, for personal use all that is needed is to insert a new
+key-value pair to the dictionary:
+
+>>> from resolution_functions.instrument import INSTRUMENT_MAP, Instrument
+>>> INSTRUMENT_MAP['TOSCA1'] = ('tosca.yaml', 'TOSCA1')
+>>> print(Instrument.from_default('TOSCA1'))
+Instrument(name=TOSCA, version=TOSCA1)
+
+To do the same for official ResINS, the same dictionary has to be edited, this
+time by editing it at its source, in
+``resolution_functions/src/resolution_functions/instrument.py``.

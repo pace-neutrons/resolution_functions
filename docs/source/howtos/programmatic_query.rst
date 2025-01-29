@@ -154,7 +154,7 @@ How To Find the Options Available for a Configuration
 
 Similarly, to obtain the :term:`options<option>` in a Python format, the
 :term:`model` must once again be known
-(:ref:`otherwise<owto-query-models-configs-options>` only a formatted table can
+(:ref:`otherwise<howto-query-models-configs-options>` only a formatted table can
 be returned), though in this case there are multiple options:
 
 If the model and setting are known

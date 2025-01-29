@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
 
-INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
+INSTRUMENT_MAP: dict[str, tuple[str, None | str]] = {
     'ARCS': ('arcs.yaml', None),
     'CNCS': ('cncs.yaml', None),
     'HYSPEC': ('hyspec.yaml', None),
@@ -100,7 +100,7 @@ class Instrument:
     associated data.
 
     To be precise, it holds all information about one :term:`version` of an :term:`instrument` (for
-    more about :term:`instrument` versions, see :doc:`instruments`), which makes it the centrepiece
+    more about :term:`instrument` versions, see :doc:`/instruments`), which makes it the centrepiece
     of this library; the data is necessary for computing the
     :term:`resolution functions<resolution function>`.
 
