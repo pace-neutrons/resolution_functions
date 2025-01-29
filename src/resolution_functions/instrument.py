@@ -710,10 +710,13 @@ class Instrument:
             if isinstance(model_data, str):
                 contents.append([model_name, model_data, ''])
             else:
-                tmp = [['', '', config_name]
-                       for config_name in model_data['configurations']]
-                tmp[0][0] = model_name
-                contents.extend(tmp)
+                if model_data['configurations']:
+                    tmp = [['', '', config_name]
+                           for config_name in model_data['configurations']]
+                    tmp[0][0] = model_name
+                    contents.extend(tmp)
+                else:
+                    contents.append([model_name, '', ''])
 
         return _format_table(contents)
 
@@ -738,6 +741,10 @@ class Instrument:
             if isinstance(model_data, str):
                 contents.append([model_name, model_data, '', ''])
             else:
+                if not model_data['configurations']:
+                    contents.append([model_name, '', '', ''])
+                    continue
+
                 for i, (config_name, config_data) in enumerate(model_data['configurations'].items()):
                     default = config_data['default_option']
                     first_option = True
