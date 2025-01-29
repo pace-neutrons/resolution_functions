@@ -43,10 +43,6 @@ PyChopModelFermi(citation=[''])
 However, if a new model was created for the new instrument, more work will be
 required, see :doc:`add_model`.
 
-How to register an instrument with ResINS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-??????????????????
 
 .. _howto-instrument-dict:
 
