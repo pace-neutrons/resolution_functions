@@ -27,7 +27,7 @@ working with Python dictionaries instead of YAML files:
 Using YAML files
 ^^^^^^^^^^^^^^^^
 
-It currently impossible to simply append a new :term:`version` to an existing
+It is currently impossible to simply append a new :term:`version` to an existing
 :term:`instrument`. It is necessary to create a new instrument YAML file into
 which the new :term:`version` can be placed. This can be done in two ways:
 
