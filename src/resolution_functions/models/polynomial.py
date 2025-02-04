@@ -61,16 +61,13 @@ class PolynomialModel1D(InstrumentModel):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PolynomialModelData` type.
     polynomial : numpy.polynomial.polynomial.Polynomial
         The polynomial representing the resolution function.
     citation
     """
-    input = 1  # tuple of strings
-    output = 1
+    input = ('energy_transfer',)
 
     data_class: ClassVar[type[PolynomialModelData]] = PolynomialModelData
 
@@ -177,8 +174,6 @@ class DiscontinuousPolynomialModel1D(InstrumentModel):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `DiscontinuousPolynomialModelData` type.
     polynomial : numpy.polynomial.polynomial.Polynomial
@@ -197,8 +192,7 @@ class DiscontinuousPolynomialModel1D(InstrumentModel):
         `high_energy_cutoff`.
     citation
     """
-    input = 1
-    output = 1
+    input = ('energy_transfer',)
 
     data_class: ClassVar[type[DiscontinuousPolynomialModelData]] = DiscontinuousPolynomialModelData
 

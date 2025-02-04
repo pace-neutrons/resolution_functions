@@ -165,14 +165,11 @@ class InstrumentModel(ABC):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         The `ModelData` subclass associated with this particular model.
     citation
     """
-    input: ClassVar[int]
-    output: ClassVar[int]
+    input: ClassVar[tuple[str, ...]]
 
     data_class: ClassVar[type[ModelData]]
 

@@ -400,15 +400,12 @@ class PyChopModel(InstrumentModel, ABC):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PyChopModelData` type.
     citation
     polynomial
     """
-    input = 1
-    output = 1
+    input = ('energy_transfer',)
 
     data_class = PyChopModelData
 
@@ -1003,8 +1000,6 @@ class PyChopModelFermi(PyChopModel):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PyChopModelDataFermi` type.
     citation
@@ -1358,8 +1353,6 @@ class PyChopModelCNCS(PyChopModelNonFermi):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PyChopModelDataNonFermi` type.
     citation
@@ -1435,8 +1428,6 @@ class PyChopModelLET(PyChopModelNonFermi):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PyChopModelDataNonFermi` type.
     citation

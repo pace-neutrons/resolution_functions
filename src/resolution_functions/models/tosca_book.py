@@ -102,14 +102,11 @@ class ToscaBookModel(InstrumentModel):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `ToscaBookModelData` type.
     citation
     """
-    input = 1
-    output = 1
+    input = ('energy_transfer',)
 
     data_class = ToscaBookModelData
 
