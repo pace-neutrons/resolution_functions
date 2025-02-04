@@ -16,7 +16,17 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TYPE_CHECKING
+
+import numpy as np
+
+if TYPE_CHECKING:
+    from jaxtyping import Float
+
+
+DEPRECATION_MSG = 'The functionality of the __call__ method is going to soon change to return a ' \
+                  'convolution with data (see #10). For current functionality, use ' \
+                  'get_characteristics instead.'
 
 
 class InvalidInputError(Exception):
@@ -168,6 +178,25 @@ class InstrumentModel(ABC):
 
     def __init__(self, model_data: ModelData, **_):
         self._citation = model_data.citation
+
+    @abstractmethod
+    def get_characteristics(self, *args) -> dict[str, Float[np.ndarray, '...']]:
+        """
+        Computes the characteristics of the broadening function at each point in [Q, w] space
+        provided.
+
+        Parameters
+        ----------
+        *args
+            The independent variables at whose values to evaluate the model.
+
+        Returns
+        -------
+        characteristics
+            The characteristics of the broadening function at each combination of independent
+            variables.
+        """
+        raise NotImplementedError()
 
     @abstractmethod
     def __call__(self, *args, **kwargs):
