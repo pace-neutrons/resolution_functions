@@ -18,7 +18,8 @@ license = {file = "LICENSE"}
 dependencies = [
     "PyYAML >= 6.0.2",
     "numpy >= 1.26.4",
-    "scipy >= 1.13.1"
+    "scipy >= 1.13.1",
+    "typing_extensions >= 4.5.0",
 ]
 
 [project.optional-dependencies]
