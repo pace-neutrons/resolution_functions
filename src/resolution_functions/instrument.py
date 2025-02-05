@@ -709,11 +709,13 @@ class Instrument:
         for model_name, model_data in self._models.items():
             if isinstance(model_data, str):
                 contents.append([model_name, model_data, ''])
-            else:
+            elif model_data['configurations']:
                 tmp = [['', '', config_name]
                        for config_name in model_data['configurations']]
                 tmp[0][0] = model_name
                 contents.extend(tmp)
+            else:
+                contents.append([model_name, '', ''])
 
         return _format_table(contents)
 
@@ -737,6 +739,8 @@ class Instrument:
         for model_name, model_data in self._models.items():
             if isinstance(model_data, str):
                 contents.append([model_name, model_data, '', ''])
+            elif not model_data['configurations']:
+                contents.append([model_name, '', '', ''])
             else:
                 for i, (config_name, config_data) in enumerate(model_data['configurations'].items()):
                     default = config_data['default_option']
