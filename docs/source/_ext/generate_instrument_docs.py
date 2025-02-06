@@ -83,6 +83,20 @@ def generate_rst(data):
         out += '\n'
 
         for model_name, model_data in version_data['models'].items():
+            if isinstance(model_data, str):
+                out += f'.. _{version_name}-{model_name}-model:\n\n' \
+                       f'{model_name}\n' \
+                       f'{len(model_name) * "^"}\n\n' \
+                       f'This is the recommended {model_name} model - it is an alias for the ' \
+                       f':ref:`{version_name}-{model_data}-model` model, which is the model ' \
+                       f'actually containing the data.\n\n' \
+                       f'.. important::\n\n' \
+                       f'    {model_name} refers to the best version of this model - using a ' \
+                       f'    specific version may run the risk using a model with known bugs or ' \
+                       f'    other issues and is not advisable unless replicating the results of ' \
+                       f'    a given version of the model.\n\n'
+                continue
+
             cls = MODELS[model_data["function"]]
             module = inspect.getmodule(cls)
             link = f'{version_name}-{model_name}-data'
@@ -165,6 +179,10 @@ def generate_data_section(data_with_links: dict, target_role: str = ':iref:targe
                 '            models:\n'
 
         for model_name, model_data in version_data['models'].items():
+            if isinstance(model_data, str):
+                out += ' ' * 16 + f'{model_name}: "{model_data}"\n'
+                continue
+
             link = model_data['sphinx_link']
             out += ' ' * 16 + f'{target_role}`{model_name}<{link}>`:\n'
 
