@@ -81,7 +81,7 @@ MAPS can only observe values of energy transfer up to the incident energy (``e_i
 If we intend to investigate spectral features between 100 and 600 meV, the useful ``e_init`` settings are limited to values above 600 meV:
 
 >>> max_feature = 600
->>> test_e_init = np.arange(max_feature, data.restrictions['e_init'][0], 100)
+>>> test_e_init = np.arange(max_feature, max(data.restrictions['e_init']), 100)
 >>> test_choppers = np.arange(*data.restrictions['chopper_frequency'])
 
 All the data can then be generated using by loopiing over these variables:
@@ -105,10 +105,10 @@ the lowest value of ``e_init``, 600:
 
 .. image:: ./optimise_experiment_pictures/maps_b_e600.png
 
-which might suggest that low values of ``chopper_frequency`` are ideal. Then, if
-the features are expected to be further apart than the resolution, they should
-be distinguishable in an INS experiment. If that is not the case, it might mean
-that this combination of :term:`instrument`,
+which might suggest that ``chopper_frequency`` of 300 Hz and above gives
+tolerable resolution. Then, if the features are expected to be further apart
+than the resolution, they should be distinguishable in an INS experiment. If
+that is not the case, it might mean that this combination of :term:`instrument`,
 :term:`configurations<configuration>`, and :term:`settings<setting>` may not be
 suitable for the given system.
 
