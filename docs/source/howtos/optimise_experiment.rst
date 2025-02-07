@@ -34,14 +34,14 @@ and then find the :term:`settings<setting>` and their defaults:
 >>> data.defaults
 {'e_init': 500, 'chopper_frequency': 400}
 
-which can be used to do a quick initial test:
+which can be used as a starting point to generate some resolution data:
 
 >>> import numpy as np
 >>> model = maps.get_resolution_function('PyChop_fit', chopper_package='B')
 >>> energies = np.arange(0, data.defaults['e_init'], 0.5)
 >>> resolution = model(energies)
 
-by plotting the results (using a simple script such as):
+Plotting with matplotlib:
 
 .. code-block:: Python
 
@@ -57,14 +57,12 @@ by plotting the results (using a simple script such as):
 
     plt.show()
 
-which will yield:
-
 .. image:: ./optimise_experiment_pictures/quick_example.png
 
 
-With this simple default plot, it should be possible to get an idea of the
+From here it should be possible to get an idea of the
 :term:`instrument` properties and check whether the other choices (e.g.
-:term:`configuration`) made seem about right. If everything checks out, the next
+:term:`configuration`) seem reasonable. If so, the next
 step is to plot the resolution at different combinations of the
 :term:`settings<setting>`:
 
@@ -72,20 +70,15 @@ step is to plot the resolution at different combinations of the
 {'e_init': [0, 2000], 'chopper_frequency': [50, 601, 50]}
 
 The ``restrictions`` provide information about the allowed values for each
-:term:`setting`. In the case of the MAPS instrument, there are two different
+:term:`setting`. In the case of the MAPS instrument, there are two
 settings:
 
 * ``e_init`` for which all values between ``0`` and ``2000`` meV are allowed
-* ``chopper_frequency`` for which all values between ``50`` and ``600``
-  (inclusive) at an interval of ``50`` are allowed.
+* ``chopper_frequency`` for which values ``50``, ``100``, ``150``, ... are allowed up to ``600`` Hz.
 
-However, depending on the instrument and the amount of scientific knowledge
-about the system, these values can be further constrained. For example, MAPS is
-a direct-geometry instrument, which means that only the values of energy
-transfer up to the value of ``e_init`` (the incident energy) are observable.
-Therefore, if it is known that in a given system features between 100 and 600
-meV are of interest, the ``e_init`` setting can be restricted further to values
-above 600 meV:
+Scientific constraints may also apply. For example, the direct-geometry instrument
+MAPS can only observe values of energy transfer up to the incident energy (``e_init``). 
+If we intend to investigate spectral features between 100 and 600 meV, the useful ``e_init`` settings are limited to values above 600 meV:
 
 >>> max_feature = 600
 >>> test_e_init = np.arange(max_feature, data.restrictions['e_init'][0], 100)
@@ -120,18 +113,16 @@ that this combination of :term:`instrument`,
 suitable for the given system.
 
 
-Using computation spectra
+Using simulated spectra
 -------------------------
 
 The other way to estimate the optimal experimental :term:`settings<setting>` is
-to use real computational spectra, e.g. from
+to simulate spectra from *ab initio* lattice dynamics or molecular dynamics, e.g. using
 `AbINS <https://github.com/mantidproject/mantid/tree/main/scripts/abins>`_ or
 `dynasor <https://dynasor.materialsmodeling.org/index.html>`_, and then convolve
 the ResINS resolution using a library like
-`euphonic <https://euphonic.readthedocs.io/en/stable/>`_. Similarly to above,
-though, to do this, the :term:`instrument`, the :term:`model`, and the
-:term:`option` for each :term:`configuration` have to have been chosen. The
-process also starts the same by creating the instrument:
+`euphonic <https://euphonic.readthedocs.io/en/stable/>`_.
+Again, we begin by creating the Instrument:
 
 >>> from resolution_functions import Instrument
 >>> maps = Instrument.from_default('MAPS')
