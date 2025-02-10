@@ -131,11 +131,8 @@ Then, to round out the options, *all* models can be listed via
 How To Find the Configurations that Must be Chosen for a Model
 --------------------------------------------------------------
 
-To do this, the :term:`model` must already be known, either from prior knowledge
-or by browsing the :ref:`available models<how-to-model>`; without this decision
-made, the only option is use :ref:`howto-query-models-configs` which returns a
-table. Otherwise, the :term:`configurations<configuration>` can be retrieved
-using the
+The :term:`configurations<configuration>` required by a given :term:`model` can
+be retrieved using the
 :py:meth:`~resolution_functions.instrument.Instrument.possible_configurations_for_model`
 method:
 
@@ -145,6 +142,12 @@ method:
 []
 >>> tosca.possible_configurations_for_model('book')
 ['detector_bank']
+
+.. seealso::
+
+    :ref:`howto-query-models-configs` shows how to list all
+    :term:`configurations<configuration>` for all :term:`models<model>` in the
+    form of a nicely formatted table.
 
 
 .. _howto-query-options:
