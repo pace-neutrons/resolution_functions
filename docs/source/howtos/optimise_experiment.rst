@@ -109,8 +109,8 @@ which might suggest that ``chopper_frequency`` of 300 Hz and above gives
 tolerable resolution. Then, if the features are expected to be further apart
 than the resolution, they should be distinguishable in an INS experiment. If
 that is not the case, it might mean that this combination of :term:`instrument`,
-:term:`configurations<configuration>`, and :term:`settings<setting>` may not be
-suitable for the given system.
+:term:`configurations<configuration>`, and :term:`settings<setting>`
+is unsuitable.
 
 
 Using simulated spectra

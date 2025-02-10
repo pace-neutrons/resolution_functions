@@ -16,10 +16,9 @@ multiple methods for doing this:
 How To Find Data In Computer-compatible Format
 ==============================================
 
-Most of the ways for finding data return computer-compatible output, i.e. Python
-objects, such as lists, dictionaries, or strings. That said, though, most of
-these are also still human-readable and are the only way of obtaining given
-information, but for some larger sets of data, additional methods have been
+Most of the methods shown here return Python data objects such as lists, dictionaries, or strings.
+These are generally human-readable,
+but for some larger sets of data additional methods have been
 provided that format the information into nice-looking tables (see
 :ref:`howto-query-human`).
 
@@ -72,7 +71,7 @@ which lists all the :term:`versions<version>` available for an
 'TOSCA'
 
 This method returns both the list of versions available for the instrument, and
-the default version for that instrument. Though, if the instrument being
+the default version for that instrument. If the instrument being
 searched for is an alias for a particular version of an instrument, that version
 is returned instead of the default version:
 
@@ -108,7 +107,7 @@ Advanced
 
 The above property returns only the recommended (usually latest) version of each
 model. These "models" are actually aliases that each point to a versioned model
-that actually holds the data. These versioned models can be listed by using
+which holds the data. These versioned models can be listed by using
 :py:meth:`~resolution_functions.instrument.Instrument.available_unique_models`:
 
 >>> tosca.available_unique_models
@@ -122,7 +121,7 @@ Then, to round out the options, *all* models can be listed via
 
 .. important::
 
-    Older versions of models often contain bugs and/or inaccuracies - use at own
+    Older versions of models may contain known bugs and/or inaccuracies - use at own
     risk.
 
 
@@ -152,10 +151,9 @@ method:
 How To Find the Options Available for a Configuration
 -----------------------------------------------------
 
-Similarly, to obtain the :term:`options<option>` in a Python format, the
-:term:`model` must once again be known
-(:ref:`otherwise<howto-query-models-configs-options>` only a formatted table can
-be returned), though in this case there are multiple options:
+To obtain the :term:`options<option>` as Python data, the
+:term:`model` must already be known.
+(Humans can read the formatted table from :ref:`otherwise<howto-query-models-configs-options>`.)
 
 If the model and setting are known
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
