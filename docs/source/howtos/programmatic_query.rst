@@ -1,11 +1,12 @@
 How To Programmatically Find Data
 *********************************
 
-While all the information and data stored by ResINS is available in the
-documentation *and* comes packaged together with the library via the YAML files
-in ``resolution_functions/instrument_data``, there are many reasons why it is
-desirable to obtain the data programmatically at runtime. ResINS implements
-multiple methods for doing this:
+The :term:`instrument`/:term:`model` data used by ResINS is available in the
+:doc:`documentation</instruments>` and comes packaged together with the library
+via the YAML files in ``resolution_functions/instrument_data``. However,
+one may also obtain the data programmatically at runtime; this could be useful
+when accessing ResINS through other software to ensure the information is
+up-to-date with the code. This guide shows how to to this:
 
 .. contents::
     :backlinks: entry
