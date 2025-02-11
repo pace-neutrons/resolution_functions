@@ -20,20 +20,20 @@ if TYPE_CHECKING:
 
 INSTRUMENT_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instrument_data')
 
-INSTRUMENT_MAP: dict[str, tuple[str, Union[None, str]]] = {
-    'ARCS': ('arcs', None),
-    'CNCS': ('cncs', None),
-    'HYSPEC': ('hyspec', None),
-    'Lagrange': ('lagrange', None),
-    'LET': ('let', None),
-    'MAPS': ('maps', None),
-    'MARI': ('mari', None),
-    'MERLIN': ('merlin', None),
-    'PANTHER': ('panther', None),
-    'TFXA': ('tosca', 'TFXA'),
-    'TOSCA': ('tosca', None),
-    'VISION': ('vision', None),
-    'SEQUOIA': ('sequoia', None),
+INSTRUMENT_MAP: dict[str, tuple[str, None | str]] = {
+    'ARCS': ('arcs.yaml', None),
+    'CNCS': ('cncs.yaml', None),
+    'HYSPEC': ('hyspec.yaml', None),
+    'Lagrange': ('lagrange.yaml', None),
+    'LET': ('let.yaml', None),
+    'MAPS': ('maps.yaml', None),
+    'MARI': ('mari.yaml', None),
+    'MERLIN': ('merlin.yaml', None),
+    'PANTHER': ('panther.yaml', None),
+    'TFXA': ('tosca.yaml', 'TFXA'),
+    'TOSCA': ('tosca.yaml', None),
+    'VISION': ('vision.yaml', None),
+    'SEQUOIA': ('sequoia.yaml', None),
 }
 
 
@@ -102,7 +102,7 @@ class Instrument:
     associated data.
 
     To be precise, it holds all information about one :term:`version` of an :term:`instrument` (for
-    more about :term:`instrument` versions, see :doc:`instruments`), which makes it the centrepiece
+    more about :term:`instrument` versions, see :doc:`/instruments`), which makes it the centrepiece
     of this library; the data is necessary for computing the
     :term:`resolution functions<resolution function>`.
 
@@ -359,7 +359,7 @@ class Instrument:
                 f'"{instrument_name}" is not a valid instrument name. Only the following instruments are '
                 f'supported: {list(INSTRUMENT_MAP)}')
 
-        return os.path.join(INSTRUMENT_DATA_PATH, file_name + '.yaml'), implied_version
+        return os.path.join(INSTRUMENT_DATA_PATH, file_name), implied_version
 
     def get_model_data(self, model_name: Optional[str] = None, **kwargs) -> ModelData:
         """

@@ -23,5 +23,6 @@ Using ResINS
     quickstart
     glossary
     theory
+    howto
     api
     instruments
