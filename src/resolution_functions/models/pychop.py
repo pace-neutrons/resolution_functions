@@ -30,12 +30,16 @@ try:
 except ImportError:
     from typing_extensions import NotRequired, TypedDict
 
+try:
+    from warnings import deprecated
+except ImportError:
+    from typing_extensions import deprecated
 
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 from scipy.interpolate import interp1d
 
-from .model_base import InstrumentModel, ModelData, InvalidInputError
+from .model_base import InstrumentModel, ModelData, InvalidInputError, DEPRECATION_MSG
 
 if TYPE_CHECKING:
     from jaxtyping import Float
@@ -396,18 +400,36 @@ class PyChopModel(InstrumentModel, ABC):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PyChopModelData` type.
     citation
     polynomial
     """
-    input = 1
-    output = 1
+    input = ('energy_transfer',)
 
     data_class = PyChopModelData
 
+    def get_characteristics(self, energy_transfer: Float[np.ndarray, 'energy_transfer']
+                            ) -> dict[str, Float[np.ndarray, 'sigma']]:
+        """
+        Computes the broadening width at each value of `energy_transfer`.
+
+        The model approximates the broadening using the Gaussian distribution, so the returned
+        widths are in the form of the standard deviation (sigma).
+
+        Parameters
+        ----------
+        energy_transfer
+            The energy transfer in meV at which to compute the broadening in meV.
+
+        Returns
+        -------
+        characteristics
+            The characteristics of the broadening function, i.e. the Gaussian width as sigma in meV.
+        """
+        return {'sigma': self.polynomial(energy_transfer)}
+
+    @deprecated(DEPRECATION_MSG)
     def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs
                  ) -> Float[np.ndarray, 'sigma']:
         """
@@ -424,7 +446,7 @@ class PyChopModel(InstrumentModel, ABC):
         sigma
             The Gaussian widths at `frequencies` as predicted by this model.
         """
-        return self.polynomial(frequencies)
+        return self.get_characteristics(frequencies)['sigma']
 
     @property
     @abstractmethod
@@ -978,8 +1000,6 @@ class PyChopModelFermi(PyChopModel):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PyChopModelDataFermi` type.
     citation
@@ -1333,8 +1353,6 @@ class PyChopModelCNCS(PyChopModelNonFermi):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PyChopModelDataNonFermi` type.
     citation
@@ -1410,8 +1428,6 @@ class PyChopModelLET(PyChopModelNonFermi):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PyChopModelDataNonFermi` type.
     citation

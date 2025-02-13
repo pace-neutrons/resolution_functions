@@ -11,10 +11,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+try:
+    from warnings import deprecated
+except ImportError:
+    from typing_extensions import deprecated
 
 import numpy as np
 
-from .model_base import InstrumentModel, ModelData
+from .model_base import InstrumentModel, ModelData, DEPRECATION_MSG
 
 if TYPE_CHECKING:
     from jaxtyping import Float
@@ -98,14 +102,11 @@ class ToscaBookModel(InstrumentModel):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `ToscaBookModelData` type.
     citation
     """
-    input = 1
-    output = 1
+    input = ('energy_transfer',)
 
     data_class = ToscaBookModelData
 
@@ -132,6 +133,45 @@ class ToscaBookModel(InstrumentModel):
         self.average_bragg_angle = model_data.average_bragg_angle_graphite
         self.time_channel_uncertainty2 = model_data.time_channel_uncertainty ** 2
 
+    def get_characteristics(self, energy_transfer: Float[np.ndarray, 'energy_transfer']
+                            ) -> dict[str, Float[np.ndarray, 'sigma']]:
+        """
+        Computes the broadening width at each value of `energy_transfer`.
+
+        The model approximates the broadening using the Gaussian distribution, so the returned
+        widths are in the form of the standard deviation (sigma) in meV.
+
+        Parameters
+        ----------
+        energy_transfer
+            The energy transfer in meV at which to compute the broadening.
+
+        Returns
+        -------
+        characteristics
+            The characteristics of the broadening function, i.e. the Gaussian width as sigma.
+        """
+        ei = energy_transfer + self.average_final_energy
+
+        time_dependent_term = (2 / NEUTRON_MASS) ** 0.5 * ei ** 1.5 / self.primary_flight_path
+        time_dependent_term *= self.time_dependent_term_factor / (
+                    2 * NEUTRON_MASS * ei) + self.time_channel_uncertainty2
+
+        incident_flight_term = 2 * ei / self.primary_flight_path * self.primary_flight_path_uncertainty
+
+        final_energy_term = (self.time_dependent_term_factor *
+                             (1 + self.average_secondary_flight_path / self.primary_flight_path *
+                              (ei / self.average_final_energy) ** 1.5))
+
+        final_flight_term = (2 / self.average_secondary_flight_path *
+                             np.sqrt(ei ** 3 / self.average_final_energy) *
+                             2 * self.primary_flight_path / np.sin(self.average_bragg_angle))
+
+        result =  np.sqrt(time_dependent_term ** 2 + incident_flight_term ** 2 +
+                          final_energy_term ** 2 + final_flight_term ** 2)
+        return {'sigma': result}
+
+    @deprecated(DEPRECATION_MSG)
     def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
         """
         Evaluates the model at given energy transfer values (`frequencies`), returning the
@@ -147,20 +187,4 @@ class ToscaBookModel(InstrumentModel):
         sigma
             The Gaussian widths at `frequencies` as predicted by this model.
         """
-        ei = frequencies + self.average_final_energy
-
-        time_dependent_term = (2 / NEUTRON_MASS) ** 0.5 * ei ** 1.5 / self.primary_flight_path
-        time_dependent_term *= self.time_dependent_term_factor / (2 * NEUTRON_MASS * ei) + self.time_channel_uncertainty2
-
-        incident_flight_term = 2 * ei / self.primary_flight_path * self.primary_flight_path_uncertainty
-
-        final_energy_term = (self.time_dependent_term_factor *
-                             (1 + self.average_secondary_flight_path / self.primary_flight_path *
-                              (ei / self.average_final_energy) ** 1.5))
-
-        final_flight_term = (2 / self.average_secondary_flight_path *
-                             np.sqrt(ei ** 3 / self.average_final_energy) *
-                             2 * self.primary_flight_path / np.sin(self.average_bragg_angle))
-
-        return np.sqrt(time_dependent_term ** 2 + incident_flight_term ** 2 +
-                       final_energy_term ** 2 + final_flight_term ** 2)
+        return self.get_characteristics(frequencies)['sigma']

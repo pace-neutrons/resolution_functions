@@ -9,11 +9,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+try:
+    from warnings import deprecated
+except ImportError:
+    from typing_extensions import deprecated
 
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 
-from .model_base import InstrumentModel, ModelData
+from .model_base import InstrumentModel, ModelData, DEPRECATION_MSG
 
 if TYPE_CHECKING:
     from jaxtyping import Float
@@ -75,8 +79,6 @@ class PantherAbINSModel(InstrumentModel):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `PantherAbINSModelData` type.
     abs : numpy.polynomial.polynomial.Polynomial
@@ -87,8 +89,7 @@ class PantherAbINSModel(InstrumentModel):
         The energy transfer and `e_init` product polynomial.
     citation
     """
-    input = 1
-    output = 1
+    input = ('energy_transfer',)
 
     data_class = PantherAbINSModelData
 
@@ -100,6 +101,30 @@ class PantherAbINSModel(InstrumentModel):
         self.ei_dependence = Polynomial(model_data.ei_dependence)(e_init)
         self.ei_energy_product = Polynomial(model_data.ei_energy_product)
 
+    def get_characteristics(self, energy_transfer: Float[np.ndarray, 'energy_transfer']
+                            ) -> dict[str, Float[np.ndarray, 'sigma']]:
+        """
+        Computes the broadening width at each value of `energy_transfer`
+
+        The model approximates the broadening using the Gaussian distribution, so the returned
+        widths are in the form of the standard deviation (sigma).
+
+        Parameters
+        ----------
+        energy_transfer
+            The energy transfer in meV at which to compute the broadening.
+
+        Returns
+        -------
+        characteristics
+            The characteristics of the broadening function, i.e. the Gaussian width as sigma in meV.
+        """
+        resolution = (self.abs(energy_transfer) +
+                      self.ei_dependence +
+                      self.ei_energy_product(self.e_init * energy_transfer))
+        return {'sigma': resolution / (2 * np.sqrt(2 * np.log(2)))}
+
+    @deprecated(DEPRECATION_MSG)
     def __call__(self, frequencies: Float[np.ndarray, 'frequencies'], *args, **kwargs) -> Float[np.ndarray, 'sigma']:
         """
         Evaluates the model at given energy transfer values (`frequencies`), returning the
@@ -115,7 +140,4 @@ class PantherAbINSModel(InstrumentModel):
         sigma
             The Gaussian widths at `frequencies` as predicted by this model.
         """
-        resolution = (self.abs(frequencies) +
-                      self.ei_dependence +
-                      self.ei_energy_product(self.e_init * frequencies))
-        return resolution / (2 * np.sqrt(2 * np.log(2)))
+        return self.get_characteristics(frequencies)['sigma']

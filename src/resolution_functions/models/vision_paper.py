@@ -10,11 +10,15 @@ obtaining the :term:`resolution function` of an :term:`instrument`, please use t
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
+try:
+    from warnings import deprecated
+except ImportError:
+    from typing_extensions import deprecated
 
 import numpy as np
 
-from .model_base import InstrumentModel, ModelData
+from .model_base import InstrumentModel, ModelData, DEPRECATION_MSG
 
 if TYPE_CHECKING:
     from jaxtyping import Float
@@ -84,14 +88,11 @@ class VisionPaperModel(InstrumentModel):
     ----------
     input
         The input that the ``__call__`` method expects.
-    output
-        The output of the ``__call__`` method.
     data_class
         Reference to the `VisionPaperModelData` type.
     citation
     """
-    input = 1
-    output = 1
+    input = ('energy_transfer',)
 
     data_class = VisionPaperModelData
 
@@ -123,6 +124,37 @@ class VisionPaperModel(InstrumentModel):
 
         self.final_term = self.e0 / np.tan(self.theta) / self.z2 * model_data.d_r
 
+    def get_characteristics(self, energy_transfer: Float[np.ndarray, 'energy_transfer']
+                            ) -> dict[str, Float[np.ndarray, 'sigma']]:
+        """
+        Computes the broadening width at each value of `energy_transfer`.
+
+        The model approximates the broadening using the Gaussian distribution, so the returned
+        widths are in the form of the standard deviation (sigma).
+
+        Parameters
+        ----------
+        energy_transfer
+            The energy transfer in meV at which to compute the broadening.
+
+        Returns
+        -------
+        characteristics
+            The characteristics of the broadening function, i.e. the Gaussian width as sigma.
+        """
+        e1 = energy_transfer * self.REDUCED_PLANCK + self.e0 * (1 / np.sin(self.theta))
+        z0 = self.l1 * (self.e0 / e1) ** 0.5
+        one_over_z0 = 1 / z0
+
+        sigma = self.distance_ratio - self.nu0 * self.d_t / z0
+        sigma += (self.one_over_l1 + one_over_z0 + self.capital_t_over_z2) * self.d_a
+        sigma += (one_over_z0 + self.capital_t_over_z2) * self.db_dc_factor
+        sigma *= 2 * e1
+        sigma -= self.final_term
+
+        return {'sigma': sigma}
+
+    @deprecated(DEPRECATION_MSG)
     def __call__(self, frequencies: Float[np.ndarray, 'frequencies']) -> Float[np.ndarray, 'sigma']:
         """
         Evaluates the model at given energy transfer values (`frequencies`), returning the
@@ -138,14 +170,4 @@ class VisionPaperModel(InstrumentModel):
         fwhm
             The Ikeda-Carpenter widths at `frequencies` as predicted by this model.
         """
-        e1 = frequencies * self.REDUCED_PLANCK + self.e0 * (1 / np.sin(self.theta))
-        z0 = self.l1 * (self.e0 / e1) ** 0.5
-        one_over_z0 = 1 / z0
-
-        sigma = self.distance_ratio - self.nu0 * self.d_t / z0
-        sigma += (self.one_over_l1 + one_over_z0 + self.capital_t_over_z2) * self.d_a
-        sigma += (one_over_z0 + self.capital_t_over_z2) * self.db_dc_factor
-        sigma *= 2 * e1
-        sigma -= self.final_term
-
-        return sigma
+        return self.get_characteristics(frequencies)['sigma']
