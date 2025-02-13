@@ -117,7 +117,7 @@ class PantherAbINSModel(InstrumentModel):
         Returns
         -------
         characteristics
-            The characteristics of the broadening function, i.e. the Gaussian width as sigma.
+            The characteristics of the broadening function, i.e. the Gaussian width as sigma in meV.
         """
         resolution = (self.abs(energy_transfer) +
                       self.ei_dependence +

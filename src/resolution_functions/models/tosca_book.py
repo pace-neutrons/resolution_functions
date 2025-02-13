@@ -139,7 +139,7 @@ class ToscaBookModel(InstrumentModel):
         Computes the broadening width at each value of `energy_transfer`.
 
         The model approximates the broadening using the Gaussian distribution, so the returned
-        widths are in the form of the standard deviation (sigma).
+        widths are in the form of the standard deviation (sigma) in meV.
 
         Parameters
         ----------

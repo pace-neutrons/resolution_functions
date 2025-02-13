@@ -420,12 +420,12 @@ class PyChopModel(InstrumentModel, ABC):
         Parameters
         ----------
         energy_transfer
-            The energy transfer in meV at which to compute the broadening.
+            The energy transfer in meV at which to compute the broadening in meV.
 
         Returns
         -------
         characteristics
-            The characteristics of the broadening function, i.e. the Gaussian width as sigma.
+            The characteristics of the broadening function, i.e. the Gaussian width as sigma in meV.
         """
         return {'sigma': self.polynomial(energy_transfer)}
 

@@ -223,7 +223,7 @@ class DiscontinuousPolynomialModel1D(InstrumentModel):
         Returns
         -------
         characteristics
-            The characteristics of the broadening function, i.e. the Gaussian width as sigma.
+            The characteristics of the broadening function, i.e. the Gaussian width as sigma in meV.
         """
         result = self.polynomial(energy_transfer)
 
