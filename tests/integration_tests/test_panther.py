@@ -18,20 +18,20 @@ def panther_rf():
 
 
 @pytest.fixture(scope="module", params=np.arange(0, 1209, 20), ids=lambda e: f'ei={e}')
-def panther_abins_plus_rf_abins_resolution_function(panther_rf, request):
-    abins = PantherInstrument()
-    abins.set_incident_energy(request.param, 'meV')
+def resolution_functions(panther_rf, request):
+    panther_abins = PantherInstrument()
+    panther_abins.set_incident_energy(request.param, 'meV')
 
     rf = panther_rf.get_resolution_function('AbINS', e_init=request.param)
-    return abins, rf, request.param
+    return panther_abins, rf, request.param
 
 
-def test_panther_against_abins(panther_abins_plus_rf_abins_resolution_function):
-    abins, rf, energy = panther_abins_plus_rf_abins_resolution_function
+def test_panther_against_abins(resolution_functions):
+    panther_abins, panther_resins, energy = resolution_functions
 
     frequencies = np.linspace(0, energy, 1000)
 
-    actual = rf(frequencies)
-    expected = abins.calculate_sigma(frequencies * MEV_TO_WAVENUMBER) * WAVENUMBER_TO_MEV
+    actual = panther_resins(frequencies)
+    expected = panther_abins.calculate_sigma(frequencies * MEV_TO_WAVENUMBER) * WAVENUMBER_TO_MEV
 
     assert_allclose(actual, expected)
