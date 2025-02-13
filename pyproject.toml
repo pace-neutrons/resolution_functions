@@ -15,6 +15,22 @@ description = "Python library for working with resolution functions of neutron i
 readme = "README.md"
 license = {file = "LICENSE"}
 
+keywords = [
+    "Python",
+    "physics",
+    "inelastic neutron scattering",
+    "instrument resolution",
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
 dependencies = [
     "PyYAML >= 6.0.2",
     "numpy >= 1.26.4",
