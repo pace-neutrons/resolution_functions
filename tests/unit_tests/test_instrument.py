@@ -3,10 +3,8 @@ import inspect
 import os
 import typing
 
-import numpy as np
 import pytest
 import yaml
-from jaxtyping import Float
 
 from resolution_functions import instrument as i
 from resolution_functions.models import MODELS
