@@ -56,18 +56,16 @@ class MockModel(InstrumentModel):
         return frequencies
 
 
-for key in list(MODELS):
-    MODELS.pop(key)
+@pytest.fixture
+def mock_models():
+    return {'mock': MockModel}
 
-MODELS['mock'] = MockModel
-
-
-for key in list(i.INSTRUMENT_MAP):
-    i.INSTRUMENT_MAP.pop(key)
-
-i.INSTRUMENT_MAP['TEST'] = ('fake_instrument.yaml', None)
-i.INSTRUMENT_MAP['ALIAS'] = ('fake_instrument.yaml', 'VERSION1')
-i.INSTRUMENT_DATA_PATH = TEST_DIR
+@pytest.fixture
+def mock_instrument_map():
+    return {
+        'TEST': ('fake_instrument.yaml', None),
+        'ALIAS': ('fake_instrument.yaml', 'VERSION1'),
+    }
 
 
 @pytest.fixture(scope='module')
@@ -121,25 +119,35 @@ def test_instrument(data):
     )
 
 
-def test_available_instruments():
+def test_available_instruments(mock_instrument_map, mocker):
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_MAP', mock_instrument_map)
     assert i.Instrument.available_instruments() == ['TEST', 'ALIAS']
 
 
-def test_private_available_versions():
+def test_private_available_versions(mock_instrument_map, mocker):
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_MAP', mock_instrument_map)
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_DATA_PATH', TEST_DIR)
+
     actual_versions, actual_default = i.Instrument._available_versions(FAKE_YAML)
 
     assert actual_default == 'TEST'
     assert actual_versions == ['VERSION1', 'TEST']
 
 
-def test_available_versions():
+def test_available_versions(mock_instrument_map, mocker):
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_MAP', mock_instrument_map)
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_DATA_PATH', TEST_DIR)
+
     actual_versions, actual_default = i.Instrument.available_versions('TEST')
 
     assert actual_default == 'TEST'
     assert actual_versions == ['VERSION1', 'TEST']
 
 
-def test_available_versions_alias():
+def test_available_versions_alias(mock_instrument_map, mocker):
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_MAP', mock_instrument_map)
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_DATA_PATH', TEST_DIR)
+
     actual_versions, actual_default = i.Instrument.available_versions('ALIAS')
 
     assert actual_default == 'VERSION1'
@@ -169,7 +177,10 @@ def test_from_file_invalid_version():
         i.Instrument.from_file(FAKE_YAML, 'INVALID_VERSION')
 
 
-def test_from_default(data):
+def test_from_default(data, mock_instrument_map, mocker):
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_MAP', mock_instrument_map)
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_DATA_PATH', TEST_DIR)
+
     instrument = i.Instrument.from_default('TEST', 'VERSION1')
 
     assert isinstance(instrument, i.Instrument)
@@ -178,7 +189,10 @@ def test_from_default(data):
     assert instrument._models == data['version']['VERSION1']['models']
 
 
-def test_from_default_default(data):
+def test_from_default_default(data, mock_instrument_map, mocker):
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_MAP', mock_instrument_map)
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_DATA_PATH', TEST_DIR)
+
     instrument = i.Instrument.from_default('TEST')
 
     assert isinstance(instrument, i.Instrument)
@@ -189,19 +203,27 @@ def test_from_default_default(data):
 
 @pytest.mark.parametrize("name,expected_path,implied_ver",
                          [('TEST', FAKE_YAML, None), ('ALIAS', FAKE_YAML, 'VERSION1')])
-def test_get_file(name, expected_path, implied_ver):
+def test_get_file(name, expected_path, implied_ver, mock_instrument_map, mocker):
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_MAP', mock_instrument_map)
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_DATA_PATH', TEST_DIR)
+
     actual_path, actual_version = i.Instrument._get_file(name)
 
     assert actual_path == expected_path
     assert actual_version == implied_ver
 
 
-def test_get_file_invalid():
+def test_get_file_invalid(mock_instrument_map, mocker):
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_MAP', mock_instrument_map)
+    mocker.patch('resolution_functions.instrument.INSTRUMENT_DATA_PATH', TEST_DIR)
+
     with pytest.raises(i.InvalidInstrumentError):
         i.Instrument._get_file('INVALID_INSTRUMENT')
 
 
-def test_private_get_model_data(instrument, version1_mock_v3_data_nondefault):
+def test_private_get_model_data(instrument, version1_mock_v3_data_nondefault, mock_models, mocker):
+    mocker.patch('resolution_functions.instrument.MODELS', mock_models)
+
     actual_model, actual_name = instrument._get_model_data(model_name='mock_v3', config1='C', config2='Y')
 
     assert actual_name == 'mock_v3'
@@ -209,7 +231,12 @@ def test_private_get_model_data(instrument, version1_mock_v3_data_nondefault):
     assert actual_model == version1_mock_v3_data_nondefault
 
 
-def test_private_get_model_data_default(instrument, version1_mock_v3_data_default):
+def test_private_get_model_data_default(instrument,
+                                        version1_mock_v3_data_default,
+                                        mock_models,
+                                        mocker):
+    mocker.patch('resolution_functions.instrument.MODELS', mock_models)
+
     actual_model, actual_name = instrument._get_model_data()
 
     assert actual_name == 'mock_v3'
@@ -222,14 +249,21 @@ def test_private_get_model_data_invalid_model(test_instrument):
         test_instrument._get_model_data(model_name='invalid_model')
 
 
-def test_get_model_data(instrument, version1_mock_v3_data_nondefault):
+def test_get_model_data(instrument, version1_mock_v3_data_nondefault, mock_models, mocker):
+    mocker.patch('resolution_functions.instrument.MODELS', mock_models)
+
     actual_model = instrument.get_model_data(model_name='mock_v3', config1='C', config2='Y')
 
     assert isinstance(actual_model, MockModelData)
     assert actual_model == version1_mock_v3_data_nondefault
 
 
-def test_get_model_data_invalid_type_no_error(instrument, version1_mock_v3_data_nondefault):
+def test_get_model_data_invalid_type_no_error(instrument,
+                                              version1_mock_v3_data_nondefault,
+                                              mock_models,
+                                              mocker):
+    mocker.patch('resolution_functions.instrument.MODELS', mock_models)
+
     # mock_v1 has param1 with invalid type
     actual_model = instrument.get_model_data(model_name='mock_v1', config1='C', config2='Y')
 
@@ -253,7 +287,9 @@ def test_resolve_model_invalid_alias(test_instrument):
         test_instrument._resolve_model('mock')
 
 
-def test_get_resolution_function(instrument, version1_mock_v3_data_nondefault):
+def test_get_resolution_function(instrument, version1_mock_v3_data_nondefault, mock_models, mocker):
+    mocker.patch('resolution_functions.instrument.MODELS', mock_models)
+
     arg1, kwarg2 = True, 42
     actual = instrument.get_resolution_function(
         'mock_v3', config1='C', config2='Y', arg1=arg1, kwarg2=kwarg2, unused=False
@@ -266,12 +302,16 @@ def test_get_resolution_function(instrument, version1_mock_v3_data_nondefault):
     assert actual.kwarg2 == kwarg2
 
 
-def test_get_resolution_function_invalid_function(instrument):
+def test_get_resolution_function_invalid_function(instrument, mock_models, mocker):
+    mocker.patch('resolution_functions.instrument.MODELS', mock_models)
+
     with pytest.raises(KeyError):
         instrument.get_resolution_function('mock_v2')
 
 
-def test_get_model_signature(instrument):
+def test_get_model_signature(instrument, mock_models, mocker):
+    mocker.patch('resolution_functions.instrument.MODELS', mock_models)
+
     expected_names = ['model_name', 'config1', 'config2', 'arg1', 'kwarg1', 'kwarg2']
     expected_annotations = [typing.Optional[str], typing.Literal['A', 'B', 'C'],
                             typing.Literal['X', 'Y'], int, None,
