@@ -46,6 +46,16 @@ dev = [
     "jaxtyping >= 0.2.34"
 ]
 
+[dependency-groups]
+doc = [
+    "inline_reference ~= 1.0",
+    "numpydoc >= 1.8.0",
+    "packaging",
+    "sphinx >= 8.1.3",
+    "sphinx_parsed_codeblock ~= 1.0",
+    "sphinx_rtd_theme >= 3.0.2",
+]
+
 [project.urls]
 Repository = "https://github.com/pace-neutrons/resins"
 
