@@ -27,7 +27,7 @@ jobs:
       shell: bash -el {0}
       run: |
         conda activate test
-        conda install tox
+        conda install "tox<4"
 
     - name: Test with tox
       shell: bash -el {0}

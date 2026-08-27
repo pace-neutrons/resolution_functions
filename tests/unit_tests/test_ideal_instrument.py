@@ -1,5 +1,5 @@
 from collections import ChainMap
-from enum import StrEnum
+from enum import Enum
 from itertools import product
 from pathlib import Path
 
@@ -73,10 +73,13 @@ TEST_CASES = {
 }
 
 
-class Feature(StrEnum):
+class Feature(str, Enum):
     KERNEL = "kernel"
     PEAK = "peak"
     BROADEN = "broaden"
+
+    def __str__(self):
+        return str.__str__(self)
 
 
 test_specs = list(
