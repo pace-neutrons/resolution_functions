@@ -1,5 +1,5 @@
 from collections import ChainMap
-from enum import StrEnum
+from enum import Enum
 from itertools import product
 from pathlib import Path
 
@@ -8,6 +8,13 @@ from numpy.testing import assert_allclose
 import pytest
 
 from resins.instrument import Instrument
+
+
+# This function was renamed in Numpy 2
+try:
+    from numpy import trapezoid as integrate
+except ImportError:
+    from numpy import trapz as integrate
 
 
 DATA_PATH = Path(__file__).parent / "data" / "ideal"
@@ -73,10 +80,13 @@ TEST_CASES = {
 }
 
 
-class Feature(StrEnum):
+class Feature(str, Enum):
     KERNEL = "kernel"
     PEAK = "peak"
     BROADEN = "broaden"
+
+    def __str__(self):
+        return str.__str__(self)
 
 
 test_specs = list(
@@ -139,7 +149,7 @@ def test_bad_width_triangle():
 
     # Area is larger for bad triangle: long tails added to reach nearest pixel
     assert np.greater(
-        np.trapezoid(result[0], mesh), np.trapezoid(ref_triangle[0], mesh)
+        integrate(result[0], mesh), integrate(ref_triangle[0], mesh)
     )
 
 

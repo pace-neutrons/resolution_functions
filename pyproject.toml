@@ -31,11 +31,11 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
 ]
 
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 
 dependencies = [
     "PyYAML >= 6.0.2",
-    "numpy >= 2.1.0",
+    "numpy >= 1.26.4, <3",
     "scipy >= 1.13.1",
     "typing_extensions >= 4.5.0",
 ]
@@ -70,7 +70,7 @@ resins = ["instrument_data/*.yaml"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py310"
 
 [tool.ruff.lint]
 # When jaxtyping array with one dimension, include a leading space

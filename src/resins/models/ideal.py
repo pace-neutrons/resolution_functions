@@ -12,6 +12,12 @@ if TYPE_CHECKING:
     from jaxtyping import Float
 
 
+# This function was renamed in Numpy 2
+try:
+    from numpy import trapezoid as integrate
+except ImportError:
+    from numpy import trapz as integrate
+
 class StaticSnappedPeaksMixin:
     """Mixin providing a get_peak() by copying kernel to nearest bins
 
@@ -178,7 +184,7 @@ class GenericBoxcar1DModel(
             values and M is the length of the `mesh` array.
         """
         kernel = uniform(loc=(-self.width / 2), scale=self.width).pdf(mesh)
-        kernel /= np.trapezoid(kernel, mesh)
+        kernel /= integrate(kernel, mesh)
 
         out_kernel = np.tile(kernel, (len(points), 1))
 
