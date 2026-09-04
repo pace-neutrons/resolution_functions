@@ -10,6 +10,13 @@ import pytest
 from resins.instrument import Instrument
 
 
+# This function was renamed in Numpy 2
+try:
+    from numpy import trapezoid as integrate
+except ImportError:
+    from numpy import trapz as integrate
+
+
 DATA_PATH = Path(__file__).parent / "data" / "ideal"
 
 
@@ -142,7 +149,7 @@ def test_bad_width_triangle():
 
     # Area is larger for bad triangle: long tails added to reach nearest pixel
     assert np.greater(
-        np.trapezoid(result[0], mesh), np.trapezoid(ref_triangle[0], mesh)
+        integrate(result[0], mesh), integrate(ref_triangle[0], mesh)
     )
 
 
